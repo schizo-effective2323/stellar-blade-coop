@@ -17,6 +17,8 @@ These are decided for the first co-op cut:
 1. **Host starts the run.** Only the linked host can begin a co-op SP run from the SP menu. The guest cannot start one.
 2. **Transfer together.** The host initiates while both are linked (typically still on the title / SP menu). Once the guest accepts, **both clients load the chosen difficulty's arena together**, then share GET READY and wave 1. Neither player is already fighting when the other arrives.
 3. **Personal rewards on a shared success.** If the run succeeds, **each** player unlocks whatever reward **their own** SP progress is currently eligible for on that difficulty (colourway, accessory, music, next-tier unlock — whatever solo SP would have granted them for that clear). The host's progress does not overwrite the guest's, and vice versa. A player who already earned that clear's reward gets nothing new; a player earlier on the track still advances. Failures unlock nothing on either PC.
+4. **Partner revive.** A downed EVE waits for her partner (Night Operation-style interact hold). No self-revive in v1. The run fails when both are down with no revive under way (`failed:both`). A Hardcore one-life mode can wait for a later cut.
+5. **NIKKE DLC required (for now).** Co-op SP is only offered when **both** players own the Goddess of Victory: NIKKE collaboration DLC. Solo SP is unchanged. The Co-op run row stays hidden or refused with a clear reason if either side lacks NIKKE — including difficulties that solo SP allows without it. This keeps one support matrix (Scarlet / Omega assets available on both PCs) for the first co-op beta; a non-NIKKE co-op path can open later.
 
 ## What Survival Protocol is today
 
@@ -48,7 +50,7 @@ Useful building blocks, already in-tree:
 | Shared bosses (channel 2) | Host-driven boss phase / arena event hints for Alpha bosses |
 | Night line (`h` / `g`) | Host-authoritative wave phase, score, masks, down/revive |
 | Night Operation co-op run | Join checks, countdown, shared score, partner death rules |
-| Friend revive | Interact-hold revive; SP would need a design choice, not new plumbing |
+| Friend revive | Interact-hold revive; SP co-op reuses this (partner revive, no self-revive) |
 | CNS outfit ghost | Partner's SP unlocks can show if both have the CNS packs |
 | Co-op saves | Isolate experiment from story progress |
 
@@ -71,7 +73,8 @@ Keep SP's identity (title entry, difficulties, modifiers, hazards, rewards). Whe
            |
   host picks difficulty → Co-op run
            |
-  guest gets ask → accepts (or refuses: no NIKKE, busy, …)
+  guest gets ask → accepts (or refuses: busy, restart-required, …)
+  (Co-op run only offered when both own NIKKE)
            |
   both transfer into the same Boss Challenge arena together
            |
@@ -115,15 +118,9 @@ Do not start with C. The link stack is the expensive part and already lives here
 
 These are product choices, not implementation details. Co-op feel collapses if they stay implicit.
 
-### 1. Lives
+### 1. Lives — locked
 
-| Model | Feel | Fit with existing code |
-| --- | --- | --- |
-| Classic SP: either death ends the run | Harsh, closest to solo SP | Night Operation's `failed:host` / `failed:guest` |
-| Shared down + partner revive | Co-op fantasy, less punishing | Night Operation revive (30 s, interact hold, optional self-revives) |
-| Shared life pool (e.g. 3 downs for the team) | Roguelike middle ground | Small extension of night line down words |
-
-**Suggestion for a first public co-op beta:** partner revive with **no self-revive**, and fail when both are down (Night Operation's `failed:both`). Keep a "Hardcore" toggle later for classic one-life.
+**Partner revive** for v1: a dead EVE is down; her partner revives her with the interact hold (reuse Night Operation's revive UX). No self-revive. Fail when both are down with no revive under way (`failed:both`). Classic one-life Hardcore is deferred.
 
 ### 2. Who rolls the run
 
@@ -137,12 +134,12 @@ Host rolls difficulty (already chosen), the two modifiers, and the hazard once a
 
 ### 4. Start flow — locked
 
-1. Both players are Steam-linked (friends session as today). They are still on the title screen / SP menu — not already in an arena.
-2. Host opens SP, picks a difficulty they both can enter (Omega still needs NIKKE on **both** clients, or the guest refuses), and chooses **Co-op run**. Guest cannot start.
-3. Guest receives an ask (accept / refuse). Refuse reasons include: not ready, missing NIKKE for Omega, restart-required state, already in a run.
+1. Both players are Steam-linked (friends session as today) and **both own the NIKKE DLC**. They are still on the title screen / SP menu — not already in an arena.
+2. Host opens SP. **Co-op run** is only available when the link reports NIKKE on both sides; otherwise the row is hidden or refused (`NIKKE DLC required for co-op`). Guest cannot start.
+3. Host picks a difficulty and chooses **Co-op run**. Guest receives an ask (accept / refuse). Refuse reasons include: not ready, restart-required state, already in a run, NIKKE check failed on their side.
 4. On accept, **both** clients transfer into that difficulty's arena together. The run does not spawn wave 1 on the host while the guest is still loading.
 5. When both report arena-ready on the `sp` line, shared GET READY, then wave 1.
-6. Solo SP is unchanged when no session is up.
+6. Solo SP is unchanged (including non-NIKKE solo play when no co-op session is up).
 
 Transfer failure on either side aborts the shared run before wave 1 (clear notice on both screens). Same if one client hits SP's second-run / restart-required softlock.
 
@@ -224,10 +221,10 @@ Announcer/music stay local. No sync required beyond "both got the same modifier/
 
 ### Phase 0 — Spec lock
 
-- Lives model still open (see above); **start flow and personal rewards are locked**.
+- **Start flow, personal rewards, partner revive, and NIKKE-only co-op are locked.**
 - Modifier/hazard classification sheet.
-- Protocol sketch for the `sp` line (ask → accept → transferring → ready → count → wave…, plus failure words).
-- Support matrix (UE4SS, NIKKE, CNS, Online protocol version).
+- Protocol sketch for the `sp` line (ask → accept → transferring → ready → count → wave…, down/revive words, plus failure words).
+- Support matrix (UE4SS, **NIKKE required for co-op**, CNS, Online protocol version).
 
 ### Phase 1 — Host start + joint transfer
 
@@ -249,7 +246,7 @@ Announcer/music stay local. No sync required beyond "both got the same modifier/
 
 ### Phase 3 — Death and revive
 
-- Implement the chosen lives model on the `sp` line (reuse Night Operation revive UX where possible).
+- Partner revive on the `sp` line (reuse Night Operation interact-hold UX; no self-revive; `failed:both`).
 - Results screen on both clients with personal unlock eligibility.
 
 ### Phase 4 — Modifiers and hazards
@@ -264,7 +261,7 @@ Announcer/music stay local. No sync required beyond "both got the same modifier/
 
 ### Phase 6 — Full difficulties and polish
 
-- D2–D5 and Omega (NIKKE gate on both clients).
+- All six difficulties under the NIKKE-only co-op gate (both clients already own DLC).
 - Music/announcer parity, loading screens, CNS unlock verification after co-op clears.
 - Automated soak: host/guest bots against desync metrics (wave drift, unpaired enemies, revive races).
 
@@ -296,10 +293,10 @@ Night Operation remains the place to harden shared enemies and revive. SP co-op 
 
 1. Should co-op SP require a co-op save, or is the Boss Challenge / title path enough (no story save touch)? Joint transfer from the title argues for title-only, same as solo SP.
 2. Which modifier/hazard pairs are known unfair even in solo, and should co-op ban them outright?
-3. For Omega, if only one player owns NIKKE: guest refuse (current lean), or host blocked from picking Omega until both own it?
-4. Is the public pitch "Survival Protocol Co-op" (SP-branded) or a mode inside Stellar Blade Online's menu that launches SP?
-5. After Option A validation, is the long-term goal to retire Boss Challenge dependence entirely for both solo and co-op?
-6. Lives model for v1: partner revive (suggested) vs classic one-life Hardcore?
+3. Is the public pitch "Survival Protocol Co-op" (SP-branded) or a mode inside Stellar Blade Online's menu that launches SP?
+4. After Option A validation, is the long-term goal to retire Boss Challenge dependence entirely for both solo and co-op?
+5. When to open co-op to players without NIKKE (non-Omega difficulties only), if ever?
+6. Whether a later Hardcore one-life toggle is worth shipping after partner revive is proven?
 
 ## Suggested next concrete step
 
