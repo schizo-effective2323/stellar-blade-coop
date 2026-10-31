@@ -14,11 +14,11 @@ The main fork in the road is whether SP keeps riding the game's Boss Challenge m
 
 These are decided for the first co-op cut:
 
-1. **Host starts the run.** Only the linked host can begin a co-op SP run from the SP menu. The guest cannot start one.
-2. **Transfer together.** The host initiates while both are linked (typically still on the title / SP menu). Once the guest accepts, **both clients load the chosen difficulty's arena together**, then share GET READY and wave 1. Neither player is already fighting when the other arrives.
+1. **SP menu owns Host / Join.** The Survival Protocol menu shows **Host co-op game** and **Join co-op game**. Those buttons drive Stellar Blade Online’s existing Steam lobby path (invite / friends / join code) — players do not have to open Online’s F5 menu first. Only the Steam host can then start the shared run; the guest cannot.
+2. **Transfer together.** After Steam has linked both players on the title / SP menu, the host picks the difficulty and starts. Once the guest accepts the run, **both clients load that arena together**, then share GET READY and wave 1. Neither player is already fighting when the other arrives.
 3. **Personal rewards on a shared success.** If the run succeeds, **each** player unlocks whatever reward **their own** SP progress is currently eligible for on that difficulty (colourway, accessory, music, next-tier unlock — whatever solo SP would have granted them for that clear). The host's progress does not overwrite the guest's, and vice versa. A player who already earned that clear's reward gets nothing new; a player earlier on the track still advances. Failures unlock nothing on either PC.
 4. **Partner revive.** A downed EVE waits for her partner (Night Operation-style interact hold). No self-revive in v1. The run fails when both are down with no revive under way (`failed:both`). A Hardcore one-life mode can wait for a later cut.
-5. **NIKKE DLC required (for now).** Co-op SP is only offered when **both** players own the Goddess of Victory: NIKKE collaboration DLC. Solo SP is unchanged. The Co-op run row stays hidden or refused with a clear reason if either side lacks NIKKE — including difficulties that solo SP allows without it. This keeps one support matrix (Scarlet / Omega assets available on both PCs) for the first co-op beta; a non-NIKKE co-op path can open later.
+5. **NIKKE DLC required (for now).** Co-op SP is only offered when **both** players own the Goddess of Victory: NIKKE collaboration DLC. Solo SP is unchanged. **Host co-op** / **Join co-op** stay hidden or refuse with a clear reason if this PC lacks NIKKE (or Online is not installed); after link, start still refuses if the partner lacks it. This keeps one support matrix (Scarlet / Omega assets available on both PCs) for the first co-op beta; a non-NIKKE co-op path can open later.
 6. **Always check against Ghidra.** For compatibility and stability, every co-op SP change that touches game behaviour (Boss Challenge start/transfer, wave/boss phase, spawn pairing, revive/respawn, hazard actors, DLC gates, rewards) must be verified against the pinned-build Ghidra DB of `SB-Win64-Shipping.exe` before it is treated as done. Do not invent offsets, call sites, or net-mode assumptions from Lua alone. Match Online's existing practice: name the `FUN_*` / globals used, confirm they still match the supported Steam build, and refuse or feature-gate when the image disagrees.
 7. **Shared UE4SS 1.3 stack.** Co-op SP targets the same UE4SS as Stellar Blade Online: **Stellar Blade UE4SS 1.3** (Nexus 2952, Git SHA `08a0733`). Pin **Survival Protocol 0.1.5-beta** (main lua391 on branch `sp-ue4ss13-port` in `schizo-effective2323/schizo-effective-mods`). Co-op bridging assumes that build co-loaded with Online — do not plan a dual-UE4SS or “port Online onto 148” path.
 
@@ -71,12 +71,17 @@ Gaps relative to SP:
 Keep SP's identity (title entry, difficulties, modifiers, hazards, rewards). When a Steam session is up, SP hands **run authority** to a co-op layer that speaks the existing night-style wire (or a sibling `sp` line on channel 0).
 
 ```
-  both on title / SP menu, Steam-linked
+  both on title → open Survival Protocol menu
            |
-  host picks difficulty → Co-op run
+  one player: Host co-op game  → Online creates Steam lobby + invite / code
+  other:      Join co-op game  → Online joins (invite / friends / code)
+           |
+  Steam link completes (title-screen join allowed for SP)
+  (refuse if either side lacks NIKKE or Online)
+           |
+  host picks difficulty → Start co-op run
            |
   guest gets ask → accepts (or refuses: busy, restart-required, …)
-  (Co-op run only offered when both own NIKKE)
            |
   both transfer into the same Boss Challenge arena together
            |
@@ -134,16 +139,23 @@ Host rolls difficulty (already chosen), the two modifiers, and the hazard once a
 - **Unlocks (locked):** on a shared success, each client runs SP's normal eligibility check against **its own** progress file and grants that player's next reward for the difficulty just cleared. Examples: host might unlock the accessory version while guest unlocks their first colourway of the same suit; a player who already has everything for that clear sees no new unlock. Progress files never travel over the link. Failures unlock nothing.
 - **Best runs:** local `records`-style files; no cross-PC leaderboard in v1.
 
-### 4. Start flow — locked
+### 4. Start flow — locked (SP menu Host / Join)
 
-1. Both players are Steam-linked (friends session as today) and **both own the NIKKE DLC**. They are still on the title screen / SP menu — not already in an arena.
-2. Host opens SP. **Co-op run** is only available when the link reports NIKKE on both sides; otherwise the row is hidden or refused (`NIKKE DLC required for co-op`). Guest cannot start.
-3. Host picks a difficulty and chooses **Co-op run**. Guest receives an ask (accept / refuse). Refuse reasons include: not ready, restart-required state, already in a run, NIKKE check failed on their side.
-4. On accept, **both** clients transfer into that difficulty's arena together. The run does not spawn wave 1 on the host while the guest is still loading.
-5. When both report arena-ready on the `sp` line, shared GET READY, then wave 1.
-6. Solo SP is unchanged (including non-NIKKE solo play when no co-op session is up).
+Players stay on the **title screen / Survival Protocol menu**. They do not open Online’s F5 menu first; SP’s buttons call the same Steam path Online already uses.
 
-Transfer failure on either side aborts the shared run before wave 1 (clear notice on both screens). Same if one client hits SP's second-run / restart-required softlock.
+1. **Both open the SP menu.** Solo **Start** stays as today. Two new rows (or equivalent buttons):
+   - **Host co-op game** — calls Online `coop host` (friends lobby + Steam invite dialog, or private / join-code per Online’s `who_can_join` setting).
+   - **Join co-op game** — calls Online `coop join` / join-code / accept held invite (same as Online’s join path).
+2. **Steam completes the link** through Online’s native worker (`steam_api64` lobby + channels). SP does not invent a second Steam stack.
+3. **Title-screen join is required for SP.** Today Online holds invites until a save sets `world=1` so a launch never joins from the title. Co-op SP needs an explicit exception: while the SP menu is up (or an SP co-op lobby tag is set), join / invite accept may complete on the title. Non-SP Online sessions keep the existing world-loaded gate.
+4. **Lobby tag.** Prefer tagging the lobby for SP (e.g. extend the `stellarcoop` metadata, or a sibling key) so a casual Online host invite is not confused with an SP co-op host. Version / build refusal stays as Online does today.
+5. **After linked:** host picks difficulty and chooses **Start co-op run**. Guest gets ask (accept / refuse). Refuse reasons: not ready, restart-required, already in a run, NIKKE missing on either side, Online missing / link lost.
+6. On accept, **both** transfer into that difficulty’s arena together. Wave 1 waits until both report arena-ready on the `sp` line → shared GET READY.
+7. Solo SP unchanged when no co-op session is up. If Online is not installed, Host / Join are hidden or show “needs Stellar Blade Online.”
+
+Transfer failure on either side aborts before wave 1 (clear notice both screens). Same if either hits SP’s restart-required softlock.
+
+**UI ownership:** SP draws the buttons and status (“Hosting… invite sent”, “Join code CCS-…”, “Linked with \<friend\>”, “Waiting for partner…”). Online owns Steam + protocol handshake; SP reads link mode / friend / code through a small Online API (or shared status file) rather than reimplementing lobbies.
 
 ### 5. Distance and camera
 
@@ -248,7 +260,7 @@ Concrete sequence (do not skip ahead of the gates):
 1. **Pin + co-load smoke** — both PCs on 0.1.5-beta + Online. Title, SP menu, Online F5, one solo SP run, confirm no timer/input fight. (Informal co-load already happened on the main PC during 0.1.5 active test.)
 2. **Ghidra + pairing spike** — name Boss Challenge accept/travel; log three E-04 waves (class/order/spot; EventSpawnId stays 0). Decide Option A pairing vs Option B custom spawns.
 3. **Guest follower API in SP** — when Online says “guest in co-op SP,” force: no fast/early kick, no resync, no boss-phase start, no stray/air/boss-centre ownership fights, no removals even if `removals` is on. Host keeps the solo kick engine.
-4. **Phase 1 bridge** — host-only Co-op run row → guest ask → both `BossChallengeButtonAcceptAction` → shared ready before wave 1.
+4. **Phase 1 bridge** — SP **Host / Join** → Steam link on title → host Start co-op run → guest ask → both `BossChallengeButtonAcceptAction` → shared ready before wave 1. Includes Online title-join exception for SP.
 5. **Phase 2+** — host wave marks on `sp`; shared enemies if pairing holds; partner revive; personal rewards; then modifiers/hazards/bosses.
 
 ### How SP 0.1.5 and Online fit together (checkout notes)
@@ -313,15 +325,16 @@ Announcer/music stay local. No sync required beyond "both got the same modifier/
 - Spec guest **follower mode** (no phase / early kicks, no resync, no removals/invents, host-owned stray/air/boss-centre) and host `sp` line fields.
 - Ghidra pass list for Phase 1 transfer + Phase 2 pairing (EventSpawnId confirmed 0 — focus class/order/gate + MetaAI/condition enums).
 
-### Phase 1 — Host start + joint transfer
+### Phase 1 — SP Host / Join + joint transfer
 
-- Host starts co-op SP from the SP menu while linked; guest gets ask / refuse.
-- On accept, both transfer into the same difficulty arena; neither starts waves until both report ready.
-- Partner ghost visible; chat/vit work.
+- SP menu **Host co-op game** / **Join co-op game** call Online Steam host/join; link completes on the title.
+- Online allows title-screen join for SP lobbies (exception to the `world=1` hold).
+- After linked, host picks difficulty → Start co-op run; guest ask / refuse.
+- On accept, both transfer into the same arena; neither starts waves until both report ready.
+- Partner ghost visible; chat/vit work (Online session active).
 - Abort before wave 1 if either client fails load or reports restart-required.
-- On a later success path (Phase 3+), each client applies its own next eligible unlock.
 
-**Exit test:** two PCs leave the title together, land in E-04 with ghosts, and wait on a shared ready gate with no wave sync yet.
+**Exit test:** from SP menu only (no F5), two PCs Steam-link, leave the title together, land in E-04 with ghosts, and wait on a shared ready gate with no wave sync yet.
 
 ### Phase 2 — Host-authoritative early waves
 
