@@ -20,7 +20,7 @@ These are decided for the first co-op cut:
 4. **Partner revive.** A downed EVE waits for her partner (Night Operation-style interact hold). No self-revive in v1. The run fails when both are down with no revive under way (`failed:both`). A Hardcore one-life mode can wait for a later cut.
 5. **NIKKE DLC required (for now).** Co-op SP is only offered when **both** players own the Goddess of Victory: NIKKE collaboration DLC. Solo SP is unchanged. The Co-op run row stays hidden or refused with a clear reason if either side lacks NIKKE — including difficulties that solo SP allows without it. This keeps one support matrix (Scarlet / Omega assets available on both PCs) for the first co-op beta; a non-NIKKE co-op path can open later.
 6. **Always check against Ghidra.** For compatibility and stability, every co-op SP change that touches game behaviour (Boss Challenge start/transfer, wave/boss phase, spawn pairing, revive/respawn, hazard actors, DLC gates, rewards) must be verified against the pinned-build Ghidra DB of `SB-Win64-Shipping.exe` before it is treated as done. Do not invent offsets, call sites, or net-mode assumptions from Lua alone. Match Online's existing practice: name the `FUN_*` / globals used, confirm they still match the supported Steam build, and refuse or feature-gate when the image disagrees.
-7. **Shared UE4SS 1.3 stack.** Co-op SP targets the same UE4SS as Stellar Blade Online: **Stellar Blade UE4SS 1.3** (Nexus 2952, Git SHA `08a0733`). The working port lives on branch `sp-ue4ss13-port` in private repo `schizo-effective2323/schizo-effective-mods` (tip lua381 / grinds 17–18: 29 + 12 wins, 0 crashes on 1.3). Co-op bridging assumes that 1.3 SP build co-loaded with Online — do not plan a dual-UE4SS or “port Online onto 148” path.
+7. **Shared UE4SS 1.3 stack.** Co-op SP targets the same UE4SS as Stellar Blade Online: **Stellar Blade UE4SS 1.3** (Nexus 2952, Git SHA `08a0733`). Pin **Survival Protocol 0.1.5-beta** (main lua391 on branch `sp-ue4ss13-port` in `schizo-effective2323/schizo-effective-mods`). Co-op bridging assumes that build co-loaded with Online — do not plan a dual-UE4SS or “port Online onto 148” path.
 
 ## What Survival Protocol is today
 
@@ -61,7 +61,7 @@ Gaps relative to SP:
 - Night line masks cover **5 waves × 8 slots**. SP needs **20 waves**, bosses, modifiers, hazards, and a longer phase vocabulary.
 - Only the Shooting Range challenge is marked `coop=true` today; swarm / skulls / gauntlet stay solo.
 - Steam link is **two players**. SP's fantasy can stay at two for a first co-op cut.
-- SP tip on GitHub is lua381 (`sp-ue4ss13-port`); co-load with Online on that build is the remaining smoke before bridge coding.
+- SP tip on GitHub is **0.1.5-beta / lua391** (`sp-ue4ss13-port`); co-load smoke + bridge coding are the remaining gates (main-PC active test already ran with StellarCoop loaded).
 - Boss Challenge itself has **no multiplayer replication**. The game never ships a dual-client challenge run.
 
 ## Architecture options
@@ -224,20 +224,38 @@ A spike or PR that only “worked once in game” without a Ghidra cross-check i
 | Piece | Path |
 | --- | --- |
 | UE4SS | Stellar Blade UE4SS 1.3 (`08a0733`) |
-| Survival Protocol | `ue4ss/Mods/RoguelikeMode/` (Scripts: `main.lua` lua381, `spmenu.lua` v61, `hazards.lua` v54, `announcer.lua` v6) + Announcer/Music helpers |
+| Survival Protocol | `ue4ss/Mods/RoguelikeMode/` (Scripts: `main.lua` **lua391**, `spmenu.lua` v61, `hazards.lua` **v56**, `announcer.lua` v6) + Announcer/Music helpers |
 | SP data | `Content/Paks/~mods/RoguelikeMode_P.*` |
 | Stellar Blade Online | `ue4ss/Mods/StellarCoop/` |
 | Outfits | CNS (DekCNS) as SP already requires |
 
-**Status (checked 2026-10-31 ~14:00 PT):** branch `sp-ue4ss13-port` tip `38610c9f` in `schizo-effective2323/schizo-effective-mods` — **main lua381**. Grind 17: all unlocks, 29 wins, 0 crashes/hangs. Grind 18 loop (stopped): 12/12 wins, 0 crashes. Companions unchanged since grind 14: hazards v54, spmenu v61, announcer v6. SP detects UE4SS SHA from `UE4SS.log`; on `08a0733` it uses **ONELOOP** (one `LoopInGameThreadAfterFrames` pump, no re-queue into UE4SS's async timer list — the 1.3 crash fix). `#148` (`d3d1004`) still runs; unknown builds get a menu warning recommending 2952. Not merged to `main` / Nexus yet.
+**Status (checked 2026-10-31 ~16:10 PT):** branch `sp-ue4ss13-port` tip `d3068342` — **Survival Protocol 0.1.5-beta / main lua391** (Nexus page updated). Companions: hazards v56, spmenu v61, announcer v6. Official requirement is now UE4SS 1.3 (Nexus 2952); `#148` still recognised but not re-tested. NIKKE DLC is required for the whole mod (not only Omega). SP on `08a0733` still uses **ONELOOP**. Main-PC active test for 0.1.5 already had **StellarCoop loaded** alongside RoguelikeMode.
 
 **Unsupported:** SP built only for old 148 semantics without the 1.3 timer path, mixed with Online on 1.3, or two different UE4SS trees in one folder. Ghidra checks stay on Online's pinned Steam build.
 
-### How SP 1.3 and Online fit together (checkout notes)
+### How to make 0.1.5 compatible with co-op (work order)
 
-Source of truth for solo SP behaviour on this stack: `SurvivalProtocol/ue4ss_RoguelikeMode/Scripts` on `sp-ue4ss13-port` @ lua381.
+Compatibility is **not** “run two independent SP sessions.” It is a host-authoritative bridge:
 
-**Still plays well with the locked co-op design.** Joint start, personal rewards, partner-revive intercept, NIKKE gate, and ONELOOP 1.3 stack are unchanged from the earlier lua352 checkout. What moved is how hard the guest must be gated.
+| Where the work lives | What to build |
+| --- | --- |
+| **Online** (`StellarCoop`) | New `sp` wire (ask/accept/transfer/ready/wave/down/revive), reuse nightop shared-enemies + partner revive, version gate for SP 0.1.5 |
+| **SP** (`RoguelikeMode`) | Small co-op hooks: detect linked role; **guest follower mode**; pause death-fail for revive; on shared success call local `M.record`; optional host invent marks |
+| **Both installs** | Same UE4SS 1.3 folder: RoguelikeMode + StellarCoop + CNS + NIKKE |
+
+Concrete sequence (do not skip ahead of the gates):
+
+1. **Pin + co-load smoke** — both PCs on 0.1.5-beta + Online. Title, SP menu, Online F5, one solo SP run, confirm no timer/input fight. (Informal co-load already happened on the main PC during 0.1.5 active test.)
+2. **Ghidra + pairing spike** — name Boss Challenge accept/travel; log three E-04 waves (class/order/spot; EventSpawnId stays 0). Decide Option A pairing vs Option B custom spawns.
+3. **Guest follower API in SP** — when Online says “guest in co-op SP,” force: no fast/early kick, no resync, no boss-phase start, no stray/air/boss-centre ownership fights, no removals even if `removals` is on. Host keeps the solo kick engine.
+4. **Phase 1 bridge** — host-only Co-op run row → guest ask → both `BossChallengeButtonAcceptAction` → shared ready before wave 1.
+5. **Phase 2+** — host wave marks on `sp`; shared enemies if pairing holds; partner revive; personal rewards; then modifiers/hazards/bosses.
+
+### How SP 0.1.5 and Online fit together (checkout notes)
+
+Source of truth: `SurvivalProtocol/ue4ss_RoguelikeMode/Scripts` on `sp-ue4ss13-port` @ lua391 / 0.1.5-beta.
+
+**Still plays well with the locked co-op design.** Joint start, personal rewards, partner-revive intercept, NIKKE gate, and ONELOOP 1.3 stack hold. 0.1.5 makes co-op *easier* in one place and *stricter* in another: enemy removals (floor/swap/carryover/leftover/zombie) are **off by default** (debugflag `removals` turns them on), so host invent divergence is rare in the shipped build; wave kicks are even faster, so guest follower mode is non-negotiable.
 
 **Joint start maps cleanly onto SP's existing arm path.** Host picks a difficulty in `spmenu`; SP opens Boss Challenge via the lobby's `BossChallengeButtonAcceptAction()` (no longer hooked — the mod calls it). Co-op adds: guest accept → **both** clients arm the same difficulty and accept → shared ready after `ClientRestart` / arena load-in / GET READY. SP's stage-mismatch rule (lua344: loaded map decides difficulty — E04/E05/Matrix_XI/B07/C05/NK_*) must run on both sides; the host's `sp` line should carry the intended difficulty **and** abort if the guest's loaded stage disagrees.
 
@@ -245,24 +263,24 @@ Source of truth for solo SP behaviour on this stack: `SurvivalProtocol/ue4ss_Rog
 
 **Partner revive is the invasive SP change.** Solo SP ends the run on Eve's death screen (`WB_MainHUD_Dead`, with a 20 s post-load delay on 1.3). Co-op must pause that fail path while Online's interact-hold revive runs, then resume the SP wave loops without treating the down as a clear/fail.
 
-**The hard co-op seam is wave authority vs SP's kick engine — tighter on lua381.** Solo SP now advances Boss Challenge phases much faster than the lua352 plan assumed:
+**The hard co-op seam is wave authority vs SP's kick engine — tighter on 0.1.5.**
 
-| Mechanism (lua381) | Behaviour | Co-op impact |
+| Mechanism (lua391 / 0.1.5) | Behaviour | Co-op impact |
 | --- | --- | --- |
-| Fast kick | Arena empty **1.5 s** + wave counted **6 s+** → next phase (`RL_PLAYER_KICK_EMPTY_S` / `RL_KICK_MIN_SINCE_S`; was 6 s / 10 s) | Guest must not kick at all |
-| Early kick (lua381) | One wave body left, wave **12 s+** old → kick next phase *before* the arena is empty | Two clients early-kicking = double phase starts |
-| Fast resync / re-kick | Already-kicked wave with no new count → skip ahead after **8 s** hold | Guest resync would drift the counter off the host |
-| Wave floor (lua375) | Thin non-boss waves topped up to 4 (waves 1–3) or 3 (later); never on boss / pre-boss | Host invents extra bodies; guest must not also floor |
-| Zombie swap (lua372) | Idle removed body → fresh Swarmer next to Eve (max 3/wave, no boss waves) | Same: host-only invent; mark on `sp` or guest ignores |
-| Leftover / carryover sweeps | 0.3 s after new count, 0.5 s after wave down | Guest must not retire host-paired leftovers alone |
+| Fast kick | Arena empty **0.5 s** + wave counted **4 s+** → next phase | Guest must not kick at all |
+| Early kick | 1 body left at **8 s+**, or 2 left at **20 s+** → kick before empty | Two clients early-kicking = double phase starts |
+| Fast resync / re-kick | Already-kicked wave with no new count → skip ahead after hold | Guest resync drifts the counter off the host |
+| Stray / air watches (lua388) | Far / mid-air bodies brought to Eve | Host-owned presentation; guest follows, does not invent teleports for authority |
+| Boss to centre (lua390) | Far boss arrivals moved to arena centre | Host owns; guest mirrors position via shared-enemy / same-place |
+| Removals (floor/swap/leftover/…) | **Off by default** in 0.1.5; `removals` flag turns on | Default co-op install has fewer invents; if host enables removals, guest must stay off and invent tags go on `sp` |
 
 For two clients:
 
-- **Host** keeps kick / early kick / floor / swap / watchdog / ACTIVATE (owns phase and any invented extras).
-- **Guest** must enter a **follower mode**: track bodies for shared-enemy pairing and local presentation, but **must not** kick phases, early-kick, resync counters, start boss phases, run wave floor, zombie-swap, or leftover retire on its own. SP already exposes debugflags that map to pieces of that (`noearlykick`, `nofloor`, `noswap`, `noleftover`, `nocarryover`, `nozombie`) — co-op should force the full follower gate in code, not rely on a flags file.
-- Otherwise guest kicks / invents will fight the host's night/`sp` line within ~1–2 s of a wave ending.
+- **Host** keeps kick / early kick / watchdog / ACTIVATE / stray-air / boss-centre (owns phase).
+- **Guest** must enter a **follower mode**: track bodies for shared-enemy pairing and local presentation, but **must not** kick phases, early-kick, resync counters, start boss phases, or run removals/invents on its own. Force the gate in code (Online role → SP switch), not a manual `debugflags.txt`.
+- Otherwise guest kicks fight the host's `sp` line within ~0.5–1 s of a wave ending.
 
-**Enemy pairing cannot use EventSpawnId.** SP's own SPAWNINFO probe (Hard): `BroadcastSpawnInfo.EventSpawnId` is **0** on challenge bodies (Tags still carry things like `Water,RL_Mob`). Co-op pairing should use `(charId / class, arrival order in wave, gate/spot)` inside a host wave mark — same conclusion as before, still true on lua381. **New:** host floor/swap bodies never come from a challenge spawn row; the host `sp` wave mark must tag invents (`floor` / `swap`) so the guest can pair or ignore them. Ghidra follow-up (SP lua350 notes): InteractionState is interaction-system; battle awareness leads are `ESBActorCondition` / MetaAI — check those before inventing guest ACTIVATE sync.
+**Enemy pairing cannot use EventSpawnId.** SP's SPAWNINFO probe (Hard): `BroadcastSpawnInfo.EventSpawnId` is **0** on challenge bodies. Pair by `(charId / class, arrival order in wave, gate/spot)` inside a host wave mark. If host later enables `removals`, invent tags (`floor` / `swap`) must ride the `sp` line. Ghidra follow-up: `ESBActorCondition` / MetaAI before inventing guest ACTIVATE sync.
 
 **Co-load risks to smoke before Phase 1 code:**
 
@@ -272,8 +290,7 @@ For two clients:
 | Death / HUD watches | Both mods touch death UI; partner revive needs one owner |
 | Title input | SP owns Boss Challenge overlay; Online F5 / pad View menu must not steal SP menu focus mid-arm |
 | Second-run leak | SP RESTART REQUIRED; either client leaking aborts the shared run |
-| Guest kick race | lua381 empty kick at 1.5 s / early kick at 12 s — follower mode is mandatory, not optional polish |
-| Host invents | Floor + swap change local body counts; guest must mirror marks, not invent |
+| Guest kick race | 0.1.5 empty kick at 0.5 s / early kick at 8 s — follower mode is mandatory |
 | DekCNS | Outfit unlocks still need CNS; mid-session unlocks still need a game restart to appear in CNS |
 
 ### Second-run / arena memory crash
@@ -292,9 +309,9 @@ Announcer/music stay local. No sync required beyond "both got the same modifier/
 - Modifier/hazard classification sheet.
 - Protocol sketch for the `sp` line (ask → accept → transferring → ready → count → wave…, down/revive words, plus failure words).
 - Support matrix (**UE4SS 1.3 shared**, **NIKKE required for co-op**, CNS, Online protocol version, **pinned Ghidra / game build**).
-- Gate: SP 1.3 tip lua381 (`sp-ue4ss13-port` @ `38610c9f`) + Online co-load smoke on one PC (title, SP menu, Online F5, one solo SP run).
-- Spec guest **follower mode** (no phase kicks / early kick / floor / swap / leftover retire) and host `sp` line fields including invent tags from the lua381 checkout.
-- Ghidra pass list for Phase 1 transfer + Phase 2 pairing (EventSpawnId confirmed 0 — focus class/order/gate + MetaAI/condition enums; account for host floor/swap bodies).
+- Gate: SP **0.1.5-beta / lua391** (`sp-ue4ss13-port` @ `d3068342`) + Online co-load smoke on one PC (title, SP menu, Online F5, one solo SP run).
+- Spec guest **follower mode** (no phase / early kicks, no resync, no removals/invents, host-owned stray/air/boss-centre) and host `sp` line fields.
+- Ghidra pass list for Phase 1 transfer + Phase 2 pairing (EventSpawnId confirmed 0 — focus class/order/gate + MetaAI/condition enums).
 
 ### Phase 1 — Host start + joint transfer
 
@@ -370,13 +387,15 @@ Night Operation remains the place to harden shared enemies and revive. SP co-op 
 
 ## Suggested next concrete steps
 
-**0. Co-load smoke** (pin lua381): one game folder with UE4SS 1.3 + `RoguelikeMode` from `sp-ue4ss13-port` tip `38610c9f` + `StellarCoop`. Confirm title entry, SP menu, Online F5, and one solo SP run without fighting over input or timers (ONELOOP vs Online game-thread loops).
+**0. Co-load smoke** (pin 0.1.5-beta / lua391): one game folder with UE4SS 1.3 + RoguelikeMode 0.1.5 + `StellarCoop`. Confirm title entry, SP menu, Online F5, and one solo SP run without fighting over input or timers.
 
 **1. Ghidra + pairing spike** (after 0), not a feature branch merge:
 
 1. On the pinned `SB-Win64-Shipping.exe` DB, name Boss Challenge accept / arena travel, and the condition/MetaAI paths SP's ACTIVATE already probes (`ESBActorCondition`, stealth/battle). Treat EventSpawnId as unusable on Hard (confirmed 0 in SP).
 2. With Online linked on two PCs, both arm the same difficulty and land in E-04 together (manual joint transfer rehearsal).
-3. Log three waves: class/charId, time, position, Tags, InteractionState / battle flags, gate/spot if any; separately log any WAVE FLOOR / ZOMBIE SWAP invents.
-4. Decide pairing + whether guest follower mode (with invent mirroring) can keep Option A, or wave ownership must move to Option B custom spawns.
+3. Log three waves: class/charId, time, position, Tags, InteractionState / battle flags, gate/spot if any.
+4. Decide pairing + whether guest follower mode can keep Option A, or wave ownership must move to Option B custom spawns.
+
+**2. First code cut after 0–1:** guest follower hook in SP + Online `sp` ask/accept/transfer (Phase 1). Do not start Phase 2 wave sync until follower mode is proven.
 
 Do not skip the Ghidra pass for speed.
