@@ -10,6 +10,14 @@ Co-op Survival Protocol is possible, but not by running two independent Boss Cha
 
 The main fork in the road is whether SP keeps riding the game's Boss Challenge mode, or whether co-op waves are rebuilt on Night Operation's custom spawn path. That choice decides almost everything else.
 
+## Locked decisions (from design)
+
+These are decided for the first co-op cut:
+
+1. **Host starts the run.** Only the linked host can begin a co-op SP run from the SP menu. The guest cannot start one.
+2. **Transfer together.** The host initiates while both are linked (typically still on the title / SP menu). Once the guest accepts, **both clients load the chosen difficulty's arena together**, then share GET READY and wave 1. Neither player is already fighting when the other arrives.
+3. **Personal rewards on a shared success.** If the run succeeds, **each** player unlocks whatever reward **their own** SP progress is currently eligible for on that difficulty (colourway, accessory, music, next-tier unlock — whatever solo SP would have granted them for that clear). The host's progress does not overwrite the guest's, and vice versa. A player who already earned that clear's reward gets nothing new; a player earlier on the track still advances. Failures unlock nothing on either PC.
+
 ## What Survival Protocol is today
 
 SP is a solo title-screen mode that wraps the game's Boss Challenge arenas:
@@ -59,18 +67,22 @@ Gaps relative to SP:
 Keep SP's identity (title entry, difficulties, modifiers, hazards, rewards). When a Steam session is up, SP hands **run authority** to a co-op layer that speaks the existing night-style wire (or a sibling `sp` line on channel 0).
 
 ```
-  title SP menu (host picks difficulty + starts)
+  both on title / SP menu, Steam-linked
            |
-           v
-  both clients load the same Boss Challenge arena
+  host picks difficulty → Co-op run
            |
-           +-- host: runs challenge / watches waves / rolls modifiers
+  guest gets ask → accepts (or refuses: no NIKKE, busy, …)
+           |
+  both transfer into the same Boss Challenge arena together
+           |
+           +-- host: rolls modifiers/hazard, owns wave/boss phase
            |         encodes SP state on the link
-           +-- guest: loads same arena, mirrors host phase,
-                     fights local copies, reports kills / death
+           +-- guest: mirrors phase, fights local copies,
+                     reports kills / death
            |
-           v
-  shared-enemy pairing on arena mobs + partner ghost
+  shared GET READY → wave 1
+           |
+  on success: each PC grants that player's next eligible reward
 ```
 
 **Pros:** Reuses SBO's hardest infrastructure; SP stays the product the player opens; outfit/music progress can stay in SP's files.  
@@ -117,19 +129,26 @@ These are product choices, not implementation details. Co-op feel collapses if t
 
 Host rolls difficulty (already chosen), the two modifiers, and the hazard once at ask-time. Guest receives them on the wire and applies local-only presentation (announcer lines, HUD). World-affecting hazards must be applied on **both** clients from the same seed/ids, never rolled twice.
 
-### 3. Score and rewards
+### 3. Score and rewards — locked
 
 - **Score:** host-authoritative, same as Night Operation (a kill counts once across worlds when shared enemies are on).
-- **Unlocks:** personal. Beating a co-op run unlocks on **each** PC that finished the success state, so neither player is gated on the other's CNS folder. Failures unlock nothing.
+- **Unlocks (locked):** on a shared success, each client runs SP's normal eligibility check against **its own** progress file and grants that player's next reward for the difficulty just cleared. Examples: host might unlock the accessory version while guest unlocks their first colourway of the same suit; a player who already has everything for that clear sees no new unlock. Progress files never travel over the link. Failures unlock nothing.
 - **Best runs:** local `records`-style files; no cross-PC leaderboard in v1.
 
-### 4. Start flow
+### 4. Start flow — locked
 
-Host opens SP → picks difficulty → "Co-op run" (only while linked) → guest auto-prompted → both load the arena → shared GET READY → wave 1. Guest cannot start a co-op SP run. Solo SP stays unchanged when no session is up.
+1. Both players are Steam-linked (friends session as today). They are still on the title screen / SP menu — not already in an arena.
+2. Host opens SP, picks a difficulty they both can enter (Omega still needs NIKKE on **both** clients, or the guest refuses), and chooses **Co-op run**. Guest cannot start.
+3. Guest receives an ask (accept / refuse). Refuse reasons include: not ready, missing NIKKE for Omega, restart-required state, already in a run.
+4. On accept, **both** clients transfer into that difficulty's arena together. The run does not spawn wave 1 on the host while the guest is still loading.
+5. When both report arena-ready on the `sp` line, shared GET READY, then wave 1.
+6. Solo SP is unchanged when no session is up.
+
+Transfer failure on either side aborts the shared run before wave 1 (clear notice on both screens). Same if one client hits SP's second-run / restart-required softlock.
 
 ### 5. Distance and camera
 
-Arenas are compact enough that ghost + shared enemies matter more than long-range travel. Still need a rule when the guest is not in the arena yet (refuse join) and when one client softlocks on the second-run crash (abort both with a clear "restart required" outcome).
+Arenas are compact enough that ghost + shared enemies matter more than long-range travel. Because both transfer in together, the old "guest not in arena yet" case is a **pre-wave abort**, not a mid-fight refuse. A mid-run softlock on either client still aborts both with a clear "restart required" outcome.
 
 ## Technical blockers mapped to work
 
@@ -205,19 +224,20 @@ Announcer/music stay local. No sync required beyond "both got the same modifier/
 
 ### Phase 0 — Spec lock
 
-- Lives model, reward rules, start flow (decisions above).
+- Lives model still open (see above); **start flow and personal rewards are locked**.
 - Modifier/hazard classification sheet.
-- Protocol sketch for the `sp` line (fields, rate limits, failure words).
+- Protocol sketch for the `sp` line (ask → accept → transferring → ready → count → wave…, plus failure words).
 - Support matrix (UE4SS, NIKKE, CNS, Online protocol version).
 
-### Phase 1 — Session + arena presence
+### Phase 1 — Host start + joint transfer
 
-- Host starts co-op SP from the SP menu while linked.
-- Guest receives ask / can refuse (wrong map, not ready, no NIKKE for Omega, etc.).
-- Both load the same difficulty arena; partner ghost visible; chat/vit work.
-- Abort if either client fails load or reports restart-required.
+- Host starts co-op SP from the SP menu while linked; guest gets ask / refuse.
+- On accept, both transfer into the same difficulty arena; neither starts waves until both report ready.
+- Partner ghost visible; chat/vit work.
+- Abort before wave 1 if either client fails load or reports restart-required.
+- On a later success path (Phase 3+), each client applies its own next eligible unlock.
 
-**Exit test:** two PCs stand in E-04 together with ghosts and no wave sync yet.
+**Exit test:** two PCs leave the title together, land in E-04 with ghosts, and wait on a shared ready gate with no wave sync yet.
 
 ### Phase 2 — Host-authoritative early waves
 
@@ -274,11 +294,12 @@ Night Operation remains the place to harden shared enemies and revive. SP co-op 
 
 ## Open questions
 
-1. Should co-op SP require a co-op save, or is the Boss Challenge path title-only enough (no story save touch)?
+1. Should co-op SP require a co-op save, or is the Boss Challenge / title path enough (no story save touch)? Joint transfer from the title argues for title-only, same as solo SP.
 2. Which modifier/hazard pairs are known unfair even in solo, and should co-op ban them outright?
-3. For Omega, if only one player owns NIKKE, is the run blocked or does the host fall back to D5?
+3. For Omega, if only one player owns NIKKE: guest refuse (current lean), or host blocked from picking Omega until both own it?
 4. Is the public pitch "Survival Protocol Co-op" (SP-branded) or a mode inside Stellar Blade Online's menu that launches SP?
 5. After Option A validation, is the long-term goal to retire Boss Challenge dependence entirely for both solo and co-op?
+6. Lives model for v1: partner revive (suggested) vs classic one-life Hardcore?
 
 ## Suggested next concrete step
 
