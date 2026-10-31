@@ -20,6 +20,7 @@ These are decided for the first co-op cut:
 4. **Partner revive.** A downed EVE waits for her partner (Night Operation-style interact hold). No self-revive in v1. The run fails when both are down with no revive under way (`failed:both`). A Hardcore one-life mode can wait for a later cut.
 5. **NIKKE DLC required (for now).** Co-op SP is only offered when **both** players own the Goddess of Victory: NIKKE collaboration DLC. Solo SP is unchanged. The Co-op run row stays hidden or refused with a clear reason if either side lacks NIKKE — including difficulties that solo SP allows without it. This keeps one support matrix (Scarlet / Omega assets available on both PCs) for the first co-op beta; a non-NIKKE co-op path can open later.
 6. **Always check against Ghidra.** For compatibility and stability, every co-op SP change that touches game behaviour (Boss Challenge start/transfer, wave/boss phase, spawn pairing, revive/respawn, hazard actors, DLC gates, rewards) must be verified against the pinned-build Ghidra DB of `SB-Win64-Shipping.exe` before it is treated as done. Do not invent offsets, call sites, or net-mode assumptions from Lua alone. Match Online's existing practice: name the `FUN_*` / globals used, confirm they still match the supported Steam build, and refuse or feature-gate when the image disagrees.
+7. **Shared UE4SS 1.3 stack (in progress).** Co-op SP targets the same UE4SS as Stellar Blade Online: **Stellar Blade UE4SS 1.3** (the package Online already requires). Survival Protocol is being ported off Nexus 148 / UE4SS 3.1.0 onto that stack so both mods can load in one game install. Until the SP 1.3 port is finished and smoke-tested (title menu, one arena run, CNS outfits, announcer), co-op bridging waits on that gate — do not plan a dual-UE4SS or “port Online onto 148” path.
 
 ## What Survival Protocol is today
 
@@ -35,7 +36,7 @@ SP is a solo title-screen mode that wraps the game's Boss Challenge arenas:
 | Presentation | Own menu, announcer, music helper, loading screens, boss darkening |
 | Progress | Separate from story saves; CNS outfits and music unlocks |
 | Engine seat | Boss Challenge HARD tab; wave counter follows the game's challenge waves |
-| Stack | UE4SS 3.1.0 (Nexus 148); CNS for outfits; NIKKE DLC for Omega |
+| Stack | Moving to Stellar Blade UE4SS 1.3 (same as Online; was Nexus 148 / 3.1.0); CNS for outfits; NIKKE DLC for Omega |
 
 Stellar Blade Online already borrowed SP's combat helpers (aggro wake, AI adopt, stuck teleport, spawn spread, death-screen watch, body validity). Night Operation and `coop challenge` are **not** SP. They are a shorter custom-spawn survival mode for two Steam-linked players, with SP-shaped challenge names and some of the same Lua ideas.
 
@@ -60,7 +61,7 @@ Gaps relative to SP:
 - Night line masks cover **5 waves × 8 slots**. SP needs **20 waves**, bosses, modifiers, hazards, and a longer phase vocabulary.
 - Only the Shooting Range challenge is marked `coop=true` today; swarm / skulls / gauntlet stay solo.
 - Steam link is **two players**. SP's fantasy can stay at two for a first co-op cut.
-- UE4SS packaging differs: SP targets Nexus 148 (3.1.0); this mod targets the UE4SS 1.3 package. Both mods cannot assume one install without a stack decision.
+- SP's move onto UE4SS 1.3 is in progress but not finished; co-op bridging assumes that port lands first so both mods share one install.
 - Boss Challenge itself has **no multiplayer replication**. The game never ships a dual-client challenge run.
 
 ## Architecture options
@@ -90,7 +91,7 @@ Keep SP's identity (title entry, difficulties, modifiers, hazards, rewards). Whe
 ```
 
 **Pros:** Reuses SBO's hardest infrastructure; SP stays the product the player opens; outfit/music progress can stay in SP's files.  
-**Cons:** Still fights Boss Challenge's single-player guts; second-run arena crashes become a two-PC problem; UE4SS stack must be reconciled.
+**Cons:** Still fights Boss Challenge's single-player guts; second-run arena crashes become a two-PC problem; needs the SP UE4SS 1.3 port finished before both mods share one install.
 
 ### B — Rebuild SP waves on Night Operation's spawn path
 
@@ -216,14 +217,17 @@ Online already pins native work to a Ghidra reverse of the supported Steam build
 
 A spike or PR that only “worked once in game” without a Ghidra cross-check is incomplete for co-op SP. When Ghidra and in-game disagree, trust the binary for offsets and re-test in game for behaviour.
 
-### UE4SS and packaging
+### UE4SS and packaging — locked direction
 
-SP and Online do not share a supported UE4SS story today. Co-op SP needs one explicit support matrix, for example:
+**Target:** one install on **Stellar Blade UE4SS 1.3**, with Survival Protocol (after its 1.3 port) and Stellar Blade Online loaded together. That matches Online's current requirement and removes the old dual-stack fork (SP on Nexus 148 vs Online on 1.3).
 
-- Co-op SP requires Stellar Blade Online + SP content packs on **Online's** UE4SS, or
-- Online's native DLL is loaded beside SP on SP's UE4SS after a dedicated port.
+**In progress (author):** porting SP onto UE4SS 1.3. Co-op implementation does not start until that port can:
 
-Treat "both mods installed on mismatched UE4SS" as unsupported, with a title-screen notice.
+- show the SP title row and start a difficulty;
+- complete at least one arena run without a UE4SS-specific crash;
+- still unlock CNS outfits and drive the announcer/music helper as solo SP does today.
+
+**Unsupported:** mixing SP-on-148 with Online-on-1.3 in one game folder. If someone still has the old SP UE4SS, Co-op run stays refused with a clear version notice. Ghidra checks stay on Online's pinned Steam build either way.
 
 ### Second-run / arena memory crash
 
@@ -237,10 +241,11 @@ Announcer/music stay local. No sync required beyond "both got the same modifier/
 
 ### Phase 0 — Spec lock
 
-- **Start flow, personal rewards, partner revive, NIKKE-only co-op, and Ghidra verification are locked.**
+- **Start flow, personal rewards, partner revive, NIKKE-only co-op, Ghidra verification, and UE4SS 1.3 as the shared stack are locked.**
 - Modifier/hazard classification sheet.
 - Protocol sketch for the `sp` line (ask → accept → transferring → ready → count → wave…, down/revive words, plus failure words).
-- Support matrix (UE4SS, **NIKKE required for co-op**, CNS, Online protocol version, **pinned Ghidra / game build**).
+- Support matrix (**UE4SS 1.3 shared**, **NIKKE required for co-op**, CNS, Online protocol version, **pinned Ghidra / game build**).
+- Gate: SP's UE4SS 1.3 port smoke-tested before Phase 1 bridge work.
 - Ghidra pass list for Phase 1 transfer + Phase 2 spawn id fields (addresses named before implementation).
 
 ### Phase 1 — Host start + joint transfer
