@@ -20,7 +20,7 @@ These are decided for the first co-op cut:
 4. **Partner revive.** A downed EVE waits for her partner (Night Operation-style interact hold). No self-revive in v1. The run fails when both are down with no revive under way (`failed:both`). A Hardcore one-life mode can wait for a later cut.
 5. **NIKKE DLC required (for now).** Co-op SP is only offered when **both** players own the Goddess of Victory: NIKKE collaboration DLC. Solo SP is unchanged. The Co-op run row stays hidden or refused with a clear reason if either side lacks NIKKE — including difficulties that solo SP allows without it. This keeps one support matrix (Scarlet / Omega assets available on both PCs) for the first co-op beta; a non-NIKKE co-op path can open later.
 6. **Always check against Ghidra.** For compatibility and stability, every co-op SP change that touches game behaviour (Boss Challenge start/transfer, wave/boss phase, spawn pairing, revive/respawn, hazard actors, DLC gates, rewards) must be verified against the pinned-build Ghidra DB of `SB-Win64-Shipping.exe` before it is treated as done. Do not invent offsets, call sites, or net-mode assumptions from Lua alone. Match Online's existing practice: name the `FUN_*` / globals used, confirm they still match the supported Steam build, and refuse or feature-gate when the image disagrees.
-7. **Shared UE4SS 1.3 stack.** Co-op SP targets the same UE4SS as Stellar Blade Online: **Stellar Blade UE4SS 1.3** (the package Online already requires). The SP port onto that stack **already works**; it still needs to be copied to the author's main PC and committed/published (expected the same day as this note). Co-op bridging assumes that published 1.3 SP build — do not plan a dual-UE4SS or “port Online onto 148” path.
+7. **Shared UE4SS 1.3 stack.** Co-op SP targets the same UE4SS as Stellar Blade Online: **Stellar Blade UE4SS 1.3** (Nexus 2952, Git SHA `08a0733`). The working port lives on branch `sp-ue4ss13-port` in private repo `schizo-effective2323/schizo-effective-mods` (grind 14 / lua352: 25 wins in 25 runs, 0 crashes on 1.3). Co-op bridging assumes that 1.3 SP build co-loaded with Online — do not plan a dual-UE4SS or “port Online onto 148” path.
 
 ## What Survival Protocol is today
 
@@ -36,7 +36,7 @@ SP is a solo title-screen mode that wraps the game's Boss Challenge arenas:
 | Presentation | Own menu, announcer, music helper, loading screens, boss darkening |
 | Progress | Separate from story saves; CNS outfits and music unlocks |
 | Engine seat | Boss Challenge HARD tab; wave counter follows the game's challenge waves |
-| Stack | Stellar Blade UE4SS 1.3 (same as Online; was Nexus 148 / 3.1.0 — 1.3 port works, publish pending); CNS for outfits; NIKKE DLC for Omega |
+| Stack | Stellar Blade UE4SS 1.3 (Nexus 2952; also still runs #148); installs as `ue4ss/Mods/RoguelikeMode` + `RoguelikeMode_P` pak; CNS for outfits; NIKKE for Omega |
 
 Stellar Blade Online already borrowed SP's combat helpers (aggro wake, AI adopt, stuck teleport, spawn spread, death-screen watch, body validity). Night Operation and `coop challenge` are **not** SP. They are a shorter custom-spawn survival mode for two Steam-linked players, with SP-shaped challenge names and some of the same Lua ideas.
 
@@ -61,7 +61,7 @@ Gaps relative to SP:
 - Night line masks cover **5 waves × 8 slots**. SP needs **20 waves**, bosses, modifiers, hazards, and a longer phase vocabulary.
 - Only the Shooting Range challenge is marked `coop=true` today; swarm / skulls / gauntlet stay solo.
 - Steam link is **two players**. SP's fantasy can stay at two for a first co-op cut.
-- SP on UE4SS 1.3 already works locally; public/main-PC publish is pending so both mods can share one documented install.
+- SP on UE4SS 1.3 is on GitHub (`sp-ue4ss13-port`); co-load with Online on that build is the remaining smoke before bridge coding.
 - Boss Challenge itself has **no multiplayer replication**. The game never ships a dual-client challenge run.
 
 ## Architecture options
@@ -91,7 +91,7 @@ Keep SP's identity (title entry, difficulties, modifiers, hazards, rewards). Whe
 ```
 
 **Pros:** Reuses SBO's hardest infrastructure; SP stays the product the player opens; outfit/music progress can stay in SP's files.  
-**Cons:** Still fights Boss Challenge's single-player guts; second-run arena crashes become a two-PC problem; needs the published SP 1.3 build on both players' installs.
+**Cons:** Still fights Boss Challenge's single-player guts; guest must suppress SP's autonomous wave kicks; second-run arena crashes become a two-PC problem; EventSpawnId is 0 on Hard so pairing cannot use spawn keys.
 
 ### B — Rebuild SP waves on Night Operation's spawn path
 
@@ -219,11 +219,48 @@ A spike or PR that only “worked once in game” without a Ghidra cross-check i
 
 ### UE4SS and packaging — locked direction
 
-**Target:** one install on **Stellar Blade UE4SS 1.3**, with Survival Protocol and Stellar Blade Online loaded together. That matches Online's current requirement and removes the old dual-stack fork (SP on Nexus 148 vs Online on 1.3).
+**Target:** one install on **Stellar Blade UE4SS 1.3** (Nexus 2952), with:
 
-**Status (author):** the SP UE4SS 1.3 port **already works**. Transfer to the main PC and the GitHub/Nexus commit are still pending (expected today). Once that build is the one players install, co-op bridging can use a single documented stack. Until then, treat “SP 1.3 on main + Online” as the co-load smoke to confirm when the files land.
+| Piece | Path |
+| --- | --- |
+| UE4SS | Stellar Blade UE4SS 1.3 (`08a0733`) |
+| Survival Protocol | `ue4ss/Mods/RoguelikeMode/` (Scripts: `main.lua` lua352, `spmenu.lua` v61, `hazards.lua`, `announcer.lua`) + Announcer/Music helpers |
+| SP data | `Content/Paks/~mods/RoguelikeMode_P.*` |
+| Stellar Blade Online | `ue4ss/Mods/StellarCoop/` |
+| Outfits | CNS (DekCNS) as SP already requires |
 
-**Unsupported:** mixing SP-on-148 with Online-on-1.3 in one game folder. If someone still has the old SP UE4SS, Co-op run stays refused with a clear version notice. Ghidra checks stay on Online's pinned Steam build either way.
+**Status (checked 2026-10-31):** branch `sp-ue4ss13-port` @ `fbbbd949` in `schizo-effective2323/schizo-effective-mods`. Grind 14 on 1.3: fresh progress → all unlocks, 25/25 wins, 0 crashes. SP detects UE4SS SHA from `UE4SS.log`; on `08a0733` it uses **ONELOOP** (one `LoopInGameThreadAfterFrames` pump, no re-queue into UE4SS's async timer list — the 1.3 crash fix). `#148` (`d3d1004`) still runs; unknown builds get a menu warning recommending 2952.
+
+**Unsupported:** SP built only for old 148 semantics without the 1.3 timer path, mixed with Online on 1.3, or two different UE4SS trees in one folder. Ghidra checks stay on Online's pinned Steam build.
+
+### How SP 1.3 and Online fit together (checkout notes)
+
+Source of truth for solo SP behaviour on this stack: `SurvivalProtocol/ue4ss_RoguelikeMode/Scripts` on `sp-ue4ss13-port`.
+
+**Joint start maps cleanly onto SP's existing arm path.** Host picks a difficulty in `spmenu`; SP opens Boss Challenge via the lobby's `BossChallengeButtonAcceptAction()` (no longer hooked — the mod calls it). Co-op adds: guest accept → **both** clients arm the same difficulty and accept → shared ready after `ClientRestart` / arena load-in / GET READY. SP's stage-mismatch rule (lua344: loaded map decides difficulty — E04/E05/Matrix_XI/B07/C05/NK_*) must run on both sides; the host's `sp` line should carry the intended difficulty **and** abort if the guest's loaded stage disagrees.
+
+**Rewards already match the locked design.** `spmenu.M.record(d, what, wave)` writes local `progress.txt` (`clears_*`, `subwins_*`, bests). On co-op success each PC calls the same record path against its own file — no progress sync over the link.
+
+**Partner revive is the invasive SP change.** Solo SP ends the run on Eve's death screen (`WB_MainHUD_Dead`, with a 20 s post-load delay on 1.3). Co-op must pause that fail path while Online's interact-hold revive runs, then resume the SP wave loops without treating the down as a clear/fail.
+
+**The hard co-op seam is wave authority vs SP's kick engine.** Solo SP aggressively advances Boss Challenge phases (player fast kick: arena empty 6 s + 10 s after count; boss gate; ACTIVATE for unaware arrivals; stall resync). That is correct for one client. For two clients:
+
+- **Host** keeps kick / watchdog / ACTIVATE (owns phase).
+- **Guest** must enter a **follower mode**: still tracks bodies for shared-enemy pairing and local presentation, but **must not** kick phases, resync counters, or start boss phases on its own. Otherwise guest kicks will fight the host's night/`sp` line.
+
+**Enemy pairing cannot use EventSpawnId.** SP's own SPAWNINFO probe (Hard): `BroadcastSpawnInfo.EventSpawnId` is **0** on challenge bodies (Tags still carry things like `Water,RL_Mob`). Co-op pairing should use `(charId / class, arrival order in wave, gate/spot)` inside a host wave mark — same conclusion as the earlier Option A risk, now confirmed in the live 1.3 scripts. Ghidra follow-up (SP lua350 notes): InteractionState is interaction-system; battle awareness leads are `ESBActorCondition` / MetaAI — check those before inventing guest ACTIVATE sync.
+
+**Co-load risks to smoke before Phase 1 code:**
+
+| Risk | Why |
+| --- | --- |
+| Game-thread load | SP ONELOOP every frame + Online's per-frame / 250 ms loops + CNS hooks |
+| Death / HUD watches | Both mods touch death UI; partner revive needs one owner |
+| Title input | SP owns Boss Challenge overlay; Online F5 / pad View menu must not steal SP menu focus mid-arm |
+| Second-run leak | SP RESTART REQUIRED; either client leaking aborts the shared run |
+| DekCNS | Outfit unlocks still need CNS; mid-session unlocks still need a game restart to appear in CNS |
+
+### Second-run / arena memory crash
 
 ### Second-run / arena memory crash
 
@@ -241,8 +278,9 @@ Announcer/music stay local. No sync required beyond "both got the same modifier/
 - Modifier/hazard classification sheet.
 - Protocol sketch for the `sp` line (ask → accept → transferring → ready → count → wave…, down/revive words, plus failure words).
 - Support matrix (**UE4SS 1.3 shared**, **NIKKE required for co-op**, CNS, Online protocol version, **pinned Ghidra / game build**).
-- Gate: published SP 1.3 on main + Online co-load confirmed (port itself already works).
-- Ghidra pass list for Phase 1 transfer + Phase 2 spawn id fields (addresses named before implementation).
+- Gate: SP 1.3 (`sp-ue4ss13-port`) + Online co-load smoke on one PC (title, SP menu, Online F5, one solo SP run).
+- Spec guest **follower mode** (no phase kicks) and host `sp` line fields from the checkout.
+- Ghidra pass list for Phase 1 transfer + Phase 2 pairing (EventSpawnId confirmed 0 — focus class/order/gate + MetaAI/condition enums).
 
 ### Phase 1 — Host start + joint transfer
 
@@ -318,13 +356,13 @@ Night Operation remains the place to harden shared enemies and revive. SP co-op 
 
 ## Suggested next concrete steps
 
-**0. Publish SP on UE4SS 1.3** (works locally; main-PC transfer + GitHub/Nexus commit expected today), then confirm SP + Online load together on that published build.
+**0. Co-load smoke** (SP 1.3 is on GitHub): one game folder with UE4SS 1.3 + `RoguelikeMode` from `sp-ue4ss13-port` + `StellarCoop`. Confirm title entry, SP menu, Online F5, and one solo SP run without fighting over input or timers.
 
 **1. Ghidra + pairing spike** (after 0), not a feature branch merge:
 
-1. On the pinned `SB-Win64-Shipping.exe` DB, locate Boss Challenge / MultiPlay / spawn-broadcast paths for arena start and enemy spawn ids (including whether EventSpawnId is copied outside net modes 1–2). Write down the `FUN_*` names and what each client would see in a standalone game.
-2. With Online linked on two PCs (or one PC + loopback where possible), load Boss Challenge arena E-04 on both.
-3. Log every enemy spawn for 3 waves: charId, time, position, any key/id fields Ghidra said to expect, controller presence.
-4. Decide pairing strategy from the Ghidra notes + that log before writing protocol or menu work.
+1. On the pinned `SB-Win64-Shipping.exe` DB, name Boss Challenge accept / arena travel, and the condition/MetaAI paths SP's ACTIVATE already probes (`ESBActorCondition`, stealth/battle). Treat EventSpawnId as unusable on Hard (confirmed 0 in SP).
+2. With Online linked on two PCs, both arm the same difficulty and land in E-04 together (manual joint transfer rehearsal).
+3. Log three waves: class/charId, time, position, Tags, InteractionState / battle flags, gate/spot if any.
+4. Decide pairing + whether guest follower mode can keep Option A, or wave ownership must move to Option B custom spawns.
 
-That spike answers whether Option A is viable past early waves, or whether planning should pivot to Option B immediately. Do not skip the Ghidra pass for speed.
+Do not skip the Ghidra pass for speed.
