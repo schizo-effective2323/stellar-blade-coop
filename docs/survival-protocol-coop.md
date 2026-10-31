@@ -14,7 +14,7 @@ The main fork in the road is whether SP keeps riding the game's Boss Challenge m
 
 These are decided for the first co-op cut:
 
-1. **SP menu owns Host / Join.** The Survival Protocol menu shows **Host co-op game** and **Join co-op game**. Those buttons drive Stellar Blade Online’s existing Steam lobby path (invite / friends / join code) — players do not have to open Online’s F5 menu first. Only the Steam host can then start the shared run; the guest cannot.
+1. **SP menu owns Host / Join for Steam friends.** The Survival Protocol menu shows **Host co-op game** and **Join co-op game**. When you and a Steam friend are both online, those buttons use Stellar Blade Online’s friends lobby / invite path to link you — no F5 menu first. Only the Steam host can then start the shared run; the guest cannot.
 2. **Transfer together.** After Steam has linked both players on the title / SP menu, the host picks the difficulty and starts. Once the guest accepts the run, **both clients load that arena together**, then share GET READY and wave 1. Neither player is already fighting when the other arrives.
 3. **Personal rewards on a shared success.** If the run succeeds, **each** player unlocks whatever reward **their own** SP progress is currently eligible for on that difficulty (colourway, accessory, music, next-tier unlock — whatever solo SP would have granted them for that clear). The host's progress does not overwrite the guest's, and vice versa. A player who already earned that clear's reward gets nothing new; a player earlier on the track still advances. Failures unlock nothing on either PC.
 4. **Partner revive.** A downed EVE waits for her partner (Night Operation-style interact hold). No self-revive in v1. The run fails when both are down with no revive under way (`failed:both`). A Hardcore one-life mode can wait for a later cut.
@@ -73,11 +73,13 @@ Keep SP's identity (title entry, difficulties, modifiers, hazards, rewards). Whe
 ```
   both on title → open Survival Protocol menu
            |
-  one player: Host co-op game  → Online creates Steam lobby + invite / code
-  other:      Join co-op game  → Online joins (invite / friends / code)
+  Steam friends, both online, both on SP menu
+           |
+  one: Host co-op game → Online friends lobby + Steam invite
+  other: Join co-op game → accept invite / find friend's lobby
            |
   Steam link completes (title-screen join allowed for SP)
-  (refuse if either side lacks NIKKE or Online)
+  (refuse if not friends, offline, missing NIKKE, or Online missing)
            |
   host picks difficulty → Start co-op run
            |
@@ -143,10 +145,10 @@ Host rolls difficulty (already chosen), the two modifiers, and the hazard once a
 
 Players stay on the **title screen / Survival Protocol menu**. They do not open Online’s F5 menu first; SP’s buttons call the same Steam path Online already uses.
 
-1. **Both open the SP menu.** Solo **Start** stays as today. Two new rows (or equivalent buttons):
-   - **Host co-op game** — calls Online `coop host` (friends lobby + Steam invite dialog, or private / join-code per Online’s `who_can_join` setting).
-   - **Join co-op game** — calls Online `coop join` / join-code / accept held invite (same as Online’s join path).
-2. **Steam completes the link** through Online’s native worker (`steam_api64` lobby + channels). SP does not invent a second Steam stack.
+1. **Both open the SP menu** while online on Steam as **friends**. Solo **Start** stays as today. Two new rows (or equivalent buttons), enabled when Online is present and this PC owns NIKKE:
+   - **Host co-op game** — Online `coop host`: friends-only Steam lobby + invite dialog so a Steam friend can join. (Online’s private / join-code modes remain available later; v1 SP co-op is **Steam friends**.)
+   - **Join co-op game** — Online `coop join`: find a Steam friend who is hosting Stellar Blade / an SP lobby, or accept their Steam invite. Same friends path Online already uses.
+2. **Steam completes the link** through Online’s native worker (`steam_api64` lobby + channels). If you are not Steam friends, or either side is offline, Host/Join do not form an SP session (clear reason). SP does not invent a second Steam stack or its own matchmaking.
 3. **Title-screen join is required for SP.** Today Online holds invites until a save sets `world=1` so a launch never joins from the title. Co-op SP needs an explicit exception: while the SP menu is up (or an SP co-op lobby tag is set), join / invite accept may complete on the title. Non-SP Online sessions keep the existing world-loaded gate.
 4. **Lobby tag.** Prefer tagging the lobby for SP (e.g. extend the `stellarcoop` metadata, or a sibling key) so a casual Online host invite is not confused with an SP co-op host. Version / build refusal stays as Online does today.
 5. **After linked:** host picks difficulty and chooses **Start co-op run**. Guest gets ask (accept / refuse). Refuse reasons: not ready, restart-required, already in a run, NIKKE missing on either side, Online missing / link lost.
