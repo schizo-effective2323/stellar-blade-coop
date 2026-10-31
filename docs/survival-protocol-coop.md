@@ -19,6 +19,7 @@ These are decided for the first co-op cut:
 3. **Personal rewards on a shared success.** If the run succeeds, **each** player unlocks whatever reward **their own** SP progress is currently eligible for on that difficulty (colourway, accessory, music, next-tier unlock — whatever solo SP would have granted them for that clear). The host's progress does not overwrite the guest's, and vice versa. A player who already earned that clear's reward gets nothing new; a player earlier on the track still advances. Failures unlock nothing on either PC.
 4. **Partner revive.** A downed EVE waits for her partner (Night Operation-style interact hold). No self-revive in v1. The run fails when both are down with no revive under way (`failed:both`). A Hardcore one-life mode can wait for a later cut.
 5. **NIKKE DLC required (for now).** Co-op SP is only offered when **both** players own the Goddess of Victory: NIKKE collaboration DLC. Solo SP is unchanged. The Co-op run row stays hidden or refused with a clear reason if either side lacks NIKKE — including difficulties that solo SP allows without it. This keeps one support matrix (Scarlet / Omega assets available on both PCs) for the first co-op beta; a non-NIKKE co-op path can open later.
+6. **Always check against Ghidra.** For compatibility and stability, every co-op SP change that touches game behaviour (Boss Challenge start/transfer, wave/boss phase, spawn pairing, revive/respawn, hazard actors, DLC gates, rewards) must be verified against the pinned-build Ghidra DB of `SB-Win64-Shipping.exe` before it is treated as done. Do not invent offsets, call sites, or net-mode assumptions from Lua alone. Match Online's existing practice: name the `FUN_*` / globals used, confirm they still match the supported Steam build, and refuse or feature-gate when the image disagrees.
 
 ## What Survival Protocol is today
 
@@ -200,6 +201,21 @@ Classify each into:
 
 Document the 50/25 list into those buckets before coding sync. Unknown or unstable ones stay disabled in co-op until classified.
 
+### Ghidra verification (process lock)
+
+Online already pins native work to a Ghidra reverse of the supported Steam build (comments and tests cite `FUN_*` addresses and “pinned build” layouts). Co-op SP inherits that rule for the whole path, not only the native DLL:
+
+| Before coding or merging… | Check in Ghidra |
+| --- | --- |
+| Joint transfer into a Boss Challenge arena | How the title / Shortcut / Boss Challenge load starts a challenge map; what must be true on both clients |
+| Wave counter / merged waves / boss arrival | Which functions advance challenge waves and boss schedules; what is local-only vs replicated |
+| Enemy pairing ids | Whether challenge spawns write `BroadcastSpawnInfo` / EventSpawnId outside net modes 1–2 (Night Operation already notes the solo gap) |
+| Partner revive | In-place respawn / death-screen paths already used by Night Operation revive |
+| Hazards and enemy mutators | Actors and scale hooks that both worlds must apply from one host id |
+| NIKKE / Omega gate | How the game (or SP) detects DLC ownership in this build |
+
+A spike or PR that only “worked once in game” without a Ghidra cross-check is incomplete for co-op SP. When Ghidra and in-game disagree, trust the binary for offsets and re-test in game for behaviour.
+
 ### UE4SS and packaging
 
 SP and Online do not share a supported UE4SS story today. Co-op SP needs one explicit support matrix, for example:
@@ -221,10 +237,11 @@ Announcer/music stay local. No sync required beyond "both got the same modifier/
 
 ### Phase 0 — Spec lock
 
-- **Start flow, personal rewards, partner revive, and NIKKE-only co-op are locked.**
+- **Start flow, personal rewards, partner revive, NIKKE-only co-op, and Ghidra verification are locked.**
 - Modifier/hazard classification sheet.
 - Protocol sketch for the `sp` line (ask → accept → transferring → ready → count → wave…, down/revive words, plus failure words).
-- Support matrix (UE4SS, **NIKKE required for co-op**, CNS, Online protocol version).
+- Support matrix (UE4SS, **NIKKE required for co-op**, CNS, Online protocol version, **pinned Ghidra / game build**).
+- Ghidra pass list for Phase 1 transfer + Phase 2 spawn id fields (addresses named before implementation).
 
 ### Phase 1 — Host start + joint transfer
 
@@ -302,8 +319,9 @@ Night Operation remains the place to harden shared enemies and revive. SP co-op 
 
 A spike, not a feature branch merge:
 
-1. With Online linked on two PCs (or one PC + loopback where possible), load Boss Challenge arena E-04 on both.
-2. Log every enemy spawn for 3 waves: charId, time, position, any key/id fields, controller presence.
-3. Decide pairing strategy from that log before writing protocol or menu work.
+1. **Ghidra first:** on the pinned `SB-Win64-Shipping.exe` DB, locate Boss Challenge / MultiPlay / spawn-broadcast paths for arena start and enemy spawn ids (including whether EventSpawnId is copied outside net modes 1–2). Write down the `FUN_*` names and what each client would see in a standalone game.
+2. With Online linked on two PCs (or one PC + loopback where possible), load Boss Challenge arena E-04 on both.
+3. Log every enemy spawn for 3 waves: charId, time, position, any key/id fields Ghidra said to expect, controller presence.
+4. Decide pairing strategy from the Ghidra notes + that log before writing protocol or menu work.
 
-That spike answers whether Option A is viable past early waves, or whether planning should pivot to Option B immediately.
+That spike answers whether Option A is viable past early waves, or whether planning should pivot to Option B immediately. Do not skip step 1 for speed.
