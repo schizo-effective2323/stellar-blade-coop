@@ -315,6 +315,31 @@ SP already warns RESTART REQUIRED between solo runs. For co-op, any client that 
 
 Announcer/music stay local. No sync required beyond "both got the same modifier/hazard ids so VO lines match."
 
+## Phase 1 as built (2026-10-31)
+
+Phase 1 lives in Survival Protocol (`coop.lua` + main lua392 + spmenu v62, branch `sp-coop-phase1` in
+`schizo-effective2323/schizo-effective-mods`). Stellar Blade Online needs **no change** for it: the bridge only uses
+files Online already has.
+
+| Need | How Phase 1 does it |
+| --- | --- |
+| Host / Join from the SP menu | SP writes `host` / `join` / `leave` to `StellarCoop/coop-request.txt` (temp file + rename, never over an unread request), the same words as `coop host` / `coop join` / `coop leave`. Keys on the SP menu: **H** host, **J** join, **L** leave. |
+| Who is linked | SP reads `StellarCoop/coop-status.txt`: `link=host/guest`, `friend=1 0 <name>`. |
+| The `sp` line | Rides Online's existing night line (`coop-night.txt` out, the status's `night=` in) with `sp` as the second word: `h sp <ver> <n> <state> <run> <diff> <omega> <boss1> <boss2> <wave> <mk> <mtype> <malias>` from the host, `g sp <ver> <n> <state> <run> <diff> <wave> <why>` from the guest. Night Operation's decoders refuse these lines and only listen during a Night Operation run, so no protocol bump. The status keeps only the last line, so both lines carry the whole state. |
+| Title-screen join | Not needed for Phase 1: J sends `join`, which Online never holds (only overlay invite accepts wait for `world=1`). Accepting the Steam overlay invite on the title still waits; the menu tells the friend to press J instead. |
+| Joint start | Host picks a difficulty and presses Start. The guest's SP menu moves onto the same difficulty (or Omega) and asks her to press Start. A guest who has not unlocked it refuses (`locked`); one who starts another difficulty plays solo (`diff`). |
+| Same bosses | The host's two boss pool keys ride the line; the guest's SP uses them when its arena loads (or as soon as they arrive, before the sub-boss). |
+| Ready gate | Each side reports `arena` once EVE is on the floor; both show PARTNER READY. Waves are not held: the game starts wave 1 on each PC by itself. |
+| Follower mode (Phase 2 prep) | Behind SP's debugflag `coopfollow`: the guest starts none of her own wave / boss phase events and starts the host's (counted on the line as `mk` / `mtype` / `malias`). Off by default until two-PC tests. |
+
+Not in Phase 1: shared enemies, wave sync, partner revive, shared modifiers / hazards (each PC still rolls its own),
+the NIKKE ownership check (SP 0.1.5 already requires NIKKE for the whole mod), a lobby tag for SP sessions, and pad
+buttons for Host / Join (keyboard only for now). Tested with `SurvivalProtocol/tests/coop_test.lua` (two bridges and a
+fake worker); not yet played on two PCs.
+
+Ghidra check for Phase 1: the installed `SB-Win64-Shipping.exe` matches the pinned build of the reference database. The
+Boss Challenge accept / start lookup is still running; Phase 1 is not done until it agrees with the path above.
+
 ## Phased delivery
 
 ### Phase 0 — Spec lock
