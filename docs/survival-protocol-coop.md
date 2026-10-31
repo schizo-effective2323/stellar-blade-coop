@@ -317,13 +317,14 @@ Announcer/music stay local. No sync required beyond "both got the same modifier/
 
 ### Phase 0 — Spec lock
 
-- **Start flow, personal rewards, partner revive, NIKKE-only co-op, Ghidra verification, and UE4SS 1.3 as the shared stack are locked.**
+- **Start flow (SP Host / Join → Steam link → joint transfer), personal rewards, partner revive, NIKKE-only co-op, Ghidra verification, and UE4SS 1.3 as the shared stack are locked.**
 - Modifier/hazard classification sheet.
-- Protocol sketch for the `sp` line (ask → accept → transferring → ready → count → wave…, down/revive words, plus failure words).
+- Protocol sketch for the `sp` line (link → ask → accept → transferring → ready → count → wave…, down/revive words, plus failure words).
 - Support matrix (**UE4SS 1.3 shared**, **NIKKE required for co-op**, CNS, Online protocol version, **pinned Ghidra / game build**).
-- Gate: SP **0.1.5-beta / lua391** (`sp-ue4ss13-port` @ `d3068342`) + Online co-load smoke on one PC (title, SP menu, Online F5, one solo SP run).
-- Spec guest **follower mode** (no phase / early kicks, no resync, no removals/invents, host-owned stray/air/boss-centre) and host `sp` line fields.
-- Ghidra pass list for Phase 1 transfer + Phase 2 pairing (EventSpawnId confirmed 0 — focus class/order/gate + MetaAI/condition enums).
+- Spec Online **title-join exception** for SP lobbies (today invites wait for `world=1`).
+- Gate: SP **0.1.5-beta / lua391** + Online co-load smoke on one PC (title, SP menu with Host/Join placeholders or Online F5, one solo SP run).
+- Spec guest **follower mode** and host `sp` line fields.
+- Ghidra pass list for Phase 1 transfer + Phase 2 pairing (EventSpawnId confirmed 0).
 
 ### Phase 1 — SP Host / Join + joint transfer
 
@@ -409,6 +410,6 @@ Night Operation remains the place to harden shared enemies and revive. SP co-op 
 3. Log three waves: class/charId, time, position, Tags, InteractionState / battle flags, gate/spot if any.
 4. Decide pairing + whether guest follower mode can keep Option A, or wave ownership must move to Option B custom spawns.
 
-**2. First code cut after 0–1:** guest follower hook in SP + Online `sp` ask/accept/transfer (Phase 1). Do not start Phase 2 wave sync until follower mode is proven.
+**2. First code cut after 0–1:** SP menu **Host / Join** wired to Online Steam host/join; Online title-join exception for SP; then guest follower hook + Start co-op run / joint transfer (Phase 1). Do not start Phase 2 wave sync until follower mode is proven.
 
 Do not skip the Ghidra pass for speed.
