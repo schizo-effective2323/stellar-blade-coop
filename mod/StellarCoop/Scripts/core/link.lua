@@ -585,6 +585,8 @@ function Link.new(folder,fs)
             if not seen[line] and not line:find('^peer=') and not line:find('^fight=') and not line:find('^mate=')
                 and not line:find('^life=')
                 and not line:find('^night=') -- nightop/run.lua logs each night line itself.
+                -- Friends in this game (Survival Protocol's co-op menu reads them): names stay out of the log.
+                and not line:find('^ingame')
                 -- Their spawns= moves with every enemy; cut/enemy.lua logs what it reads for each.
                 and not line:find('^lion=') and not line:find('^gardener=') and not line:find('^tendril=')
                 and not line:find('^bolt=') and not line:find('^mxiii=') then
