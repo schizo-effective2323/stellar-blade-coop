@@ -337,8 +337,12 @@ the NIKKE ownership check (SP 0.1.5 already requires NIKKE for the whole mod), a
 buttons for Host / Join (keyboard only for now). Tested with `SurvivalProtocol/tests/coop_test.lua` (two bridges and a
 fake worker); not yet played on two PCs.
 
-Ghidra check for Phase 1: the installed `SB-Win64-Shipping.exe` matches the pinned build of the reference database. The
-Boss Challenge accept / start lookup is still running; Phase 1 is not done until it agrees with the path above.
+Ghidra check for Phase 1 (2026-10-31): the installed `SB-Win64-Shipping.exe` matches the pinned build of the reference
+database. Phase 1 adds no new engine call: the menu move, the player's own Start and the Boss Challenge open are the calls SP
+already makes, and follower phase events use SP's existing zone-event path. The lookup confirmed that `EventSpawnId` is
+filled only by the game's network actor-register / broadcast path, so Phase 2 pairing cannot use it (as noted above). The
+Boss Challenge start / travel functions are not named yet (their names are not plain strings in the exe); that lookup is
+part of the Phase 2 Ghidra pass.
 
 ## Phased delivery
 
