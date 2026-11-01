@@ -640,7 +640,7 @@ struct Request {
   bool rule = false;                     // nightop rule.
   Who who = Who::friends;                // host: who can join the lobby.
   bool code = false;                     // join: with a code; lobby 0 when it is no valid code.
-  uint64_t player = 0;                   // allow, deny, remove: her SteamID.
+  uint64_t player = 0;                   // allow, deny, remove, invite <SteamID>: her SteamID.
   Fight fight = Fight::none;
   SavesAsk saves = SavesAsk::none; // saves: which.
   int slot = -1;                    // saves refresh: the slot; saves export: the co-op slot; 0 to 4. shortcut load:
@@ -837,6 +837,8 @@ inline Request parse_request(std::string text) {
     r.who = text.size() == 4 ? Who::friends : text[5] == 'c' ? Who::code : Who::invited;
   } else if (text == "invite")
     r.command = Command::invite;
+  else if (split(text, f, 2, nullptr) && f[0] == "invite" && number(f[1], r.player) && r.player)
+    r.command = Command::invite; // invite <SteamID>: that friend only.
   else if (text == "leave")
     r.command = Command::leave;
   else if (text == "report")
