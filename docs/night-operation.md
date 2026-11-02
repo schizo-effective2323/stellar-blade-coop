@@ -54,7 +54,8 @@ These parts do not exist yet:
 - A boss wave.
 
 The Steam link connects two players and shows each player the other's ghost (see [usage.md](usage.md)). The previews
-test how the cut mode's parts behave.
+test how the cut mode's parts behave. A separate plan covers turning Survival Protocol itself into a co-op mode that
+reuses this link: [survival-protocol-coop.md](survival-protocol-coop.md).
 
 ## The solo run (`coop nightop`)
 

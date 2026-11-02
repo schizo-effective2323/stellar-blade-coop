@@ -67,6 +67,9 @@ struct Fake {
   std::vector<uint64_t> accepted, closed, left;
   std::map<uint64_t, std::string> names = {{kFriend, "Kaanta"}, {kOther, "Third"}, {kStranger, "Stranger"}};
   std::map<uint64_t, uint64_t> friend_lobby; // A friend playing in a lobby.
+  std::set<uint64_t> not_playing;            // Friends in friend_lobby playing no game (or another).
+  std::map<uint64_t, int> state;             // EPersonaState, 0 (offline) when missing.
+  std::vector<std::pair<uint64_t, uint64_t>> invited; // InviteUserToLobby: lobby, friend.
   int invites = 0, released = 0, relay = 100, session_state = 3, session_ping = 42;
   int32_t pending = 4096; // Steam's pending unreliable bytes and queue time.
   int64_t queue_us = 25000;
@@ -122,7 +125,14 @@ template <int N> Api make_api() {
     return it->first;
   };
   a.friend_game = [](void *, uint64_t id, FriendGame *g) {
+    if (F.not_playing.count(id))
+      return false;
     *g = FriendGame{3489700, 0, 0, 0, F.friend_lobby.at(id)};
+    return true;
+  };
+  a.friend_state = [](void *, uint64_t id) { return F.state.count(id) ? F.state.at(id) : 0; };
+  a.invite_user = [](void *, uint64_t lobby, uint64_t id) {
+    F.invited.push_back({lobby, id});
     return true;
   };
   a.has_friend = [](void *, uint64_t id, int flags) {
@@ -985,6 +995,67 @@ int main() {
     F.friend_lobby[kFriend] = 7200;
     w.tick("join");
     assert(saw("joining lobby 7200 (friend Kaanta)"));
+  }
+  // Friends playing this game: listed on the status, rescanned every kInGameScanMs.
+  reset();
+  {
+    World w;
+    assert(w.link.ready(L"SB.exe") == Link::Ready::now);
+    w.tick();
+    assert(w.status().find("\ningame=0\n") != std::string::npos);
+    F.friend_lobby[kFriend] = 7200;
+    F.friend_lobby[kOther] = 0;
+    w.tick();
+    assert(w.status().find("\ningame=0\n") != std::string::npos); // Not rescanned yet.
+    w.tick("", 0, 0, kInGameScanMs);
+    const std::string s = w.status();
+    assert(s.find("\ningame=2\n") != std::string::npos);
+    assert(s.find("\ningame_friend=2002 7200 Kaanta\n") != std::string::npos);
+    assert(s.find("\ningame_friend=3003 0 Third\n") != std::string::npos);
+    F.friend_lobby.erase(kFriend);
+    w.tick("", 0, 0, kInGameScanMs);
+    assert(w.status().find("\ningame=1\n") != std::string::npos && w.status().find("Kaanta") == std::string::npos);
+    assert(w.status().find("\nonline=0\n") != std::string::npos);
+    // Online friends not in this game: listed apart (online lines); offline ones not at all.
+    F.friend_lobby[kFriend] = 0;
+    F.not_playing = {kFriend, kOther};
+    F.state[kFriend] = 1;
+    w.tick("", 0, 0, kInGameScanMs);
+    const std::string o = w.status();
+    assert(o.find("\ningame=0\n") != std::string::npos && o.find("\nonline=1\n") != std::string::npos);
+    assert(o.find("\nonline_friend=2002 Kaanta\n") != std::string::npos && o.find("Third") == std::string::npos);
+  }
+
+  // coop invite <SteamID>: no lobby yet, one is created and she is invited when it exists (no dialog); hosting, sent
+  // at once; not a friend, refused; a guest, refused.
+  reset();
+  {
+    World w;
+    assert(w.link.ready(L"SB.exe") == Link::Ready::now);
+    w.tick("invite 2002");
+    assert(saw("creating a friends-only lobby to invite Kaanta") && F.lobby_type == kFriendsOnly);
+    assert(F.invited.empty());
+    finish_all();
+    w.tick();
+    assert(F.invited.size() == 1 && F.invited[0].first == 5000 && F.invited[0].second == kFriend && F.invites == 0);
+    assert(saw("hosting lobby 5000: invite sent to Kaanta") && noticed(w.status(), "Hosting: invite sent to Kaanta."));
+    w.tick("invite 2002");
+    assert(F.invited.size() == 2 && saw("invite sent to Kaanta") && noticed(w.status(), "Invite sent to Kaanta."));
+    w.tick("invite 3003");
+    assert(F.invited.size() == 2 && saw("invite refused: 3003 is not a Steam friend"));
+    w.tick("invite");
+    assert(F.invites == 1); // The plain word still opens the overlay's dialog.
+  }
+  reset();
+  {
+    World w;
+    assert(w.link.ready(L"SB.exe") == Link::Ready::now);
+    w.tick("host");
+    w.tick("invite 2002"); // Asked while the host's lobby is being created: held, then sent instead of the dialog.
+    assert(saw("invite to Kaanta held until the lobby exists"));
+    finish_all();
+    w.tick();
+    assert(F.invited.size() == 1 && F.invites == 0);
   }
 
   // Leave while the lobby is being created: it is left at once, no invite dialog.
