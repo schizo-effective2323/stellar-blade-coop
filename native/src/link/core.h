@@ -95,6 +95,10 @@ constexpr uint64_t kHelloAgainMs = 10000;
 // A guest who lost the host's lobby tries again this long after the loss, and gives up at kRejoinMs (D5.10).
 constexpr int kRejoinTries = 3;
 constexpr uint64_t kRejoinAt[kRejoinTries] = {2000, 12000, 42000}, kRejoinMs = 60000;
+// Friends playing this game (the status's ingame lines, for Survival Protocol's co-op menu): a scan every
+// kInGameScanMs, at most kMaxInGame friends listed.
+constexpr uint64_t kInGameScanMs = 3000;
+constexpr size_t kMaxInGame = 16;
 constexpr size_t kNotices = 8, kMaxNotice = 300;
 // A joiner who is not the host's Steam friend waits this long for the host's answer, then is refused.
 constexpr uint64_t kApprovalMs = 60000;
@@ -434,6 +438,8 @@ public:
     if (session_request)
       on_session_request(session_request);
     poll_calls();
+    if (started_ && (!ingame_scanned_ || now_ - ingame_at_ >= kInGameScanMs))
+      scan_ingame();
     if (held_ && world_ && !create_call_ && !join_call_) {
       cancel_rejoin("a new invite"); // Held from before the loss: the player's later choice wins.
       uint64_t lobby = std::exchange(held_, 0);
@@ -737,6 +743,10 @@ public:
                     " relay=" + (relay_known_ ? std::to_string(relay_) : std::string("unknown")) +
                     " cb333=" + std::to_string(c.join_requested) + " cb505=" + std::to_string(c.data_update) +
                     " cb1251=" + std::to_string(c.session_request) + "\n";
+    // Friends playing this game (scan_ingame): their count, then one line each: Steam id, lobby (0 = none), name last.
+    s += "ingame=" + std::to_string(ingame_.size()) + "\n";
+    for (auto &f : ingame_)
+      s += "ingame_friend=" + std::to_string(f.id) + " " + std::to_string(f.lobby) + " " + f.name + "\n";
     s += std::string("link=") + (!lobby_ ? "none" : host_ ? "host" : "guest") + " lobby=" + std::to_string(lobby_) +
          (create_call_ || join_call_ ? " pending=1" : "") + (held_ ? " held=" + std::to_string(held_) : "") +
          (rejoin_.lobby ? " rejoin=" + std::to_string(rejoin_.tries) + "/3" : "") + "\n";
@@ -921,6 +931,22 @@ private:
     held_how_ = how;
     if (!world_)
       notice("Invite held: joining once your save has loaded.");
+  }
+
+  // Which immediate friends are playing this game right now, and the lobby each one is in (0 = none). Steam tells no
+  // game what a friend owns, only what she is playing. Read by Survival Protocol's co-op menu (status ingame lines).
+  void scan_ingame() {
+    ingame_at_ = now_;
+    ingame_scanned_ = true;
+    std::vector<InGame> found;
+    int n = api_.friend_count(friends_, kImmediateFriends);
+    for (int i = 0; i < n && found.size() < kMaxInGame; ++i) {
+      uint64_t id = api_.friend_by_index(friends_, i, kImmediateFriends);
+      FriendGame g{};
+      if (id && id != me_ && api_.friend_game(friends_, id, &g) && (g.game & 0xffffff) == app_)
+        found.push_back(InGame{id, g.lobby, name_of(id)});
+    }
+    ingame_ = std::move(found);
   }
 
   // A friend playing this game in a joinable lobby: the fallback when an accepted invite never reaches us.
@@ -1918,6 +1944,13 @@ private:
   uint32_t app_ = 0, build_ = 0;
   std::string tag_, my_name_;
   bool started_ = false;
+  struct InGame {
+    uint64_t id, lobby;
+    std::string name;
+  };
+  std::vector<InGame> ingame_;
+  uint64_t ingame_at_ = 0;
+  bool ingame_scanned_ = false;
   uint64_t create_call_ = 0, join_call_ = 0, joining_ = 0; // Pending call results, and the lobby being joined.
   bool cancel_ = false, report_ = false;                  // coop leave while a call was pending; coop report.
   uint64_t lobby_ = 0, host_id_ = 0;

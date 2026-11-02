@@ -986,6 +986,26 @@ int main() {
     w.tick("join");
     assert(saw("joining lobby 7200 (friend Kaanta)"));
   }
+  // Friends playing this game: listed on the status, rescanned every kInGameScanMs.
+  reset();
+  {
+    World w;
+    assert(w.link.ready(L"SB.exe") == Link::Ready::now);
+    w.tick();
+    assert(w.status().find("\ningame=0\n") != std::string::npos);
+    F.friend_lobby[kFriend] = 7200;
+    F.friend_lobby[kOther] = 0;
+    w.tick();
+    assert(w.status().find("\ningame=0\n") != std::string::npos); // Not rescanned yet.
+    w.tick("", 0, 0, kInGameScanMs);
+    const std::string s = w.status();
+    assert(s.find("\ningame=2\n") != std::string::npos);
+    assert(s.find("\ningame_friend=2002 7200 Kaanta\n") != std::string::npos);
+    assert(s.find("\ningame_friend=3003 0 Third\n") != std::string::npos);
+    F.friend_lobby.erase(kFriend);
+    w.tick("", 0, 0, kInGameScanMs);
+    assert(w.status().find("\ningame=1\n") != std::string::npos && w.status().find("Kaanta") == std::string::npos);
+  }
 
   // Leave while the lobby is being created: it is left at once, no invite dialog.
   reset();
