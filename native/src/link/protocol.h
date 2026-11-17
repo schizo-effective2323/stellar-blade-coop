@@ -946,7 +946,8 @@ struct Request {
   Who who = Who::friends;                // host: who can join the lobby. list: everyone (public) or friends.
   int players = kMaxMembers;             // host: the session's players at most (max_players), 2 to kMaxMembers.
   bool code = false;                     // join: with a code; lobby 0 when it is no valid code.
-  uint64_t player = 0;                   // allow, deny, remove, mute, unmute, block, unblock: her SteamID (0: all).
+  uint64_t player = 0;                   // allow, deny, remove, mute, unmute, block, unblock, invite <SteamID>: her
+                                         // SteamID (0: all; invite: 0 opens the dialog).
   Fight fight = Fight::none;
   SavesAsk saves = SavesAsk::none; // saves: which.
   int slot = -1;                    // saves refresh: the slot; saves export: the co-op slot; 0 to 4. shortcut load:
@@ -1254,6 +1255,8 @@ inline Request parse_request(std::string text) {
     r.command = Command::rules, r.text = f[1];
   } else if (text == "invite")
     r.command = Command::invite;
+  else if (split(text, f, 2, nullptr) && f[0] == "invite" && number(f[1], r.player) && r.player)
+    r.command = Command::invite; // invite <SteamID>: that friend only.
   else if (text == "leave")
     r.command = Command::leave;
   else if (text == "report")

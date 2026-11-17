@@ -94,6 +94,9 @@ struct Fake {
   std::set<std::pair<uint64_t, uint64_t>> sessions;
   std::map<uint64_t, std::string> names = {{kFriend, "Kaanta"}, {kOther, "Third"}, {kStranger, "Stranger"}};
   std::map<uint64_t, uint64_t> friend_lobby; // A friend playing in a lobby.
+  std::set<uint64_t> not_playing;            // Friends in friend_lobby playing no game (or another).
+  std::map<uint64_t, int> state;             // EPersonaState, 0 (offline) when missing.
+  std::vector<std::pair<uint64_t, uint64_t>> invited; // InviteUserToLobby: lobby, friend.
   int invites = 0, released = 0, relay = 100, session_state = 3, session_ping = 42;
   int32_t pending = 4096; // Steam's pending unreliable bytes and queue time.
   int64_t queue_us = 25000;
@@ -175,9 +178,14 @@ template <int N> Api make_api() {
   };
   a.friend_game = [](void *, uint64_t id, FriendGame *g) { // false for a friend not in the game, as Steam answers.
     const auto it = F.friend_lobby.find(id);
-    if (it == F.friend_lobby.end())
+    if (it == F.friend_lobby.end() || F.not_playing.count(id))
       return false;
     *g = FriendGame{3489700, 0, 0, 0, it->second};
+    return true;
+  };
+  a.friend_state = [](void *, uint64_t id) { return F.state.count(id) ? F.state.at(id) : 0; };
+  a.invite_user = [](void *, uint64_t lobby, uint64_t id) {
+    F.invited.push_back({lobby, id});
     return true;
   };
   a.has_friend = [](void *, uint64_t id, int flags) {

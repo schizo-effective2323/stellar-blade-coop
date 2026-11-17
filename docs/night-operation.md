@@ -64,6 +64,8 @@ These parts do not exist yet:
 
 The Steam link connects the players of a session and shows each player the others' ghosts (see [playing-with-a-friend.md](playing-with-a-friend.md)). The previews
 test how the cut mode's parts behave.
+A separate plan covers turning Survival Protocol itself into a co-op mode that reuses this link:
+[survival-protocol-coop.md](survival-protocol-coop.md).
 
 ## The solo run (`coop nightop`)
 

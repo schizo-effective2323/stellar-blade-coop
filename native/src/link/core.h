@@ -174,6 +174,13 @@ constexpr uint64_t kHelloAgainMs = 10000;
 // A guest who lost the host's lobby tries again this long after the loss, and gives up at kRejoinMs (D5.10).
 constexpr int kRejoinTries = 3;
 constexpr uint64_t kRejoinAt[kRejoinTries] = {2000, 12000, 42000}, kRejoinMs = 60000;
+// Friends playing this game (the status's ingame lines, for Survival Protocol's co-op menu): a scan every
+// kInGameScanMs, at most kMaxInGame friends listed.
+constexpr uint64_t kInGameScanMs = 3000;
+constexpr size_t kMaxInGame = 16;
+// Online friends not in this game (the status's online lines, for Survival Protocol's invite list): the same scan, at
+// most kMaxOnline listed.
+constexpr size_t kMaxOnline = 24;
 constexpr size_t kNotices = 8, kMaxNotice = 300;
 // A joiner who is not the host's Steam friend waits this long for the host's answer once her question is the first
 // one waiting, then is refused.
@@ -247,6 +254,8 @@ struct Api {
   bool (*friend_game)(void *, uint64_t, FriendGame *);
   bool (*has_friend)(void *, uint64_t, int);
   void (*invite_dialog)(void *, uint64_t);
+  int (*friend_state)(void *, uint64_t);         // EPersonaState: 0 offline.
+  bool (*invite_user)(void *, uint64_t, uint64_t); // A lobby invite straight to one friend.
   bool (*call_done)(void *, uint64_t, bool *);
   bool (*call_result)(void *, uint64_t, void *, int, int, bool *);
   uint64_t (*create_lobby)(void *, int, int);
@@ -318,6 +327,8 @@ template <class Resolve> std::string load(Api &api, Resolve resolve) {
   get(api.friend_game, "SteamAPI_ISteamFriends_GetFriendGamePlayed");
   get(api.has_friend, "SteamAPI_ISteamFriends_HasFriend");
   get(api.invite_dialog, "SteamAPI_ISteamFriends_ActivateGameOverlayInviteDialog");
+  get(api.friend_state, "SteamAPI_ISteamFriends_GetFriendPersonaState");
+  get(api.invite_user, "SteamAPI_ISteamMatchmaking_InviteUserToLobby");
   get(api.call_done, "SteamAPI_ISteamUtils_IsAPICallCompleted");
   get(api.call_result, "SteamAPI_ISteamUtils_GetAPICallResult");
   get(api.create_lobby, "SteamAPI_ISteamMatchmaking_CreateLobby");
@@ -620,6 +631,8 @@ public:
     if (session_request)
       on_session_request(session_request);
     poll_calls();
+    if (started_ && (!ingame_scanned_ || now_ - ingame_at_ >= kInGameScanMs))
+      scan_ingame();
     if (held_ && world_ && !create_call_ && !join_call_) {
       cancel_rejoin("a new invite"); // Held from before the loss: the player's later choice wins.
       uint64_t lobby = std::exchange(held_, 0);
@@ -1121,6 +1134,14 @@ public:
              (r.ping < 0 ? std::string("-") : std::to_string(r.ping)) + " " + (r.pal ? "1 " : "0 ") + word(r.zone) +
              " " + word(r.camp) + " " + word(r.rules) + " " + r.name + "\n";
     }
+    // Friends playing this game (scan_ingame): their count, then one line each: Steam id, lobby (0 = none), name last (after the session list, before the peers).
+    s += "ingame=" + std::to_string(ingame_.size()) + "\n";
+    for (auto &f : ingame_)
+      s += "ingame_friend=" + std::to_string(f.id) + " " + std::to_string(f.lobby) + " " + f.name + "\n";
+    // Online friends not in this game (scan_ingame): their count, then one line each: Steam id, name last.
+    s += "online=" + std::to_string(online_.size()) + "\n";
+    for (auto &f : online_)
+      s += "online_friend=" + std::to_string(f.id) + " " + f.name + "\n";
     for (auto &p : peers_)
       s += "peer=" + std::to_string(p.id) + " name=" + p.name + " hello=" + (p.hello_received ? "1" : "0") +
            " accepted=" + (p.accepted ? "1" : "0") + " compatible=" + (p.compatible ? "1" : "0") +
@@ -1433,6 +1454,68 @@ private:
       notice("Invite held: joining once your save has loaded.");
   }
 
+  // coop invite <SteamID>: Steam's lobby invite straight to that friend (her Steam chat and overlay show it). Hosting
+  // already: sent now. A guest: refused. Neither: a friends-only lobby is created first and she is invited the moment it
+  // exists (instead of the invite dialog). Only immediate friends.
+  void invite_friend(uint64_t id) {
+    const std::string name = name_of(id);
+    if (!api_.has_friend(friends_, id, kImmediateFriends)) {
+      event("invite refused: " + std::to_string(id) + " is not a Steam friend");
+      notice("Only Steam friends can be invited.");
+    } else if (lobby_ && host_) {
+      bool sent = api_.invite_user(mm_, lobby_, id);
+      event(std::string(sent ? "invite sent to " : "Steam refused the invite to ") + name);
+      notice(sent ? "Invite sent to " + name + "." : "Steam refused the invite to " + name + ".");
+    } else if (lobby_) {
+      event("invite to " + name + " ignored: a guest");
+      notice("You are in " + name_of(host_id_) + "'s game: leave it first.");
+    } else if (join_call_) {
+      event("busy: joining a lobby, invite to " + name + " ignored");
+    } else if (create_call_) {
+      invite_to_ = id;
+      event("invite to " + name + " held until the lobby exists");
+    } else {
+      cancel_rejoin("invite asked");
+      leave("hosting to invite");
+      drop_search("invite");
+      relay_only(false); // As host does: before a co-op lobby's first session opens.
+      hosting_ = Who::friends;
+      max_players_ = kMaxMembers;
+      create_call_ = api_.create_lobby(mm_, kFriendsOnly, max_players_);
+      if (!create_call_) {
+        event("Steam refused to create a lobby");
+        notice("Could not host: Steam refused.");
+        return;
+      }
+      invite_to_ = id;
+      event("creating a friends-only lobby to invite " + name);
+      notice("Hosting: inviting " + name + "...");
+    }
+  }
+
+  // Which immediate friends are playing this game right now, and the lobby each one is in (0 = none). Steam tells no
+  // game what a friend owns, only what she is playing. Read by Survival Protocol's co-op menu (status ingame lines).
+  void scan_ingame() {
+    ingame_at_ = now_;
+    ingame_scanned_ = true;
+    std::vector<InGame> found, online;
+    int n = api_.friend_count(friends_, kImmediateFriends);
+    for (int i = 0; i < n; ++i) {
+      uint64_t id = api_.friend_by_index(friends_, i, kImmediateFriends);
+      if (!id || id == me_)
+        continue;
+      FriendGame g{};
+      if (api_.friend_game(friends_, id, &g) && (g.game & 0xffffff) == app_) {
+        if (found.size() < kMaxInGame)
+          found.push_back(InGame{id, g.lobby, name_of(id)});
+      } else if (online.size() < kMaxOnline && api_.friend_state(friends_, id) != 0) {
+        online.push_back(InGame{id, 0, name_of(id)}); // Online, in another game or none: Steam's invite still reaches her.
+      }
+    }
+    ingame_ = std::move(found);
+    online_ = std::move(online);
+  }
+
   // A friend playing this game in a joinable lobby: the fallback when an accepted invite never reaches us.
   void join_friend() {
     int n = api_.friend_count(friends_, kImmediateFriends);
@@ -1506,6 +1589,8 @@ private:
       if (closed()) {
         event("invite ignored: a private session");
         notice("Nobody can join a private session.");
+      } else if (r.player) { // coop invite <SteamID>: one friend, no overlay (Survival Protocol's invite list).
+        invite_friend(r.player);
       } else if (lobby_) {
         api_.invite_dialog(friends_, lobby_);
         event("invite dialog opened");
@@ -2235,6 +2320,11 @@ private:
                   " without a join code: its high part is not 0x01860000; invite dialog opened");
             notice("Hosting without a join code (unexpected lobby id): invite a friend from the Steam overlay "
                    "(Shift+Tab).");
+          } else if (invite_to_) { // coop invite <SteamID> made this lobby: her invite, no dialog.
+            const std::string name = name_of(invite_to_);
+            bool sent = api_.invite_user(mm_, lobby_, invite_to_);
+            event("hosting lobby " + id + (sent ? ": invite sent to " : ": Steam refused the invite to ") + name);
+            notice(sent ? "Hosting: invite sent to " + name + "." : "Hosting, but Steam refused the invite to " + name + ".");
           } else {
             api_.invite_dialog(friends_, lobby_);
             event("hosting lobby " + id + ": invite dialog opened");
@@ -2244,6 +2334,7 @@ private:
       }
       cancel_ = false;
       seeking_.clear();
+      invite_to_ = 0;
     }
     failed = false;
     if (join_call_ && api_.call_done(utils_, join_call_, &failed)) {
@@ -3476,6 +3567,14 @@ private:
   uint32_t app_ = 0, build_ = 0;
   std::string tag_, my_name_;
   bool started_ = false;
+  struct InGame {
+    uint64_t id, lobby;
+    std::string name;
+  };
+  std::vector<InGame> ingame_, online_;
+  uint64_t invite_to_ = 0; // A friend to invite once the lobby being created exists (coop invite <SteamID>).
+  uint64_t ingame_at_ = 0;
+  bool ingame_scanned_ = false;
   uint64_t create_call_ = 0, join_call_ = 0, joining_ = 0; // Pending call results, and the lobby being joined.
   bool cancel_ = false, report_ = false;                  // coop leave while a call was pending; coop report.
   uint64_t lobby_ = 0, host_id_ = 0;

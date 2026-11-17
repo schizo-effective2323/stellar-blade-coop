@@ -576,6 +576,10 @@ int main() {
          parse_request("match search " + std::string(kMaxToken + 1, 'a') + " xion xion").command == Command::none);
   assert(parse_request("match search ffa " + std::string(kMaxToken, 'a') + " " + std::string(kMaxToken, 'b')).command ==
          Command::match);
+  assert(parse_request("invite").player == 0);
+  assert(parse_request("invite 76561198000000001").command == Command::invite &&
+         parse_request("invite 76561198000000001").player == 76561198000000001ull);
+  assert(parse_request("invite 0").command == Command::none && parse_request("invite x").command == Command::none);
   // coop mark: "mark" alone or with a text, cleaned like a chat line and cut to kMaxMark bytes; the text may clean
   // away.
   Request mk = parse_request("mark\n");

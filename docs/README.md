@@ -31,6 +31,7 @@ start with `coop`.
 | Page | What it covers |
 | --- | --- |
 | [Night Operation](night-operation.md) | The cut mode, the plan, the solo run, the co-op run, credits |
+| [Survival Protocol co-op](survival-protocol-coop.md) | The plan for a co-op Survival Protocol over the Steam link, and the friend list and invite lines it reads |
 | [Reward shop](night-operation-shop.md) | The points, the seven items, the shop screen, Roxanne's choices, the cut Shock Bolt |
 | [Challenges](challenges.md) | `coop challenge`, Target Practice, the Shooting Range alone and for two, score, best runs |
 | [Night Operation previews](night-operation-previews.md) | The probe (`coop no`), the recruiter (`coop recruiter`), how the original matchmaking is blocked |
