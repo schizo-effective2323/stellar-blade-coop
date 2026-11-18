@@ -95,6 +95,9 @@ setting is now on by default, the experimental ones included; most of them have 
   as a Doro. See [Doro races](docs/doro-races.md).
 - The bike (not tested in game yet): F3, D-pad Right held 1 s or `coop bike` puts EVE on a motorbike from the game's
   files, on any save. Your friend's ghost of you rides it too. See [The bike](docs/bike.md).
+- Gun mode (experimental, played alone only): G, a tap of D-pad Right or `coop gun` gives EVE the NIKKE DLC's rifle
+  outside its missions, on any save, as a third-person shooter. It is built on luke77's rifle stance. See
+  [Gun mode](docs/gun-mode.md).
 - Night Operation is a multiplayer wave-survival mode that Shift Up cut before release. `coop nightop` runs five timed
   waves alone or for both players, and the points buy items in a reward shop. `coop challenge` runs five short fights
   on the same code. See [Night Operation](docs/night-operation.md).
@@ -155,6 +158,10 @@ that mark them.
 The bike's riding model and its lean adapt code from [Eve On Wheels](https://www.nexusmods.com/stellarblade/mods/4165)
 by dCharisma1 (Nexus Mods, Stellar Blade mod 4165). With his written consent, the code is distributed here under the
 SBO License (see [NOTICE](NOTICE)). No asset, sound or animation of Eve On Wheels ships with the mod.
+
+Gun mode's rifle stance and laser sight are luke77's RifleStance, which Lucas (luke77) contributed to this project; they
+are kept in `gunmode/stance.lua` and `gunmode/laser.lua` as he wrote them, with the changes for gun mode marked. Gun mode
+around them is by SchizoEffective. [Gun mode: Credits](docs/gun-mode.md#credits) lists who wrote which part.
 
 Mother Sphere illustration by timediffer24 (https://x.com/timediffer24), given to this project; not covered by the SBO
 License. It is `mod/StellarCoop/Assets/MotherSphere.png`, shown in the guide the mod opens at its first run. The release

@@ -840,7 +840,7 @@ for _,file in ipairs({'session','partner','nightop','race','fight','cut','guide'
     end
 end
 -- Gun mode (gunmode/, logging [GM] lines): a module of its own, built and started inside a pcall so nothing in it
--- can stop the rest of the mod; it reads its own coop-settings.txt lines and finds its own paks. coop gun [status].
+-- can stop the rest of the mod; it reads its own coop-settings.txt lines and needs no pak. coop gun [status].
 local gunmode
 do
     local ok,e=pcall(function()

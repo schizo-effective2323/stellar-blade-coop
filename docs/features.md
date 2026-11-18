@@ -85,6 +85,11 @@ achievements, which cannot be taken back.
   items are off while she rides. Your friend's ghost of you and the match-lobby ghosts show the bike. Its riding model
   adapts dCharisma1's Eve On Wheels, with his consent. Nothing of the ride is saved. It is not tested in game yet (see
   [bike.md](bike.md)).
+- Gun mode: G, a tap of D-pad Right or `coop gun` gives EVE the NIKKE DLC's rifle outside its missions, on any save, as
+  a third-person shooter. With the rifle out she moves with luke77's rifle carry; RMB or LT held brings the camera over
+  her shoulder with a laser sight, and LMB or RT fires NIKKE rounds at full auto, with magazines and reloads. It changes
+  the game's tables in memory only and puts them back. It is experimental and has been played alone only (see
+  [gun-mode.md](gun-mode.md)).
 - Day and night: the sun moves across the sky on the maps that can show it, by one clock that every SBO player shares
   through UTC, so players on the same map see the same sky with no network message. One real hour is one game day; the
   night runs from about :52 to :12 past each hour. It runs in solo play, in online sessions, in the hall lobbies, in

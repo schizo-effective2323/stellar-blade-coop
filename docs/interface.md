@@ -237,7 +237,8 @@ A controller drives the co-op menu, the [join popups](#join-popups) and the
 pad) for 1 s to open the menu, in a world with the game's HUD shown, and hold it again to close the menu. View is also
 the game's Scan button, and the game still gets the press that opens the menu. The controller in the menu has not been
 tested in game yet. Outside the menu, D-pad Right held for 1 s puts EVE on the [bike](bike.md) or takes her off it, in
-a world with none of the mod's screens or the game's menus open; the game still gets the press as D-pad Right.
+a world with none of the mod's screens or the game's menus open; the game still gets the press as D-pad Right. A tap of
+D-pad Right (let go within 0.4 s) brings [gun mode](gun-mode.md)'s rifle out or puts it away.
 
 | Button | In the menu |
 | --- | --- |
