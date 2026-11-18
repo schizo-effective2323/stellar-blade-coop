@@ -25,11 +25,20 @@ local Probe=require('fight.gunmode.probe')
 local Ammo=require('fight.gunmode.ammo')
 local Overlay=require('fight.gunmode.overlay')
 
+local U=require('core.unreal')
+
 local GunMode={}
 
-local LIB='/Script/SB.Default__SBBlueprintLibrary'
 local SETTINGS='/Script/Engine.Default__InputSettings'
 local TRACE='/Script/Engine.Default__KismetSystemLibrary'
+
+-- The only zone event gun mode fires: kind 2 on the NIKKE shot's row (Data.row('Fire'): the borrowed row or its spare).
+function GunMode.allowed(kind,name) return kind==2 and name~=nil and name==Data.row('Fire') end
+local function find_name(t) return FName(t,EFindName.FNAME_Find) end -- None (index 0) when not a name yet.
+local function zone_event(kind,name)
+    assert(GunMode.allowed(kind,name),'zone event refused')
+    U.find('/Script/SB.Default__SBBlueprintLibrary'):CreateSBZoneEvent(kind,find_name(name))
+end
 
 local function read_all(path)
     local f=io.open(path,'rb')
@@ -119,9 +128,7 @@ function GunMode.new(env)
     local ammo=Ammo.new(g,cfg,function(v) data.cool(v) end,on_reload,nil)
 
     local function fire_row(row)
-        local lib=StaticFindObject(LIB)
-        if not g.valid(lib) then return false end
-        local ok,err=pcall(function() lib:CreateSBZoneEvent(2,FName(row)) end)
+        local ok,err=pcall(zone_event,2,row)
         if not ok then g.log('row '..row..' failed: '..tostring(err)) end
         return ok
     end
