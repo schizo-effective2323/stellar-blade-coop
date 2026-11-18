@@ -168,7 +168,7 @@ with tempfile.TemporaryDirectory() as tmp:
     files = install.package('v', dll)
     docs = {'INSTALL.md', 'LICENSE', 'NOTICE', 'EXCLUDED-PARTIES.md', 'CHANGELOG.md', 'SHA256SUMS.txt'}
     shipped = {'enabled.txt', 'StellarCoop.dll', *docs,
-               'Assets/MotherSphere.png',
+               'Assets/MotherSphere.png', 'Scripts/gunmode/nikke_rifle.png',
                *(f'Scripts/{name}.lua' for name in ('commands/guide', 'commands/keys', 'ui/guide', 'ui/guide_text')),
                *(f'Scripts/{name}.lua'
                  for name in ('bike/model', 'bike/ride', 'commands/bike',
@@ -176,6 +176,8 @@ with tempfile.TemporaryDirectory() as tmp:
                               'commands/scenes', 'commands/session', 'commands/story', 'commands/world', 'core/keybind', 'core/link', 'core/mask', 'core/pak_gate', 'core/settings_file',
                               'core/unreal', 'core/ue4ss_settings', 'cut/chainspin', 'cut/devmenu', 'cut/emote', 'cut/enemy', 'cut/flight',
                               'cut/glide', 'cut/gardener', 'cut/leviathan',
+                              *(f'gunmode/{part}' for part in ('aim', 'ammo', 'commands', 'config', 'data', 'dpad',
+                                                               'input', 'laser', 'mode', 'probe', 'stance')),
                               'cut/lines', 'cut/lion', 'cut/lion_rows', 'cut/mailbox',
                               'cut/scene', 'cut/tendril', 'cut/wear', 'main',
                               'matrix13/culture', 'matrix13/quest/on_time', 'matrix13/quest/text', 'matrix13/quest/zone_talks',
