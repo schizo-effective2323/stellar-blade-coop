@@ -3,7 +3,7 @@
 -- SBO License 1.0 or later, in LICENSE and at github.com/MotherSphere/stellar-blade-coop; NOTICE adds a permission.
 -- Gun mode's shot, without a pak of tables: fields of SB's own rows (live data, as FindRow gives them), changed while
 -- gun mode is out and put back at put_back() (a new world), so the NIKKE missions find them as shipped. No row is
--- added (UE4SS's AddRow is not used).
+-- added (UE4SS's row adding is not used).
 -- * EventActorEffectTable: Nikke_01_E_ActorEff_015 (a NIKKE mission's cover row) applies M_Scarlet_CounterLinkStart;
 --   gunmode/mode.lua fires it as a zone event for each shot.
 -- * EffectTable: M_Scarlet_CounterLinkStart (0.1 s on self, one UseSkill action) starts P_Eve_GunNikke_ShootSlug1_1,

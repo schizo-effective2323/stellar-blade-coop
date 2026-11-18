@@ -20,7 +20,7 @@ ROOT = Path(__file__).resolve().parents[2]
 SCRIPTS = 'mod/StellarCoop/Scripts'
 NATIVE = ('native/src', 'tests/wine')
 # The one guarded CreateSBZoneEvent per file that has one, and what each file may hold of the rationed calls and names.
-SITES = {'cut/scene.lua', 'matrix13/world/boss.lua', 'nightop/probe.lua', 'nightop/recruiter.lua'}
+SITES = {'cut/scene.lua', 'gunmode/mode.lua', 'matrix13/world/boss.lua', 'nightop/probe.lua', 'nightop/recruiter.lua'}
 ADD_ROWS = {'nightop/probe.lua': 1}
 # Raw counts, comments and strings included, so a call no pattern below sees (obj['AddRow'](obj,...)) still shows. A
 # new mention, even in a log line, is a deliberate edit here. ServerRequest_*: coop no's ChangeRule and CreateActor,
@@ -35,10 +35,11 @@ ADD_ROWS = {'nightop/probe.lua': 1}
 # on our EVE, its choke point: its own effect, and the effects of coop devmenu's fixed list of 23 in cut/devmenu.lua,
 # which only reaches it through ChainSpin.apply) and its header. coop gift: its one ItemBucketItemRemove (a send's
 # choke point; its grants go through the shop's) and its header.
+# Gun mode: its guarded call (kind 2, the NIKKE shot's one row only, each shot).
 # The Join row: coop recruiter's constant only, which it reads and neutralizes, never fires.
 RATIONED = {'MultiplayTest_ZoneE_059': {'nightop/recruiter.lua': 1},
             'CreateSBZoneEvent': {'nightop/probe.lua': 3, 'nightop/recruiter.lua': 4, 'cut/scene.lua': 6,
-                                  'matrix13/world/boss.lua': 2},
+                                  'matrix13/world/boss.lua': 2, 'gunmode/mode.lua': 1},
             'AddRow': {'nightop/probe.lua': 3, 'cut/enemy.lua': 2, 'cut/lion.lua': 1},
             'ServerRequest_': {'nightop/probe.lua': 10, 'nightop/run.lua': 1, 'nightop/shop.lua': 3,
                                'session/group.lua': 7, 'cut/enemy.lua': 2, 'cut/chainspin.lua': 2,
@@ -137,7 +138,7 @@ def scan_of(files):
 N, M, H, W = f'{SCRIPTS}/nightop/probe.lua', f'{SCRIPTS}/main.lua', 'native/src/link/core.h', 'tests/wine/smoke.cpp'
 R, NR, GR = f'{SCRIPTS}/nightop/recruiter.lua', f'{SCRIPTS}/nightop/run.lua', f'{SCRIPTS}/session/group.lua'
 NS, LI, SC = f'{SCRIPTS}/nightop/shop.lua', f'{SCRIPTS}/cut/lion.lua', f'{SCRIPTS}/cut/scene.lua'
-BO = f'{SCRIPTS}/matrix13/world/boss.lua'
+BO, GM = f'{SCRIPTS}/matrix13/world/boss.lua', f'{SCRIPTS}/gunmode/mode.lua'
 SH, SG, WG = 'native/src/game/sbo.h', 'native/src/glue/tick/sbo_game.inc', 'native/src/glue/tick/world_game.inc'
 SEQ_CONST, SEQ_CALL = ('constexpr uint64_t kRunZoneEvent = 0x141ca5790;\n',
                        'game_function<RunZoneEvent>(sbo::kRunZoneEvent)(world, id, &sbo_seq_names[k], 0);\n')
@@ -165,9 +166,10 @@ ENEMY = padded('cut/enemy.lua', "pc:ServerRequest_CreateActor(id,at,rot,false,tr
 LION = padded('cut/lion.lua', '')
 SCENE = padded('cut/scene.lua', GUARDED.replace('NightOp', 'Scene'))
 BOSS = padded('matrix13/world/boss.lua', GUARDED.replace('NightOp', 'Boss'))
+GUN = padded('gunmode/mode.lua', GUARDED.replace('NightOp', 'GunMode'))
 CHAINSPIN = padded('cut/chainspin.lua', "pc:ServerRequest_Cheat(guid,0,'SBApplyEffectMe',tostring(ChainSpin.ID))\n")
 MAILBOX = padded('cut/mailbox.lua', "pc:ServerRequest_ItemBucketItemRemove(1,guid,FName(alias),count,-1)\n")
-CLEAN = {N: NIGHTOP, R: RECRUITER, NR: RUN, GR: GROUP, NS: SHOP, LI: LION, EN: ENEMY, SC: SCENE, BO: BOSS, CS: CHAINSPIN,
+CLEAN = {N: NIGHTOP, R: RECRUITER, NR: RUN, GR: GROUP, NS: SHOP, LI: LION, EN: ENEMY, SC: SCENE, BO: BOSS, GM: GUN, CS: CHAINSPIN,
          MB: MAILBOX, M: 'local coop=1 -- Steam lobby, friends matchmaking later\n',
          H: 'get(api.create_lobby, "SteamAPI_ISteamMatchmaking_CreateLobby");\n', W: 'int main() { return 0; }\n',
          SH: SEQ_CONST, SG: SEQ_CALL, WG: WORLD_CALL}
@@ -202,6 +204,8 @@ PLANTS = [({'L1'}, {N: NIGHTOP.replace("    assert(NightOp.allowed(kind,name),'z
           ({'L1'}, {SC: SCENE.replace('Scene.allowed(kind,name)', 'Scene.allowed(6,name)')}),
           ({'L1'}, {BO: BOSS.replace('Boss.allowed(kind,name)', 'Boss.allowed(15,name)')}),
           ({'L1', 'L5'}, {BO: None}),
+          ({'L1', 'L5'}, {GM: None}),
+          ({'L1'}, {GM: GUN.replace('GunMode.allowed(kind,name)', 'GunMode.allowed(2,name)')}),
           ({'L1'}, {R: RECRUITER.replace('Recruiter.allowed(kind,name)', 'Recruiter.allowed(15,name)')}),
           ({'L1', 'L5'}, {M: 'bpl.CreateSBZoneEvent(bpl,15,n)\n'}),
           ({'L1', 'L5'}, {M: 'bpl: CreateSBZoneEvent(15,n)\n'}),
