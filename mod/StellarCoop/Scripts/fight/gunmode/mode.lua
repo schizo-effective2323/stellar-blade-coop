@@ -464,7 +464,7 @@ function GunMode.new(env)
         if pw then carry(pw,false) end
         if s.layer and pw then pcall(layer.stop,pw); local ok,e=pcall(layer.uninstall,pw); if not ok then g.log('layer off: '..tostring(e)) end end
         if s.mesh_rot and pw then local b=s.mesh_rot; pcall(function() pw.Mesh:K2_SetRelativeRotation(b,false,{},false) end) end
-        s.mesh_rot,s.mesh_yaw=nil,0
+        s.mesh_rot,s.mesh_yaw,s.head_yaw=nil,0,nil
         if s.cmod and g.valid(s.cmod) then local m=s.cmod; pcall(function() g.pc().PlayerCameraManager:RemoveCameraModifier(m) end) end
         s.cmod,s.cmod_fail=nil,nil
         s.layer,s.layer_clip,s.reload_until,s.turn,s.turnq=false,nil,nil,nil,nil
@@ -637,7 +637,17 @@ function GunMode.new(env)
     local function shoot(p,now)
         if now<s.next_shot then return end
         s.next_shot=now+cfg.fire_interval
-        aim.write(p,s.target)
+        s.shot_at=now
+        local tgt=s.target
+        if s.in_air and g.valid(s.rifle) then
+            pcall(function()
+                local ml=StaticFindObject('/Script/Engine.Default__KismetMathLibrary')
+                local mz=s.rifle:GetSocketLocation(FName('FX_Fire'))
+                local f=ml:GetForwardVector(s.rifle:GetSocketRotation(FName('FX_Fire')))
+                tgt={X=mz.X+f.X*3000,Y=mz.Y+f.Y*3000,Z=mz.Z+f.Z*3000}
+            end)
+        end
+        aim.write(p,tgt)
         if fire_row(Data.row('Fire')) then
             s.shots=s.shots+1
             if s.shots<=3 or s.shots%50==0 then
@@ -775,7 +785,8 @@ function GunMode.new(env)
                     or nm:find('[Ff]lip') or nm:find('[Dd]ash') or nm:find('[Pp]arry') or nm:find('[Gg]uard') or nm:find('[Ss]lide')) and nm or nil
                 if set.trace and nm~=s.last_montage then s.last_montage=nm; g.log('layer: montage '..tostring(nm)..(s.move and ' (layer steps aside)' or '')) end
             end
-            if s.move then want='none' end
+            -- a move keeps the rifle held (the carry follows her body through it) instead of handing her arms back
+            if s.move and want=='aim' then want='carry' end
             s.want=want
             -- the game's aim stance (P_Eve_Gun) may switch her post-process graph off and hide what her hands hold: both
             -- are put back while the rifle is out (property reads and plain setters only, nothing on the instance itself)
@@ -836,6 +847,11 @@ function GunMode.new(env)
             s.ik=s.ik or require('fight.gunmode.ik').new(g)
             local ppi=g.try(function() return p.Mesh:GetPostProcessInstance() end)
             local mode_ik=(want=='aim') and 'aim' or ((want=='carry' or want=='reload') and 'carry' or 'off')
+            -- in the air (jumps, the double-jump flip) the rifle goes with her body; held up and pointing where her
+            -- chest points while firing or aiming, so the shots follow the flip round
+            local falling=g.try(function() return p.CharacterMovement:IsFalling() end)==true
+            s.in_air=falling
+            if falling and mode_ik~='off' then mode_ik=(s.zoom_held or (now-(s.shot_at or 0)<0.3)) and 'air' or 'carry' end
             local ok_i,err_i=pcall(s.ik.tick,pc,p,s.rifle,mode_ik,ppi)
             if not ok_i and not s.ik_err then s.ik_err=true; g.log('ik: '..tostring(err_i)) end
             -- the aim camera over her right shoulder (the native TPS camera ignores the boom): gunmode's camera
@@ -865,12 +881,18 @@ function GunMode.new(env)
                 local m=p.Mesh
                 if not s.mesh_rot then local r=m.RelativeRotation; s.mesh_rot={Pitch=r.Pitch,Yaw=r.Yaw,Roll=r.Roll}; s.mesh_yaw=0 end
                 local C=require('fight.gunmode.ik').CFG
-                local target=(mode_ik=='aim') and C.aim_mesh_yaw or 0
+                local target=(mode_ik=='aim' and s.tps) and C.aim_mesh_yaw or 0
                 local dy=target-s.mesh_yaw
                 if math.abs(dy)>0.05 then
                     s.mesh_yaw=s.mesh_yaw+dy*0.25
                     local b=s.mesh_rot
                     m:K2_SetRelativeRotation({Pitch=b.Pitch,Yaw=b.Yaw+s.mesh_yaw,Roll=b.Roll},false,{},false)
+                end
+                -- her head and neck turned back by the same amount (the stance has her looking over her left shoulder):
+                -- the layer adds AimRot to Bip001-Neck and to Bip001-Head, so each takes half
+                if ppi then
+                    local hy=-s.mesh_yaw*C.head_turn*0.5
+                    if math.abs(hy-(s.head_yaw or 0))>0.05 then s.head_yaw=hy; ppi.AimRot={Pitch=0,Yaw=hy,Roll=0} end
                 end
             end)
             if s.layer_clip and s.layer_clip~='none' and now-(s.layer_seen or 0)>=0.25 then
@@ -930,7 +952,7 @@ function GunMode.new(env)
             s.on=false
             if s.mask then pcall(s.mask); s.mask=nil end
             s.cam,s.zoom=nil,0
-            s.mesh_rot,s.mesh_yaw,s.cmod,s.cmod_fail=nil,0,nil,nil
+            s.mesh_rot,s.mesh_yaw,s.cmod,s.cmod_fail,s.head_yaw=nil,0,nil,nil,nil
             s.fov,s.fov_locked=nil,false
             s.ammo_reset=true
             s.stop_stance=true
