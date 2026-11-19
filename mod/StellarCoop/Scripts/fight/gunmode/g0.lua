@@ -58,7 +58,7 @@ function G0.new(g)
     end
 
     -- the hidden capture camera: one SceneCapture2D actor, moved around her for each view
-    local function capture(p,tag)
+    local function capture(p,tag,rifle,pc)
         local world=p:GetWorld()
         local kr=StaticFindObject('/Script/Engine.Default__KismetRenderingLibrary')
         if not st.cap_ok then
@@ -81,22 +81,36 @@ function G0.new(g)
         local mesh=p.Mesh
         local chest=bone(mesh,'Bip001-Spine2')
         local fwd=p:GetActorForwardVector(); local right=p:GetActorRightVector()
+        -- views around her chest (actor axes): from her right, from in front, from above, and a close look at the hands
+        local rg=rifle:K2_GetComponentLocation()
         local views={
-            side={X=chest.X+right.X*190,Y=chest.Y+right.Y*190,Z=chest.Z+5},     -- from her right
-            front={X=chest.X+fwd.X*200,Y=chest.Y+fwd.Y*200,Z=chest.Z+5},
-            top={X=chest.X+fwd.X*40,Y=chest.Y+fwd.Y*40,Z=chest.Z+190},
+            side={X=chest.X+right.X*170,Y=chest.Y+right.Y*170,Z=chest.Z+5},
+            front={X=chest.X+fwd.X*180,Y=chest.Y+fwd.Y*180,Z=chest.Z+5},
+            top={X=chest.X+fwd.X*40,Y=chest.Y+fwd.Y*40,Z=chest.Z+170},
+            hands={X=rg.X+fwd.X*55+right.X*45,Y=rg.Y+fwd.Y*55+right.Y*45,Z=rg.Z+25},
         }
+        local targets={hands=rg}
         st.n=st.n+1
         local dir=os.getenv('USERPROFILE')..'\\Downloads\\Modding Tools\\NikkeGunBuild\\cap'
         os.execute('mkdir "'..dir..'" 2>nul')
         for name,loc in pairs(views) do
-            local rot=ml():FindLookAtRotation(loc,chest)
+            local rot=ml():FindLookAtRotation(loc,targets[name] or chest)
             a:K2_SetActorLocationAndRotation(loc,rot,false,{},false)
             c:CaptureScene()
             local file=('%03d_%s_%s'):format(st.n,tag,name)
             kr:ExportRenderTarget(world,c.TextureTarget,dir,file..'.png')
             st.shot[#st.shot+1]=file
         end
+        -- what the player sees: the game camera itself
+        local okc=pcall(function()
+            local cm=pc.PlayerCameraManager
+            c.FOVAngle=cm:GetFOVAngle()
+            a:K2_SetActorLocationAndRotation(cm:GetCameraLocation(),cm:GetCameraRotation(),false,{},false)
+            c:CaptureScene()
+            local file=('%03d_%s_cam'):format(st.n,tag)
+            kr:ExportRenderTarget(world,c.TextureTarget,dir,file..'.png')
+        end)
+        c.FOVAngle=45
         g.log('g0 capture '..st.n..' '..tag..' (side, front, top) -> cap\\'..('%03d_%s_*.png'):format(st.n,tag))
     end
 
@@ -106,9 +120,10 @@ function G0.new(g)
         if not st.dumped then dump(rifle,mesh) end
         if mode~=st.mode then st.mode,st.mode_at,st.captured=mode,now,false end
         local wait=(mode=='aim') and 1.5 or 3.0
-        if not st.captured and not st.cap_fail and now-st.mode_at>=wait and (mode=='aim' or mode=='carry') then
-            st.captured=true
-            local ok,e=pcall(capture,p,mode)
+        st.done=st.done or {}
+        if not st.captured and not st.done[mode] and not st.cap_fail and now-st.mode_at>=wait and (mode=='aim' or mode=='carry') then
+            st.captured=true; st.done[mode]=true -- one set per mode per load (a capture stalls the game ~6 s)
+            local ok,e=pcall(capture,p,mode,rifle,pc)
             if not ok then g.log('g0 capture error: '..tostring(e)); st.cap_fail=true end
         end
         if now-st.last<0.5 then return end
@@ -140,8 +155,11 @@ function G0.new(g)
             local bore=nrm(sub(muzzle,br))
             local camf=ml():GetForwardVector(camr)
             local boreErr=math.deg(math.acos(math.max(-1,math.min(1,dot(bore,camf)))))
-            g.log(('g0,%s,%.1f,dActor %s,palmL-handguard %s cm,palmR-grip %s cm,reachL %.2f,reachR %.2f,bore-camera %s deg,camPitch %s,handguard(rifle) %s'):format(
-                mode,now,f(dActor),f(dPalm),f(dRGrip),reachL,reachR,f(boreErr),f(camr.Pitch),v3(to_rifle(rifle,hg))))
+            local sl=sub(bone(mesh,'Bip001-R-UpperArm'),bone(mesh,'Bip001-L-UpperArm'))
+            local ar=p:GetActorRightVector()
+            local blade=math.deg(math.atan(sl.X*ar.Y-sl.Y*ar.X, sl.X*ar.X+sl.Y*ar.Y))
+            g.log(('g0,%s,%.1f,blade %.0f,dActor %s,palmL-handguard %s cm,palmR-grip %s cm,reachL %.2f,reachR %.2f,bore-camera %s deg,camPitch %s,handguard(rifle) %s'):format(
+                mode,now,blade,f(dActor),f(dPalm),f(dRGrip),reachL,reachR,f(boreErr),f(camr.Pitch),v3(to_rifle(rifle,hg))))
         end)
         if not ok and not st.err then st.err=true; g.log('g0 error: '..tostring(e)) end
     end

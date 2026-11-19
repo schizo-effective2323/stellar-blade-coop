@@ -63,11 +63,12 @@ local function ortho(x,z) x=nrm(x); z=nrm(sub(z,mul(x,dot(z,x)))); return x,z en
 
 -- tuning (cm / degrees); starting values from the plan, refined in game
 IK.CFG={
-    grip_aim={fwd=24,right=2,up=-10},     -- rifle grip point from her right shoulder joint, aim
+    grip_aim={fwd=16,right=-5,up=-3},     -- rifle grip point from her right shoulder joint, aim (stock in the shoulder pocket)
     grip_carry={fwd=18,right=-10,up=-18}, -- carry (low ready)
     carry_pitch=-35, carry_yaw=35, carry_cant=12, aim_cant=3,
     pole_r={right=22,fwd=-5,up=-35}, pole_l={right=-8,fwd=15,up=-40},
-    aim_dist=2000,
+    aim_dist=2000, aim_mesh_yaw=-75, -- her mesh turned back this far while aiming (the aim stance blades her ~105 deg)
+    lhand={x_fwd=0.7,x_right=0.7,x_up=0,z_up=-1,below=3}, -- left hand axes in rifle space; palm this far under the bore line
     handguard_frac=0.62,                  -- the handguard as a fraction of the grip->muzzle distance, until measured
 }
 
@@ -145,7 +146,14 @@ function IK.new(g)
         local hgR=mul(G.muzzle,C.handguard_frac)
         local hg=add(rifleLoc,qrot(Rr,hgR))
         -- left hand: rotation = right hand's (until the style pose); palm offset measured live in hand space
-        local lq=hq
+        -- left hand: palm up under the handguard, fingers across to the far side (axes set in rifle space)
+        local rr=cross(bz,bx) -- rifle right (y = z cross x)
+        local L=C.lhand
+        local lx=nrm(add(add(mul(bx,L.x_fwd),mul(rr,L.x_right)),mul(bz,L.x_up)))
+        local lz=mul(bz,L.z_up)
+        lx,lz=ortho(lx,lz)
+        local lq=qmul(Rr,frame_q(lx,lz))
+        hg=add(hg,qrot(Rr,mul(bz,-L.below)))
         local lh,lhq=cs(mesh,'Bip001-L-Hand'); local lf=cs(mesh,'Bip001-L-Finger2')
         local palmLocal=qrot(qinv(lhq),mul(sub(lf,lh),0.5))
         st.palm=st.palm or palmLocal -- frozen on first use

@@ -18,11 +18,10 @@ Overlay.BASES={'/Game/Art/Character/PC/CH_P_EVE_29/CH_P_EVE_29.CH_P_EVE_29','/Ga
 -- the two-handed rifle clips made on her skeleton for this rifle (Blender Rifle10: both hands on the rifle by IK, the
 -- sight at her right eye); only the arms are used, from the clavicles down
 local NGM='/Game/Art/Character/PC/CH_P_EVE_01/Animation/NGM/'
-Overlay.CLIPS={
-    carry=NGM..'NGM_R_C_Idle.NGM_R_C_Idle',
-    aim=NGM..'NGM_R_AimIdle.NGM_R_AimIdle',
-    reload=NGM..'NGM_R_C_Idle.NGM_R_C_Idle',
-}
+-- v2: the solver places the arms; the clip on the slot only gives the hands their grip (the layer's Layered Blend
+-- Per Bone takes Bip001-L-Hand / Bip001-R-Hand and their fingers from it): NIKKE's own rifle idle, a vanilla DLC asset
+local SHOOT_IDLE='/Game/DLC_2/Art/Character/PC/CH_P_EVE_01/Animation/P_Eve_GunNikke_Shoot_Idle.P_Eve_GunNikke_Shoot_Idle'
+Overlay.CLIPS={ carry=SHOOT_IDLE, aim=SHOOT_IDLE, reload=SHOOT_IDLE }
 
 -- the layer's class is loadable (gunmode's pak is installed)
 function Overlay.available()
