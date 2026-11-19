@@ -55,6 +55,31 @@ function G0.new(g)
             g.log(('g0 %s arm: parents UpperArm<-%s Forearm<-%s Hand<-%s, upper %.1f cm, fore %.1f cm'):format(side,tostring(pu),tostring(pf),tostring(ph),a,b))
             st['arm'..side]=a+b
         end
+        -- the hand bones' frames, through the finger bases in each hand's own frame (static offsets, to map Blender's
+        -- bone frames onto UE's), plus each hand's component-space rotation
+        local function unrot(q,v) -- rotate v by the inverse of quaternion q {X,Y,Z,W}
+            local x,y,z,w=-q.X,-q.Y,-q.Z,q.W
+            local tx,ty,tz=2*(y*v.Z-z*v.Y),2*(z*v.X-x*v.Z),2*(x*v.Y-y*v.X)
+            return {X=v.X+w*tx+(y*tz-z*ty),Y=v.Y+w*ty+(z*tx-x*tz),Z=v.Z+w*tz+(x*ty-y*tx)}
+        end
+        for _,side in ipairs({'L','R'}) do
+            local h=('Bip001-%s-Hand'):format(side)
+            local ok,e=pcall(function()
+                local th=mesh:GetSocketTransform(FName(h),2)
+                local parts={}
+                for _,fn in ipairs({'Finger0','Finger1','Finger2','Finger4'}) do
+                    local tf=mesh:GetSocketTransform(FName(('Bip001-%s-%s'):format(side,fn)),2)
+                    local d={X=tf.Translation.X-th.Translation.X,Y=tf.Translation.Y-th.Translation.Y,Z=tf.Translation.Z-th.Translation.Z}
+                    local l=unrot(th.Rotation,d)
+                    parts[#parts+1]=fn..' '..v3(l)
+                end
+                local fo=mesh:GetSocketTransform(FName(('Bip001-%s-Forearm'):format(side)),2)
+                local d={X=th.Translation.X-fo.Translation.X,Y=th.Translation.Y-fo.Translation.Y,Z=th.Translation.Z-fo.Translation.Z}
+                parts[#parts+1]='hand-in-forearm '..v3(unrot(fo.Rotation,d))
+                g.log(('g0 %s hand frame: %s'):format(side,table.concat(parts,' | ')))
+            end)
+            if not ok then g.log('g0 hand frame '..side..': '..tostring(e)) end
+        end
     end
 
     -- the hidden capture camera: one SceneCapture2D actor, moved around her for each view
