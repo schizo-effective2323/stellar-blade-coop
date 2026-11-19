@@ -184,7 +184,7 @@ with tempfile.TemporaryDirectory() as tmp:
                               'world/objects/commands', 'vehicles/bike/commands', 'world/daynight/commands',
                               'fight/gunmode/commands',
                               *(f'fight/gunmode/{name}' for name in ('aim', 'ammo', 'config', 'data', 'facts', 'g0',
-                                                                     'ik', 'input', 'laser', 'mode', 'overlay',
+                                                                     'gates', 'ik', 'input', 'laser', 'mode', 'overlay',
                                                                      'probe', 'release_check', 'rifle', 'stance')),
                               'core/keybind', 'core/link',
                               'core/mask', 'core/pak_gate', 'core/settings_file',
