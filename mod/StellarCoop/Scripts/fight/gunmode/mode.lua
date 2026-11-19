@@ -465,8 +465,8 @@ function GunMode.new(env)
         if s.layer and pw then pcall(layer.stop,pw); local ok,e=pcall(layer.uninstall,pw); if not ok then g.log('layer off: '..tostring(e)) end end
         if s.mesh_rot and pw then local b=s.mesh_rot; pcall(function() pw.Mesh:K2_SetRelativeRotation(b,false,{},false) end) end
         s.mesh_rot,s.mesh_yaw=nil,0
-        if s.acam and g.valid(s.acam.boom) then local a=s.acam; pcall(function() a.boom.SocketOffset={X=a.X,Y=a.Y,Z=a.Z} end) end
-        s.acam=nil
+        if s.cmod and g.valid(s.cmod) then local m=s.cmod; pcall(function() g.pc().PlayerCameraManager:RemoveCameraModifier(m) end) end
+        s.cmod,s.cmod_fail=nil,nil
         s.layer,s.layer_clip,s.reload_until,s.turn,s.turnq=false,nil,nil,nil,nil
         s.ovr_row=nil
         show_others()
@@ -838,16 +838,26 @@ function GunMode.new(env)
             local mode_ik=(want=='aim') and 'aim' or ((want=='carry' or want=='reload') and 'carry' or 'off')
             local ok_i,err_i=pcall(s.ik.tick,pc,p,s.rifle,mode_ik,ppi)
             if not ok_i and not s.ik_err then s.ik_err=true; g.log('ik: '..tostring(err_i)) end
-            -- the aim camera over her right shoulder, so the rifle on that shoulder is in view (eased)
+            -- the aim camera over her right shoulder (the native TPS camera ignores the boom): gunmode's camera
+            -- modifier (BP_NGM_CamMod in the layer pak) adds Offset (camera space: forward, right, up), eased
             pcall(function()
-                local boom=p.CameraBoom
-                if not s.acam then local so=boom.SocketOffset; s.acam={boom=boom,X=so.X,Y=so.Y,Z=so.Z,k=0} end
-                local a=s.acam
-                local kt=(mode_ik=='aim') and 1 or 0
-                if math.abs(kt-a.k)>0.002 then
-                    a.k=a.k+(kt-a.k)*0.2
-                    local o=cfg.aim_cam
-                    boom.SocketOffset={X=a.X+o.X*a.k,Y=a.Y+o.Y*a.k,Z=a.Z+o.Z*a.k}
+                local cm=pc.PlayerCameraManager
+                if not s.cmod and not s.cmod_fail then
+                    local path='/Game/Mods/NGM/BP_NGM_CamMod.BP_NGM_CamMod_C'
+                    local cls=StaticFindObject(path)
+                    if not g.valid(cls) then
+                        cls=StaticFindObject('/Script/AssetRegistry.Default__AssetRegistryHelpers'):GetAsset({ObjectPath=FName(path)})
+                    end
+                    if g.valid(cls) then s.cmod=cm:AddNewCameraModifier(cls); s.cmod_k=0 end
+                    if not g.valid(s.cmod) then s.cmod=nil; s.cmod_fail=true; g.log('camera: modifier not available') else g.log('camera: modifier added') end
+                end
+                if s.cmod then
+                    local kt=(mode_ik=='aim') and 1 or 0
+                    if math.abs(kt-s.cmod_k)>0.002 then
+                        s.cmod_k=s.cmod_k+(kt-s.cmod_k)*0.2
+                        local o,k=cfg.aim_cam,s.cmod_k
+                        s.cmod.Offset={X=o.X*k,Y=o.Y*k,Z=o.Z*k}
+                    end
                 end
             end)
             -- the game's aim stance turns her side-on; her mesh is turned back toward the aim (eased)
@@ -920,7 +930,7 @@ function GunMode.new(env)
             s.on=false
             if s.mask then pcall(s.mask); s.mask=nil end
             s.cam,s.zoom=nil,0
-            s.mesh_rot,s.mesh_yaw,s.acam=nil,0,nil
+            s.mesh_rot,s.mesh_yaw,s.cmod,s.cmod_fail=nil,0,nil,nil
             s.fov,s.fov_locked=nil,false
             s.ammo_reset=true
             s.stop_stance=true

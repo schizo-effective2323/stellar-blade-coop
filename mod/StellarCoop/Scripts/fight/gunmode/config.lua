@@ -67,7 +67,7 @@ Config.DEFAULTS={
     start_fallback={X=45,Y=22,Z=55}, -- else here: forward, right, up from her centre (her right shoulder).
     follow_names={}, -- Parts made to follow the posed copy: none (her face moved off her head that way, 02:20).
     pose_time=0.08, -- Firing mode between shots: the NIKKE shot montage held at this time (s).
-    aim_cam={X=0,Y=90,Z=24}, -- With the rifle layer: the game's aim camera moved this far (cm; right, up) while aiming.
+    aim_cam={X=0,Y=55,Z=12}, -- With the rifle layer: the aim camera moved this far (cm; camera space: forward, right, up) while aiming, through gunmode's camera modifier.
     native_speed=1.4, -- In the game's aim: its stance's walk and run speeds times this (CharacterStanceTable).
     -- Hidden from the player's own camera while the rifle is out (Luke's stance shows a posed copy of EVE's body
     -- there): her other mesh components wearing her body's own mesh (Ultra Violence's blood layer, outfit overlays)
