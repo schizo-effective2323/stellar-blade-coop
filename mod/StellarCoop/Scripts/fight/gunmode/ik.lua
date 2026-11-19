@@ -64,11 +64,14 @@ local function ortho(x,z) x=nrm(x); z=nrm(sub(z,mul(x,dot(z,x)))); return x,z en
 -- tuning (cm / degrees); starting values from the plan, refined in game
 IK.CFG={
     grip_aim={fwd=16,right=-5,up=-3},     -- rifle grip point from her right shoulder joint, aim (stock in the shoulder pocket)
-    grip_carry={fwd=18,right=-10,up=-18}, -- carry (low ready)
-    carry_pitch=-35, carry_yaw=35, carry_cant=12, aim_cant=3,
+    grip_carry={fwd=16,right=-5,up=-3}, -- (carry places the grip from butt_carry instead)
+    butt_carry={fwd=2,right=-4,up=-4}, stock_len=15, -- low ready: the butt in her shoulder pocket, the grip 15 cm down the bore
+    carry_pitch=-30, carry_yaw=35, carry_cant=12, aim_cant=3,
     pole_r={right=22,fwd=-5,up=-35}, pole_l={right=-8,fwd=15,up=-40},
     aim_dist=2000, aim_mesh_yaw=-75, -- her mesh turned back this far while aiming (the aim stance blades her ~105 deg)
     lhand={x_fwd=0.7,x_right=0.7,x_up=0,z_up=-1,below=3}, -- left hand axes in rifle space; palm this far under the bore line
+    rel={q={0.2301,0.6314,0.3212,0.6672},t={X=1.91,Y=-24.67,Z=10.52}}, -- the support hand in the right hand's frame {q={x,y,z,w},t={X,Y,Z}} once measured (Blender: P_Eve_GunNikke_Shoot_Idle frame 0, Y mirrored to UE; nil: measure in game)
+    lhand_nudge={X=-4,Y=0,Z=4}, -- (rifle space, cm) the NIKKE support hand moved onto this rifle's handguard
     handguard_frac=0.62,                  -- the handguard as a fraction of the grip->muzzle distance, until measured
 }
 
@@ -96,6 +99,46 @@ function IK.new(g)
         st.gt={X=G.Translation.X,Y=G.Translation.Y,Z=G.Translation.Z}
     end
 
+    -- The support hand as NIKKE holds the rifle: the vanilla NIKKE rifle idle is played once on her main anim instance
+    -- (the layer off meanwhile) and her left hand is read relative to her right hand. The left hand then rides on the
+    -- right hand with that transform, so it lands where (and shaped as) the clip's left hand holds the rifle.
+    local SHOOT_IDLE='/Game/DLC_2/Art/Character/PC/CH_P_EVE_01/Animation/P_Eve_GunNikke_Shoot_Idle.P_Eve_GunNikke_Shoot_Idle'
+    local SLOTS={'DefaultSlot','UpperBody','FullBody','Upper'}
+    local function find(path)
+        local o=StaticFindObject(path)
+        if valid(o) then return o end
+        return g.try(function() return StaticFindObject('/Script/AssetRegistry.Default__AssetRegistryHelpers'):GetAsset({ObjectPath=FName(path)}) end)
+    end
+    local function measure_rel(mesh,pp)
+        local now=os.clock()
+        local m=st.meas
+        if not m then
+            local mi=mesh:GetAnimInstance(); local seq=find(SHOOT_IDLE)
+            if not (valid(mi) and valid(seq)) then st.rel=false; g.log('ik: support-hand measure: no anim instance or clip'); return end
+            local l0=cs(mesh,'Bip001-L-Hand')
+            st.meas={mi=mi,seq=seq,slot=1,at=now,l0=l0}
+            pcall(function() mi:PlaySlotAnimationAsDynamicMontage(seq,FName(SLOTS[1]),0.0,0.0,1.0,100000,-1.0,0.0) end)
+            pcall(function() pp.ArmsAlpha=0 end); st.alpha=0
+            return
+        end
+        if now-m.at<0.6 then return end
+        local rp,rq=cs(mesh,'Bip001-R-Hand'); local lp,lq=cs(mesh,'Bip001-L-Hand')
+        local moved=len(sub(lp,m.l0))
+        local playing=g.try(function() return m.mi:IsPlayingSlotAnimation(m.seq,FName(SLOTS[m.slot])) end)
+        g.log(('ik: support-hand measure on slot %s: playing %s, left hand moved %.1f cm'):format(SLOTS[m.slot],tostring(playing),moved))
+        pcall(function() m.mi:StopSlotAnimation(0.0,FName(SLOTS[m.slot])) end)
+        if moved<4 and m.slot<#SLOTS then
+            m.slot=m.slot+1; m.at=now; m.l0=lp
+            pcall(function() m.mi:PlaySlotAnimationAsDynamicMontage(m.seq,FName(SLOTS[m.slot]),0.0,0.0,1.0,100000,-1.0,0.0) end)
+            return
+        end
+        if moved<4 then st.rel=false; g.log('ik: support-hand measure failed (no slot moved her)'); return end
+        local iq=qinv(rq)
+        st.rel={q=qmul(iq,lq),t=qrot(iq,sub(lp,rp))}
+        local t,q=st.rel.t,st.rel.q
+        g.log(('ik: support hand from the NIKKE idle (in the right hand frame): t %.2f %.2f %.2f q %.4f %.4f %.4f %.4f'):format(t.X,t.Y,t.Z,q[1],q[2],q[3],q[4]))
+    end
+
     -- mode: 'aim' | 'carry' | 'off'; returns a table of numbers for the log
     function self.tick(pc,p,rifle,mode,pp)
         local mesh=p.Mesh
@@ -105,6 +148,8 @@ function IK.new(g)
             return
         end
         if not st.geo then measure(rifle,require('fight.gunmode.rifle')) end
+        if st.rel==nil and IK.CFG.rel then st.rel={q=IK.CFG.rel.q,t=IK.CFG.rel.t} end
+        if st.rel==nil then measure_rel(mesh,pp); if st.rel==nil then return end end
         local ml=StaticFindObject('/Script/Engine.Default__KismetMathLibrary')
         local CT=mesh:K2_GetComponentToWorld()
         -- her axes in component space
@@ -113,6 +158,12 @@ function IK.new(g)
         local up=nrm(cross(fwd,right)); up= (up.Z<0) and mul(up,-1) or up
         local rsh=cs(mesh,'Bip001-R-UpperArm'); local lsh=cs(mesh,'Bip001-L-UpperArm')
         local C=IK.CFG
+        if mode~='aim' then
+            -- carry follows her upper body, not the actor: turns and the run twist her shoulders away from the actor's
+            -- facing, and a rifle placed from the actor's axes left her arms trailing behind her (07:07 video)
+            local sr=sub(rsh,lsh); sr=nrm(sub(sr,mul(up,dot(sr,up))))
+            if sr.X==sr.X then right=sr; fwd=nrm(cross(right,up)) end
+        end
         local o=(mode=='aim') and C.grip_aim or C.grip_carry
         local gripP=add(add(add(rsh,mul(fwd,o.fwd)),mul(right,o.right)),mul(up,o.up))
         -- bore direction
@@ -129,6 +180,10 @@ function IK.new(g)
             local yaw,pit=math.rad(C.carry_yaw),math.rad(C.carry_pitch)
             local h=add(mul(fwd,math.cos(yaw)),mul(right,-math.sin(yaw)))
             d=nrm(add(mul(h,math.cos(pit)),mul(up,math.sin(pit))))
+            -- low ready pivots on the butt in her shoulder pocket: the grip sits a stock's length down the bore from it
+            local b=C.butt_carry
+            local butt=add(add(add(rsh,mul(fwd,b.fwd)),mul(right,b.right)),mul(up,b.up))
+            gripP=add(butt,mul(d,C.stock_len))
         end
         -- rifle rotation: its bore onto d, its up as close to her up as possible (plus cant)
         local G=st.geo
@@ -154,10 +209,12 @@ function IK.new(g)
         lx,lz=ortho(lx,lz)
         local lq=qmul(Rr,frame_q(lx,lz))
         hg=add(hg,qrot(Rr,mul(bz,-L.below)))
+        local lloc_rel
+        if st.rel then lq=qmul(hq,st.rel.q); lloc_rel=add(add(hloc,qrot(hq,st.rel.t)),qrot(Rr,C.lhand_nudge)) end
         local lh,lhq=cs(mesh,'Bip001-L-Hand'); local lf=cs(mesh,'Bip001-L-Finger2')
         local palmLocal=qrot(qinv(lhq),mul(sub(lf,lh),0.5))
         st.palm=st.palm or palmLocal -- frozen on first use
-        local lloc=sub(hg,qrot(lq,st.palm))
+        local lloc=lloc_rel or sub(hg,qrot(lq,st.palm))
         -- poles
         local pr,pl=C.pole_r,C.pole_l
         local poleR=add(add(add(rsh,mul(right,pr.right)),mul(fwd,pr.fwd)),mul(up,pr.up))
