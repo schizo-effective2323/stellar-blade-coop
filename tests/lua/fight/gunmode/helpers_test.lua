@@ -18,6 +18,7 @@ do
     assert(s.on and s.key=='F4' and s.aim_key=='LeftMouseButton' and #bad==0)
     s,bad=Config.parse('gun_key=F10\ngun_mode=maybe\ngun_zoom=sideways\n')
     assert(s.key=='G' and #bad==3)
+    assert(Config.parse('gun_g1=on').g1==true and Config.parse(nil).g1==nil)
 end
 
 -- 2. Keys: an edge on the press only; a tap is a short press, a hold is not.

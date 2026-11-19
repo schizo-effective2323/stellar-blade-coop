@@ -128,6 +128,8 @@ function Config.parse(text)
     if v=='on' then out.facts=true end
     v=get(text,'gun_g0') -- (dev only) the v2 plan's G0 measurements and capture pictures, fight/gunmode/g0.lua
     if v=='on' then out.g0=true end
+    v=get(text,'gun_g1') -- (dev only) the v3 plan's gate G1 measurements and pictures, fight/gunmode/g1.lua
+    if v=='on' then out.g1=true end
     v=get(text,'gun_trace') -- (testing) step log around reloads and aim changes
     if v then out.trace=v:lower()=='on' end
     v=get(text,'gun_fire_key') -- (testing) one more fire key, as F

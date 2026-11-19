@@ -685,8 +685,14 @@ function GunMode.new(env)
             local ok,e=pcall(s.facts.tick,pc,g.pawn(),down,now)
             if not ok and not s.facts_err then s.facts_err=true; g.log('facts: '..tostring(e)) end
         end
+        if set.g1 then s.g1=s.g1 or require('fight.gunmode.g1').new(g) end
+        if set.g1 and not s.on then pcall(s.g1.idle,g.pawn(),now) end
         if not s.on then return end
         local p=g.pawn()
+        if set.g1 and p and g.valid(s.rifle) then
+            local ok,e=pcall(s.g1.tick,pc,p,s.rifle,s.want or 'carry',now)
+            if not ok and not s.g1_err then s.g1_err=true; g.log('g1: '..tostring(e)) end
+        end
         if set.g0 and p and g.valid(s.rifle) then
             s.g0=s.g0 or require('fight.gunmode.g0').new(g)
             local ok,e=pcall(s.g0.tick,pc,p,s.rifle,s.want or 'carry',now)

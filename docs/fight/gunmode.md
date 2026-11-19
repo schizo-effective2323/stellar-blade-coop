@@ -7,7 +7,7 @@ Gun mode is parked while it is rebuilt. G shows a notice and does nothing else, 
 layer's class (`ABP_NGM_Spike`, in the test pak `zNGMSpike_P`). With that pak installed, G brings the rifle out on the
 rifle layer. The sections below describe gun mode as it ran before it was parked.
 
-The rebuild adds four files. `fight/gunmode/overlay.lua` swaps her body mesh's post-process anim blueprint for gun
+The rebuild adds six files. `fight/gunmode/overlay.lua` swaps her body mesh's post-process anim blueprint for gun
 mode's layer. The layer runs the outfit's original post-process graph first, then a two-bone IK on each arm. Her main
 animation, springs and outfit physics are left as they are. `fight/gunmode/ik.lua` places the rifle in her mesh's
 component space each tick (aiming: the bore on the camera's line; carrying: low ready). It solves her right hand from
@@ -15,6 +15,9 @@ the rifle's grip and puts her left palm on the handguard. `fight/gunmode/g0.lua`
 `gun_g0=on`: it logs the palm-to-handguard distance, the arms' reach, the bore against the camera and her facing. It
 also saves side, front and top pictures from a hidden SceneCapture2D. `fight/gunmode/gates.lua` holds the pass
 limits of gate G1 (the standing aim at camera pitch -40, 0 and +40) and judges a measured value against them.
+`fight/gunmode/g1.lua` runs only with the dev setting `gun_g1=on`. In the aim it sets the camera to each of those
+pitches, measures every G1 gate (the math is in `fight/gunmode/g1_math.lua`), runs the AimRot test and saves four
+fixed-camera pictures and one game-camera picture per pitch to `NikkeGunBuild\cap_g1`, with a report of each gate.
 The Windows scripts in `tools/gunmode/rebuild/` build the layer's pak and send test input to the game.
 
 ## What you need
