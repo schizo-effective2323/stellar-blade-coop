@@ -63,14 +63,14 @@ local function ortho(x,z) x=nrm(x); z=nrm(sub(z,mul(x,dot(z,x)))); return x,z en
 
 -- tuning (cm / degrees); starting values from the plan, refined in game
 IK.CFG={
-    grip_aim={fwd=16,right=-5,up=-3},     -- rifle grip point from her right shoulder joint, aim (stock in the shoulder pocket)
+    grip_aim={fwd=22,right=3,up=3},     -- rifle grip point from her right shoulder joint, aim (stock in the shoulder pocket)
     grip_carry={fwd=16,right=-5,up=-3}, -- (carry places the grip from butt_carry instead)
     butt_carry={fwd=2,right=-4,up=-4}, stock_len=15, -- low ready: the butt in her shoulder pocket, the grip 15 cm down the bore
     carry_pitch=-30, carry_yaw=35, carry_cant=12, aim_cant=3,
-    pole_r={right=22,fwd=-5,up=-35}, pole_l={right=-8,fwd=15,up=-40},
-    aim_dist=2000, aim_mesh_yaw=-75, -- her mesh turned back this far while aiming (the aim stance blades her ~105 deg)
-    lhand={x_fwd=0.7,x_right=0.7,x_up=0,z_up=-1,below=3}, -- left hand axes in rifle space; palm this far under the bore line
-    rel={q={0.2301,0.6314,0.3212,0.6672},t={X=1.91,Y=-24.67,Z=10.52}}, -- the support hand in the right hand's frame {q={x,y,z,w},t={X,Y,Z}} once measured (Blender: P_Eve_GunNikke_Shoot_Idle frame 0, Y mirrored to UE; nil: measure in game)
+    pole_r={right=40,fwd=-5,up=-15}, pole_l={right=-25,fwd=20,up=-35}, -- elbows out, clear of her chest
+    aim_dist=2000, head_turn=1.0, aim_mesh_yaw=-75, -- her mesh turned back this far while aiming (the aim stance blades her ~105 deg)
+    lhand={x_fwd=0.85,x_right=0.4,x_up=0.15,z_up=-1,below=3.5}, -- left hand axes in rifle space; palm this far under the bore line
+    rel=false, -- was {q={0.2301,0.6314,0.3212,0.6672},t={X=1.91,Y=-24.67,Z=10.52}}: put her hand through the rifle (07:43); the support hand in the right hand's frame {q={x,y,z,w},t={X,Y,Z}} once measured (Blender: P_Eve_GunNikke_Shoot_Idle frame 0, Y mirrored to UE; nil: measure in game)
     lhand_nudge={X=-4,Y=0,Z=4}, -- (rifle space, cm) the NIKKE support hand moved onto this rifle's handguard
     handguard_frac=0.62,                  -- the handguard as a fraction of the grip->muzzle distance, until measured
 }
@@ -148,6 +148,7 @@ function IK.new(g)
             return
         end
         if not st.geo then measure(rifle,require('gunmode.rifle')) end
+        if st.rel==nil and IK.CFG.rel==false then st.rel=false end
         if st.rel==nil and IK.CFG.rel then st.rel={q=IK.CFG.rel.q,t=IK.CFG.rel.t} end
         if st.rel==nil then measure_rel(mesh,pp); if st.rel==nil then return end end
         local ml=StaticFindObject('/Script/Engine.Default__KismetMathLibrary')
@@ -159,12 +160,14 @@ function IK.new(g)
         local rsh=cs(mesh,'Bip001-R-UpperArm'); local lsh=cs(mesh,'Bip001-L-UpperArm')
         local C=IK.CFG
         if mode~='aim' then
-            -- carry follows her upper body, not the actor: turns and the run twist her shoulders away from the actor's
-            -- facing, and a rifle placed from the actor's axes left her arms trailing behind her (07:07 video)
-            local sr=sub(rsh,lsh); sr=nrm(sub(sr,mul(up,dot(sr,up))))
-            if sr.X==sr.X then right=sr; fwd=nrm(cross(right,up)) end
+            -- carry (and firing in the air) follows her upper body, not the actor: turns and the run twist her shoulders
+            -- away from the actor's facing (07:07 video), and in a flip the whole frame turns over with her (07:43)
+            local neck=cs(mesh,'Bip001-Neck'); local pel=cs(mesh,'Bip001-Pelvis')
+            local sr=nrm(sub(rsh,lsh)); local su=nrm(sub(neck,pel))
+            local f2=nrm(cross(sr,su))
+            if f2.X==f2.X and sr.X==sr.X then right=sr; fwd=f2; up=nrm(cross(fwd,right)) end
         end
-        local o=(mode=='aim') and C.grip_aim or C.grip_carry
+        local o=(mode=='aim' or mode=='air') and C.grip_aim or C.grip_carry
         local gripP=add(add(add(rsh,mul(fwd,o.fwd)),mul(right,o.right)),mul(up,o.up))
         -- bore direction
         local d
@@ -175,6 +178,8 @@ function IK.new(g)
             local aimW={X=cl.X+cf.X*C.aim_dist,Y=cl.Y+cf.Y*C.aim_dist,Z=cl.Z+cf.Z*C.aim_dist}
             local aimC=ml:InverseTransformLocation(CT,aimW)
             d=nrm(sub(aimC,gripP))
+        elseif mode=='air' then
+            d=fwd -- in the air the rifle points where her chest points, through the flip
         else
             -- low ready: forward, pitched down, turned across her body
             local yaw,pit=math.rad(C.carry_yaw),math.rad(C.carry_pitch)
@@ -189,7 +194,7 @@ function IK.new(g)
         local G=st.geo
         local bx,bz=ortho(G.bore,G.up)
         local tx,tz=ortho(d,up)
-        local cant=math.rad((mode=='aim') and C.aim_cant or C.carry_cant)
+        local cant=math.rad((mode=='aim' or mode=='air') and C.aim_cant or C.carry_cant)
         local ty=cross(tz,tx); tz=nrm(add(mul(tz,math.cos(cant)),mul(ty,math.sin(cant))))
         local Rr=qmul(frame_q(tx,tz),qinv(frame_q(bx,bz)))
         -- the rifle's origin so that its grip (origin) sits at gripP
