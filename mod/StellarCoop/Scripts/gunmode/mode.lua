@@ -424,16 +424,23 @@ function GunMode.new(env)
         end
     end
 
-    -- The rifle carried: a custom moving stance with no force whose OverrideStanceAnim is the carry animation set
-    -- (gunmode/data.lua fills it); off while she aims, so the aim stance's own set plays.
-    local function carry(p,on)
-        if on and s.ovr_row and not s.ovr then
-            s.ovr=pcall(function()
-                p:ActiveCustomMovingStanceData({OverrideStanceAnim=FName(s.ovr_row),NormalAnimRangeDegree=180.0,ApplySpeedForIdleAnimScale=1.0})
+    -- The rifle's animation sets: a custom moving stance with no force whose OverrideStanceAnim is the carry row, or
+    -- the aim row while she aims (gunmode/data.lua fills both). The game drops the stance on its own (a sprint did,
+    -- 16:06), so it is checked and put back every tick.
+    local function carry(p,on,aiming)
+        local want=on and ((aiming and s.aim_row) or s.ovr_row) or nil
+        local active=g.try(function() return p:IsActiveCustomMovingStanceData() end)
+        if want then
+            if s.ovr==want and active then return end
+            if active then pcall(function() p:DeactiveCustomMovingStanceData() end) end
+            local ok=pcall(function()
+                p:ActiveCustomMovingStanceData({OverrideStanceAnim=FName(want),NormalAnimRangeDegree=180.0,ApplySpeedForIdleAnimScale=1.0})
             end)
-        elseif not on and s.ovr then
-            pcall(function() p:DeactiveCustomMovingStanceData() end)
-            s.ovr=false
+            if ok and s.ovr_log~=want then g.log('animation set -> '..want..(s.ovr==want and ' (put back)' or '')); s.ovr_log=want end
+            s.ovr=ok and want or false
+        elseif s.ovr then
+            if active then pcall(function() p:DeactiveCustomMovingStanceData() end) end
+            s.ovr=false; s.ovr_log=nil
         end
     end
 
@@ -450,7 +457,7 @@ function GunMode.new(env)
         end
         local pw=g.pawn()
         if pw then carry(pw,false) end
-        s.ovr_row=nil
+        s.ovr_row,s.aim_row=nil,nil
         show_others()
         show_drone()
         pcall(ammo.stop)
@@ -573,9 +580,15 @@ function GunMode.new(env)
         end
         local co=data.opts.carry_ovr
         s.ovr_row=(co=='auto' and data.carry_ovr_row) or (co and co~='auto' and co~='off' and co) or nil
+        s.aim_row=co=='auto' and data.aim_ovr_row or nil
         if s.ovr_row then
-            carry(p,true)
-            g.log('carry override '..s.ovr_row..': '..(s.ovr and 'on' or 'failed')..', active='..tostring(g.try(function() return p:IsActiveCustomMovingStanceData() end)))
+            if data.preload and not s.preloaded then
+                local n=0
+                for _,path in ipairs(data.preload) do if g.try(function() return LoadAsset(path) end) then n=n+1 end end
+                g.log('preloaded '..n..'/'..#data.preload..' rifle animations')
+                s.preloaded=true
+            end
+            carry(p,true,false)
         end
         s.on,s.shots,s.next_shot,s.zoom_held,s.held_since=true,0,0,false,nil
         pcall(hide_others,p,true)
@@ -723,7 +736,7 @@ function GunMode.new(env)
         if not set.native then face(p,s.zoom_held) end
         -- Firing mode: fire once the rifle has had a moment to come up (Luke's raise eases in over ~12 frames).
         if s.zoom_held then s.held_since=s.held_since or now else s.held_since=nil end
-        if s.ovr_row then carry(p,not s.zoom_held) end
+        if s.ovr_row then carry(p,true,s.zoom_held) end
         if not set.native and inp.fire and s.held_since and now-s.held_since>=cfg.raise_time then shoot(p,now) end
     end
 
