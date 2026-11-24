@@ -596,9 +596,10 @@ shows its own key images and `UE4SS.log` says
 
 The game's pause menu gets an Online tab after Settings. The tab opens the Online page inside the pause menu, laid
 out like the game's Settings page: a list of categories on the left, the rows of the chosen category with their
-values in the middle, the name of the focused row on the right. This is stage 1 of the page. It shows your settings
-and session rows with their values. It does not change a value yet. One row, Open the co-op menu, does what the tab
-did before the page: it closes the pause menu and opens the co-op menu.
+values in the middle, the name of the focused row on the right. Its rows change a value as the game's Settings rows
+do. The page and the co-op menu's Options page run the same code: a value changed on one shows on the other, written
+on the same line of [coop-settings.txt](settings.md#coop-settingstxt). One row, Open the co-op menu, does what the
+tab did before the page: it closes the pause menu and opens the co-op menu.
 
 ### Opening the page
 
@@ -618,8 +619,9 @@ Display, Other players, Photo mode, Saves, Help and Test tools while a module's 
 rules before she hosts, as on the co-op menu's Options page. In an online session the list also has Players. Each
 category has sections with a header, as in the game's Settings page. Session
 starts with Open the co-op menu. Each row shows its value as the co-op menu shows it: On or Off, a choice, a number,
-a key name. The pane on the right shows the name of the focused row, or of the category while you are in the list. No
-row has a description or a picture yet: the pane shows the name alone, at its top.
+a key name. The pane on the right shows the name of the focused row, or of the category while you are in the list.
+Under the name it shows what the last press asked or why it was refused: the question of a row that asks twice, which
+keys a key row takes, the co-op menu's note when a value could not be saved. A move clears it. No row has a picture.
 
 The page is made of the game's own Settings parts: the list item, the section header, the action row, the row with
 a choice, the slider row and the description pane. A part that cannot be made outside the game's Settings page is
@@ -630,22 +632,40 @@ drawn in the co-op menu's style instead. `UE4SS.log` says which for each part.
 | Up arrow, W or Z; D-pad or left stick up | Up in the list or in the rows |
 | Down arrow or S; D-pad or left stick down | Down in the list or in the rows |
 | Right arrow or D, Enter or Space; D-pad right or A | From the list into the rows of that category |
-| Enter or Space; A | On Open the co-op menu: close the pause menu, then open the co-op menu |
-| Esc; B | From the rows back to the list. In the list: close the pause menu, as Back does on Settings |
+| Left arrow, A or Q; D-pad or left stick left | On a row: its previous value |
+| Right arrow or D; D-pad or left stick right | On a row: its next value |
+| Enter or Space; A | On a row: its next value, run it, or wait for a key (see the table below) |
+| Esc; B | From the rows back to the list. In the list: close the pause menu, as Back does on Settings. While a key row waits for a key: stop waiting |
 | Mouse | A row under the mouse takes the focus. A list item under it lights up. A mouse at rest moves nothing |
-| Left click | Show the rows of the list item under the mouse, or select the row under it |
+| Left click | Show the rows of the list item under the mouse. On a row's value: its left half gives the previous value, its right half the next one. Elsewhere on a row: as Enter |
 | LB, RB, a click on one of the game's tabs | Go to that tab of the game's pause menu |
 | The key that opened the pause menu (Start on a controller) | Close the pause menu |
 
-In the rows, up and down skip the headers and wrap around. A long category scrolls. Left does nothing in stage 1.
+In the rows, up and down skip the headers and wrap around. A long category scrolls.
+
+| Row | Left or right | Enter, A, or a click on the row's name | Sound |
+| --- | --- | --- | --- |
+| A choice or On and Off (Who can join, HP marker) | The previous or next value; the end wraps to the start | The next value | Settings select |
+| A number (Players, Enemy HP, Menu size) | One step down or up, held at both ends | One step up | Settings select; the refusal beep at an end |
+| A key (Open this menu, Show the status) | Nothing | The row reads Press a key. The next F-key, with Shift, Ctrl or Alt if you like, is checked against your other keys as in the co-op menu. Enter (A) puts back its default; Esc (B) stops waiting | Settings confirm; Settings select when the key is taken, the refusal beep when it is refused |
+| Copy my code | Nothing | Copies the code | Settings confirm |
+| Leave the session, Remove a player, Reset all keys | Nothing | Asks first; a second Enter within 3 s on the same row runs it, as in the co-op menu | Settings confirm |
+| Mute a player | Mute or unmute | Mute or unmute | Settings select |
+| Host a session, Find a session, Join with a code, Chat, Invite a friend, Guide, Write a bug report | Nothing | Closes the pause menu, then opens the co-op menu, where the row is | Settings confirm |
+| Open the co-op menu, a Test tools row | Nothing | Closes the pause menu, then opens the co-op menu | Settings confirm |
+
+A press the co-op menu would refuse changes nothing and plays the refusal beep of the game's Settings rows
+(`ui_beep`): a number at its end, a row that is no longer shown (the session ended, the code went), a key another
+action holds, a value that could not be saved. Online tab in the pause menu set to Off on the page closes the pause
+menu; the next pause menu has no Online tab.
 
 The focus moving, with the keys or under the mouse, plays the focus sound of the game's Settings page
-(`UI_Tab_2_Cue`). A click that shows another category plays `ui_move`. Entering the page plays `UI_Tab_1_Cue`. The
-mouse arriving on the Online tab plays `UI_Common_Hover_Cue`. The last two are picks by name: the cues the game plays
-for its own tab row are not read yet.
+(`UI_Tab_2_Cue`). A value changed plays the select sound of its rows (`UI_Setting_Select_Cue`), a row run their
+confirm sound (`UI_Setting_Confirm_Cue`). A click that shows another category plays `ui_move`. Entering the page plays
+`UI_Tab_1_Cue`. The mouse arriving on the Online tab plays `UI_Common_Hover_Cue`. The last two are picks by name: the
+cues the game plays for its own tab row are not read yet.
 
-Stage 1 does not change a value, run another row (Host, Leave, a key change) or play sounds. Use the co-op menu for
-those: Open the co-op menu on the page, or F5. The co-op menu keeps every row it has.
+The co-op menu keeps every row it has: Open the co-op menu on the page, or F5.
 
 `pause_tab=off` in [coop-settings.txt](settings.md#coop-settingstxt) or Online tab in the pause menu (Options,
 Controls) removes the tab from the next pause menu. RB on Settings then goes to Equipment as in the game. LB on
@@ -670,32 +690,32 @@ hides and the pause menu closes as Back closes it.
 
 ### Testing the page in the game
 
-The first game test (build 3581c9ab) showed the page in the pause menu, its keys and RB on Settings working. The
-mouse did nothing on the tab or on the page. LB on Equipment skipped Online. The pane showed an empty black box above
-the name. The steps below check those fixes with the rest. Before the test, install the build when the game is
-closed. After each step keep `UE4SS.log` (the `[PT]` lines) and `coop-link.log` (the `pause tab` lines). The steps go
-from the least risky to the most.
+The game tests of the first build showed the page, its keys, the mouse and Open the co-op menu working. The steps
+below check the rows that change a value. Before the test, install the build when the game is closed. After each step
+keep `UE4SS.log` (the `[PT]` lines and the `menu:` lines) and `coop-link.log`. The steps go from the least risky to
+the most.
 
-1. Pause, go to Settings, move the mouse over Online. Expect: it lights up as the game's tabs do under the mouse.
-   Note whether the game's hover sound plays. Click it. Expect: Settings goes away and the Online page shows with its
-   left list. Stop on a crash or a freeze, if the pause menu closes, or if the game stays paused with no menu.
-2. On the page's left list, press Esc (keyboard) or B (controller). Expect: the pause menu closes as Back does on
-   Settings. Stop if nothing closes or the menu cannot be left.
-3. Pause again, go to Settings, press RB (or E). Expect: Online. Then LB: Settings. RB, RB: Online, then Equipment.
-   On Equipment press LB (or Q, A on an AZERTY keyboard). Expect: Online. LB again: Settings. On Online, click the
-   Map tab: Map shows and the page goes. Stop if two tabs show at once and the next tab change does not fix it.
-4. On the page, move the mouse over the rows. Expect: the one under the mouse takes the focus look, with the
-   Settings focus sound. The pane on the right follows it. Move the mouse over the list items. Expect: the one under
-   it lights up with the same sound and the rows do not change. Click it: its rows show. Leave the mouse still and
-   press up and down: the focus moves with the keys and the mouse does not pull it back. Compare by ear with the
-   game's Settings page and its tabs: the sounds on the Online tab are picks. Then
-   with the keys: up and down in the list, right or Enter into the rows, up and down there, Esc or B back to the list.
-   Check that the pane shows the name at its top with no black box above it.
-5. In Session, select Open the co-op menu, once with Enter or A, once with a click. Expect: the pause menu closes and
-   the co-op menu opens. Then pause, open Settings and check that none of its values changed.
-6. On the page, press the key that opened the pause menu (Start on a controller). Expect: the menu closes.
-7. Last: with the page shown, type `coop off` in the console. Expect: the page goes and the pause menu closes.
-8. With a friend: host an online session and open the page again. Expect: Players in the list.
+1. Pause and open Online with no online session. Expect: Shared world, Combat and Game modes in the list.
+2. Other players: HP marker. Press right, left, then Enter. Then click the left half of its value, then the right half.
+   Expect: On and Off switch at each press, with the select sound of the game's Settings rows. Close the pause menu,
+   open the co-op menu (F5), Options: HP marker shows the same value.
+3. Session: Players. Left to 2, right to 4, right again. Expect: the refusal beep at 4 and no change. Who can join:
+   right through Public, Friends only, Invitation and Private. Expect: Friends join without asking only under Public
+   and Invitation, the focus staying on Who can join.
+4. Controls: Show the status. Enter. Expect: the row reads Press a key, the pane says which keys it takes. Press F5.
+   Expect: the beep, the pane says Open this menu already uses this key. Press Shift+F6. Expect: taken. Enter on it,
+   then Enter again: F6 is back. Enter, then Esc: it stops waiting. Note whether the F-keys reach the page at all.
+5. Controls: Reset all keys. Enter once. Expect: the pane asks. Wait 4 s, Enter: it asks again. Enter twice fast: the
+   keys go back to their defaults.
+6. Session: Host a session. Expect: the pause menu closes and the co-op menu opens.
+7. Display: Online tab in the pause menu, Off. Expect: the pause menu closes and the next pause menu has no Online tab.
+   Put it back On in the co-op menu's Options.
+8. With a friend: Players, Mute <name> with Enter, then with right. The co-op menu's Options show the same. Last,
+   Session: Leave the session with two Enters. It runs while the game is paused, which the co-op menu never did.
+
+Stop on a crash, a freeze, a pause menu that does not close, or the game paused with no menu. Note without stopping: a
+row that flashes its focus look when its value changes, a sound that does not play, a click half that acts on the
+wrong side, a pane note you cannot read.
 
 ### What is not known before the test
 
@@ -722,6 +742,15 @@ Most points have their own log line.
 9. How the game's focus look on the tab buttons shows together with the mod's.
 10. Where the page draws against the key hints, the covers and the fade; which key hints show on the page.
 11. Whether the game reads the open tab elsewhere, for example to reopen the pause menu on the tab it showed last.
+12. Whether the confirm sound and the refusal beep play (`ui_beep` is a sound wave, as `ui_move`, which plays).
+13. Whether the pane shows its note under the name where you can read it. The game's pane had no text there before.
+14. Whether a row whose value changed flashes its focus look: the mod makes the row again with its new value.
+15. Whether the two halves of a value match where the game draws it at your screen size. The value part runs from 610
+    to 1570 of the row's 1640 units, as the game's Settings rows lay it out.
+16. Whether the F-keys reach the mod while the pause menu is open. Enter, the arrows and Esc do.
+17. What a change of a ghost look, of Shared world or Leave the session does while the game is paused. The co-op menu
+    only ever changed them with the game running.
+18. Whether a slider row's bar follows its value.
 
 ### Log lines
 
@@ -735,6 +764,8 @@ Most points have their own log line.
   the page. `pause tab fault ...: off for this run` means a fault in the mod's hook or in its reads of the open pause
   menu: RB on Settings goes to Equipment. A click on the tab stops the tab with the `[PT] STOP` line. `pause tab: asked
   off, ...` and `pause tab: asked on, ...` follow the setting.
+- `UE4SS.log`: a value changed on the page logs `menu: <setting>=<value> saved in coop-settings.txt`, as the co-op
+  menu does; one not saved logs `menu: <setting>=<value> not saved: <why>`.
 - `UE4SS.log`: `[PT] hook on: WB_GameMenu_Master_C:Construct` once a Lua load, or `[PT] STOP: <why>; the pause menu
   keeps its 8 tabs until the mod reloads`, after which the mod asks the native part `pausetab off`.
   - `[PT] online page: <part> built from SB's class` or `[PT] online page: <part> not built (<why>); the kit's drawing
