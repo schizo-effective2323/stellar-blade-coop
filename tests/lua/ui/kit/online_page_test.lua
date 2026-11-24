@@ -22,7 +22,9 @@
 -- value, the wrap, a row shown or hidden by it with the cursor kept), a range held at its end with the refusal sound,
 -- a click on each half of a value part, a write refused with its note in the pane, nothing on left or right of an
 -- action row, the Online tab written off answering 'close', a row no longer shown refused and gone, Leave asked again
--- after a move, a mute row kept under the cursor, a key row waiting for a key (Press a key, the capture words, a key
+-- after a move of the keys, of the mouse look or of a click and after its 3 s, its question in the pane, Copy my code
+-- run in place, a run refused with its why, a mute row kept under the cursor and muted by select too, Remove and Reset
+-- all keys asking first then running, a key row waiting for a key (Press a key, the capture words, a key
 -- refused or taken through a fake bind, select for the default, back to stop, the mouse and the other words doing
 -- nothing meanwhile), an act that raises turning the page off.
 package.path='mod/StellarCoop/Scripts/?.lua;'..package.path
@@ -244,6 +246,9 @@ local sounds={} -- The kit's sounds asked, by name.
 -- answer (taken, written, note), the key written into the ctx's values when taken and written.
 local acts,act_ok,act_note,act_raise={},true,nil,nil
 local binds,bound={},{true,true,nil}
+-- A confirm's first step: the co-op menu's act answers with its question (ui/kit/menu.lua's here).
+local ASKS={confirm_leave=w.confirm_leave,confirm_remove=w.confirm_remove:format('S'),
+    confirm_reset_keys=w.confirm_reset_keys}
 local function new()
     events,logs,made,constructed,raising,no_canvas,mouse,sounds={},{},{},{},{},false,nil,{}
     acts,act_ok,act_note,act_raise={},true,nil,nil
@@ -257,7 +262,7 @@ local function new()
             if act_raise then error(act_raise) end
             acts[#acts+1]=a..' '..tostring(k)..' '..tostring(t)
             if a=='set' and act_ok then ctx.values[k]=t end
-            return act_ok,act_note
+            return act_ok,act_note or ASKS[a]
         end,
         bind=function(k,name)
             binds[#binds+1]=k..' '..name
@@ -487,6 +492,25 @@ do
     page.nav('select',20); page.nav('down',20); page.nav('up',20); page.nav('select',21)
     assert(table.concat(acts,'|',n+1)=='confirm_leave nil nil|confirm_leave nil nil',table.concat(acts,'|',n+1))
     page.nav('select',22); assert(acts[#acts]=='leave nil nil' and heard()=='confirm','The second Select leaves')
+    -- The 3 s window (model.lua's): a second Select 4 s later asks again, the question in the pane.
+    page.nav('select',30); page.nav('select',34)
+    assert(table.concat(acts,'|',#acts-1)=='confirm_leave nil nil|confirm_leave nil nil' and desc()==w.confirm_leave
+        and heard()=='confirm','Past 3 s: asked again')
+    -- The mouse look leaving the row and coming back forgets the first Select (slot 7 Leave, slot 9 Who can join).
+    mouse={row_at(7)}; page.tick(39.5)
+    page.nav('select',40); mouse={row_at(9)}; page.tick(40.5); mouse={row_at(7)}; page.tick(41); page.nav('select',41)
+    assert(table.concat(acts,'|',#acts-1)=='confirm_leave nil nil|confirm_leave nil nil','Asked again after the mouse')
+    -- So does a click on another row: Leave, Who can join's name (its next value), Leave again within 3 s.
+    page.click(45); mouse={row_at(9)}; page.click(45); mouse={row_at(7)}; page.click(46)
+    assert(table.concat(acts,'|',#acts-2)=='confirm_leave nil nil|set who_can_join friends|confirm_leave nil nil',
+        table.concat(acts,'|',#acts-2))
+    mouse=nil
+    -- Copy my code runs in place with SB's confirm cue; a run the co-op menu refuses: the beep, its why in the pane.
+    page.nav('up',50); page.nav('up',50)
+    page.nav('select',50); assert(pane()=='Copy my code' and acts[#acts]=='copy nil nil' and heard()=='confirm')
+    act_ok,act_note=false,'x'
+    page.nav('select',51); assert(acts[#acts]=='copy nil nil' and heard()=='refuse' and desc()=='x','Refused')
+    act_ok,act_note=true,nil
     -- A mute row: right mutes her (its select); the cursor stays on her row when the row above it goes.
     page.nav('back',23)
     to('Players')
@@ -495,6 +519,13 @@ do
     ctx.members={{id='8',name='B',linked=true,muted=false}}
     page.nav('right',24)
     assert(acts[#acts]=='mute 8 false' and heard()=='change' and pane()=='Mute B',pane())
+    n=#acts
+    page.nav('select',24); assert(#acts==n+1 and acts[#acts]=='mute 8 false' and heard()=='change','Select mutes too')
+    -- Remove S asks first in the co-op menu's words, then removes on a second Select within 3 s.
+    page.nav('down',25); page.nav('select',25)
+    assert(pane()=='Remove S' and acts[#acts]=='confirm_remove nil nil'
+        and desc()=='Select again within 3 s to remove and block S.' and heard()=='confirm',desc())
+    page.nav('select',26); assert(acts[#acts]=='remove nil nil' and heard()=='confirm')
     -- A key row: select waits for the next key (Press a key in the row, the capture words in the pane, SB's confirm
     -- cue); the keys move nothing meanwhile. Each key goes through the co-op menu's bind: refused, the wait goes on
     -- with its note; taken, the row shows it. Enter (select) asks for the default; back stops the wait with no bind.
@@ -523,6 +554,10 @@ do
     page.nav('select',33); page.nav('back',33)
     assert(#binds==3 and heard()=='back' and desc()==''
         and latest('option','Open this menu').props.Text_ItemValue=='Enter','Back: the wait stopped, no bind')
+    -- Reset all keys asks first, then resets on a second Select within 3 s.
+    to('Reset all keys')
+    page.nav('select',60); assert(acts[#acts]=='confirm_reset_keys nil nil' and desc()==w.confirm_reset_keys)
+    page.nav('select',61); assert(acts[#acts]=='reset_keys nil nil' and heard()=='confirm')
     page.nav('back',33)
     to('Session'); page.nav('right',34); to('Who can join')
     -- An act that raises: the page off with one line.
