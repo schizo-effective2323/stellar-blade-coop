@@ -284,14 +284,16 @@ function Tab.new(o)
             if action=='open_menu' then close(now,true) end
             return
         end
-        local ok,over,widget=pcall(function()
-            return assert(U.valid(button.Button_Action),'the tab button lost its Button_Action'):IsHovered()==true,
-                button:IsHovered()==true
+        local ok,over=pcall(function()
+            return assert(U.valid(button.Button_Action),'the tab button lost its Button_Action'):IsHovered()==true
         end)
         if not ok then return fail(over) end
-        -- shortcut: both answers each click while unproven; the Button's alone once a game test shows it holds.
+        -- shortcut: both answers each click while unproven; the Button's alone once a game test shows it holds. The
+        -- tab button's own answer is only for the log: a refusal there never stops the tab.
+        local asked,widget=pcall(function() return button:IsHovered()==true end)
         local function yes(b) return b and 'yes' or 'no' end
-        log('click: Online tab hovered: Button_Action '..yes(over)..', tab button '..yes(widget))
+        log('click: Online tab hovered: Button_Action '..yes(over)..', tab button '
+            ..(asked and yes(widget) or 'refused'))
         if not over then return end
         clicked=o.tab~=nil
         enter(now,'a click')

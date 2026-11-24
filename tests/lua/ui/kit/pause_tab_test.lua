@@ -92,7 +92,7 @@ local function menu(no_tap_set,no_action)
                     IsHovered=function() return hovered end}) or nil,
                 RefreshDesign=function(self) self.refreshed=self.refreshed+1 end,
                 SetVisibility=function(self,v) self.visibility=v end,
-                IsHovered=function() return widget_hovered end,
+                IsHovered=function() if widget_hovered=='raise' then error('refused') end return widget_hovered end,
                 GetCachedGeometry=function() error('the cached geometry was read') end}))
             buttons[#buttons+1]=made
             return made
@@ -326,6 +326,9 @@ widget_hovered=true
 s.tab.click(30); s.tab.click(30.1)
 assert(count(logs,'click: Online tab hovered: Button_Action no, tab button yes')==2
     and p.calls[#p.calls]=='show false','Not over the Button: one line each click, no entry')
+widget_hovered='raise' -- The question asked for the log alone is refused: one line, the tab goes on.
+s.tab.click(30.15)
+assert(logged('click: Online tab hovered: Button_Action no, tab button refused') and s.tab.armed())
 hovered,widget_hovered=true,false
 s.tab.click(30.2)
 assert(logged('click: Online tab hovered: Button_Action yes, tab button no')
