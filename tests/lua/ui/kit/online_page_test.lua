@@ -365,7 +365,7 @@ local function pane() return detail.props.Text_ItemName.props.text end
 mouse={row_at(2)}
 page.tick(40); assert(pane()=='Session','The first look moves nothing')
 mouse={row_at(4)}
-page.tick(40.05); assert(pane()=='Session','Not before HOVER s')
+page.tick(40.05) -- The very next frame: the mouse answers at once, as SB's own menus do.
 page.tick(40.1)
 host=part('Host a session') -- The latest one: Session's rows were made again after Controls.
 assert(pane()=='Host a session' and host.calls[#host.calls][2]=='StateFocus','Moved onto Host a session')
@@ -381,8 +381,15 @@ mouse={item_at(5)}
 page.tick(40.4)
 assert(pane()=='Open the co-op menu' and sounds[#sounds]=='tab' and #sounds==n+2,'Lit, not shown')
 local controls,session=tab_part('Controls'),tab_part('Session')
-assert(controls.calls[#controls.calls][1]=='PlayFocusAnim' and session.calls[#session.calls][1]=='Select')
+local boxes=called(controls,'PlayFocusAnim')
+assert(controls.calls[#controls.calls][1]=='Select' and session.calls[#session.calls][1]=='Select',
+    'Under the mouse: white as the shown category, never the white box')
 assert(page.click()==nil and pane()=='Controls' and sounds[#sounds]=='wheel_move','A click shows its rows')
+assert(called(controls,'PlayFocusAnim')==boxes+1,'The click puts the cursor on it: the white box')
+mouse={item_at(1)} -- The cursor stays on Controls while the mouse lights Session.
+page.tick(40.45)
+assert(session.calls[#session.calls][1]=='Select' and called(controls,'PlayFocusAnim')==boxes+1
+    and controls.calls[#controls.calls][1]=='PlayFocusAnim' and pane()=='Controls')
 mouse={row_at(1)} -- Controls' first header: no item.
 page.tick(40.5); assert(pane()=='Controls')
 n=#sounds

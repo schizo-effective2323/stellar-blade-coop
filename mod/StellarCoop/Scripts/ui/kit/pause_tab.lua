@@ -228,7 +228,7 @@ function Tab.new(o)
         -- plays none. A refused read is only no sound.
         -- shortcut: the kit's move cue (UI_Common_Hover_Cue); SB's own tab hover cue is native and not read yet.
         if not showing and now>=over_at and self.armed() and o.paused() then
-            over_at=now+0.1
+            over_at=now -- Each frame: SB's own tabs answer the mouse at once.
             local ok,on=pcall(function() return button.Button_Action:IsHovered()==true end)
             on=ok and on
             if on and not over then sound('move') end

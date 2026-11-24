@@ -35,7 +35,9 @@ local Parts=require('ui.kit.parts')
 local Model=require('ui.kit.model')
 local Online=require('ui.kit.online_model')
 local Join=require('core.line')
-local Page={ROWS=12,HOVER=0.1} -- Slots in the rows area (a longer category scrolls); seconds between mouse looks.
+-- Slots in the rows area (a longer category scrolls); seconds between mouse looks: none, SB's own menus answer the
+-- mouse at once and a look each 0.1 s read as lag in the game.
+local Page={ROWS=12,HOVER=0}
 -- WB_Setting_Set's layout in 3840 by 2160 units, read in its class export: from x 0 at y 384, a 200 spacer, the left
 -- list (356 wide, items 100 high), a 120 spacer, the rows (1640 wide, 130 a slot), a 120 spacer, the description pane
 -- (780 by 1344, 68 down).
@@ -165,8 +167,8 @@ function Page.under(cats,cur,x,y)
 end
 -- What to draw: list {kind='tab', label=, look=} per category; rows, one per slot ({kind='header', head=true,
 -- label=}, {kind=, label=, value=, percent= (a slider's), row=, look=} or false); detail {title=, desc=}. look:
--- 'focus' (the cursor, or the list item under the mouse, cur.over), 'select' (the category the rows show while the
--- cursor is in them or the mouse is on another item) or 'normal'. The pane's description is the last press's note
+-- 'focus' (the cursor), 'select' (the category the rows show while the cursor is in them, and the list item under
+-- the mouse, cur.over) or 'normal'. The pane's description is the last press's note
 -- (cur.note: a confirm's question, a refusal's why, the reload note) while the cursor is in the rows.
 function Page.specs(cats,cur,w,gw,ctx)
     local out={list={},rows={},detail={title='',desc=''}}
@@ -177,8 +179,8 @@ function Page.specs(cats,cur,w,gw,ctx)
     cur.cat=math.max(1,math.min(cur.cat,#cats))
     for i,cat in ipairs(cats) do
         out.list[i]={kind='tab',label=w.online_page.cat[cat.id] or cat.id,
-            look=i==cur.over and 'focus' or i~=cur.cat and 'normal' or (cur.list and not cur.over) and 'focus'
-                or 'select'}
+            -- As SB's Settings list: the white box is the cursor's alone; an item under the mouse only turns white.
+            look=i==cur.cat and (cur.list and 'focus' or 'select') or i==cur.over and 'select' or 'normal'}
     end
     local list=lines(cats[cur.cat])
     for i=1,Page.ROWS do
