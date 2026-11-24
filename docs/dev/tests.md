@@ -619,13 +619,14 @@ fails the test. The `main/` tests load `main/fixture.lua` first, with UE4SS stub
   pane's `Thumbnail` collapsed once (a pane without one logged once); Session's 10 list items and 19 parts at the places
   of the game's Settings page; right giving Select, StateFocus on Host a session and its words in the pane, Select there
   asking first; no part made again while the rows stay; a click at the kit's pointer selecting the row under it,
-  answering `away` with `find` on Find a session, asking first on Host a session, nothing on a header or with no
+  opening Find a session's rows (back returning to it), asking first on Host a session, nothing on a header or with no
   pointer, a click on another category; the mouse look every 0.1 s (the first look moving nothing, the item the mouse
   moved onto taking the cursor, a resting mouse never moving it after the keys did, a header or no pointer moving
   nothing); the game's eight pages by name with their state; a look refused logged once; a class whose Create raises
   drawn with TextBlocks and Borders, one line for it, the others the game's; a canvas that cannot be made turning the
   page off with one line. Pure: what a press asks of each kind of row (`Page.press`: the next or previous value, select,
-  never `open_menu`, nothing on left or right of an action or key row) and which press a click at x makes on a row
+  never `open_menu`, nothing on left or right of an action or key row, `sub` on a sub-page's row: select, then left
+  and right on a rolling one only) and which press a click at x makes on a row
   (`Page.word_at`: the halves of the value part from 1286 to 2246, select elsewhere). Engine, through the co-op menu's
   model and a fake act and bind: right, left and select on Who can join (the value written, the select sound, the part
   made again, Friends join without asking hidden and skipped, the wrap), Players held at 4 with the refusal sound and no
@@ -637,13 +638,24 @@ fails the test. The `main/` tests load `main/fixture.lua` first, with UE4SS stub
   run refused with its why, a mute row kept under the cursor when the row above it goes and muted by select too, Remove
   and Reset all keys asking first then running, a key row waiting (Press a key, the capture words, a key refused or
   taken, Enter for the default, back to stop, the keys and the mouse moving nothing), Write a bug report solo and Invite
-  while hosting run in place, each row that still needs the game world (Find a session, Join with a code and Guide solo,
-  Chat while hosting) answering `away` and its id with the confirm cue and nothing run, no Test tools list item though
-  the ctx has a module page. An act that raises turns the page off. The state read again every 0.25 s while the page
-  shows: an online session that begins adds Players second with the cursor kept on Who can join, no sound and no act; a
-  change before 0.25 s waits for the next read; the cursor's row gone (Host a session once hosting) puts it on Invite a
-  friend with the pane's question cleared; a first Select of Leave survives a read that changes nothing; a read that
-  raises turns the page off;
+  while hosting run in place, Chat while hosting answering `away` and its id with the confirm cue and nothing run, no
+  Test tools list item though the ctx has a module page. Guide shows its rows in Help's place: a header, one row a
+  guide page with SB's value word off, its body in the pane, the list kept with Help selected, nothing run or sounded
+  on a page, back on Guide with the focus sound, a click opening it, a click on a list item leaving it. An act that
+  raises turns the page off. The state read again every 0.25 s while the page shows: an online session that begins
+  adds Players second with the cursor kept on Who can join, no sound and no act; a change before 0.25 s waits for the
+  next read; the cursor's row gone (Host a session once hosting) puts it on Invite a friend with the pane's question
+  cleared; a first Select of Leave survives a read that changes nothing; a read that
+  raises turns the page off. Find a session through a fake of the Sessions screen's `enter`, `texts` and `ask`: Search
+  with the tab, Refresh, a header naming the tab over the sessions with their values, the status and footer in the pane
+  on Search, a session's details on its row, right and left on Search asking `tab` with the select sound, Refresh asked
+  with the confirm sound then refused with the seconds left in the pane, a join answering `close` or refused, the list
+  read again (a status in the header, the cursor on Search), the sub-page gone when an online session begins or the
+  sessions go off, back on Find a session, Select refused with the `not shown` line while they are off. Join with a
+  code through a fake of the code box's `chars` and `join`: seven places reading `_` and Join reading `___-____`, right
+  from an empty place giving 0 and left Z, the wrap, Join refused with the box's words in the pane, `0CS-CBMH` joined
+  answering `close`, the places kept at a read of the state and empty at the next open, Select refused while the box
+  is off;
 - `world/daynight/rule_test` covers `world/daynight/rule.lua`: every row of the map table (keys in lower case, each open
   row complete for its kind of sky, the fixed maps, an unknown map), the rules in their order (SB's screens and
   cutscenes ignored, Xion's story night before photo mode, photo mode's hold whatever the hour, a test pin before Night
@@ -715,7 +727,9 @@ fails the test. The `main/` tests load `main/fixture.lua` first, with UE4SS stub
   module page. While the pause menu's Online page shows, the pad's words, the navigation keys, Enter and Esc go to the
   tab's `nav` and to no screen (E and F do nothing, RB on Settings still goes to the tab's event); while it does not,
   nothing changes. The page is built behind its guard and handed to the tab with the native entry and tab read, its ctx
-  giving the model's fields with no module pages, its pointer the kit's; a page that does not build logs one line. The
+  giving the model's fields with no module pages, its pointer the kit's, its `sessions` the Sessions screen (its
+  `enter` reaching it), its `code` the code box (`Join.CHARS`, its `join` asking `join 0CS-CBMH`); a page that does
+  not build logs one line. The
   keys work on. `main/boot_test` covers the two native reads: each of `coop_pause_enter`'s 5 counts and
   `coop_pause_page`'s 12 as its word or tab, any other count nil and why, an older DLL without them nil and the loadlib
   reason. For spectate it covers the pad's left and right that nothing else took switching the member watched (the co-op
@@ -895,7 +909,10 @@ fails the test. The `main/` tests load `main/fixture.lua` first, with UE4SS stub
   their scroll window, the details pane and footer, Select asking to join, the mouse (a resting mouse moves neither the
   cursor nor the list), the closes by itself, the input given back, parts made again after a root build, the kit drawing
   for a part the game cannot make (rows, headers, hints, the tab keys) and the log lines. No part is focused or sent a
-  call outside the allowed list;
+  call outside the allowed list. The Online page's three: `enter` asking for the tab's search with its line, no input
+  taken and nothing shown; `texts` giving the tab, Refresh's word (SB's Cancel while the search runs), the status, the
+  footer and the rows with their values and details; `ask` changing the tab with its search, refreshing as Refresh does
+  (nothing inside the 5 s gap) and joining a row of the last texts with its line;
 - `online/session/ui/sessions_model_test` covers a tab's rows and status from the native part's list, what Refresh and
   Select ask for, the cursor, the region and camp keys and the rules word read back (any other shape gives none);
 - `online/session/ui/create_test` covers the Create a session screen on fake SB parts: it opens in a world on the values
@@ -949,7 +966,9 @@ fails the test. The `main/` tests load `main/fixture.lua` first, with UE4SS stub
   mouse (SB's own buttons or the panel's rows, nothing elsewhere), the mouse cursor shown, each player asked once a
   lobby, the 60 s left to the native part. For the joiner's wait: Close (a key or a click) leaving the lobby, a let in
   or a refusal closing it. Then `coop ui reset`, `coop off` and a name with `<` or `>`. It also covers the feed's join
-  and leave lines in SB's words (`Join.feed`);
+  and leave lines in SB's words (`Join.feed`), `Join.CHARS` against `kCodeDigits` in `native/src/link/protocol.h` (each
+  character a valid code in each place) and the box's `join` with the box closed: a code run, a code with places not
+  picked refused in English or French with nothing run, the run's refusal as its why;
 - `online/lobby/halls_rows_test` checks the hall lobbies' 181 rows (5 worlds, 5 zones, 171 seats) against
   `online/lobby/halls_rows.h` and `online/lobby/sbo_maps.lua`, then the title's ask: none without the lobby pak, once
   with it on the co-op save files, read back; a refusal, a fault or rows that read back wrong keep the lobby in Xion

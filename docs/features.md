@@ -58,9 +58,10 @@ achievements, which cannot be taken back.
   opens the Online page, laid out like the game's Settings page: SBO's settings and session rows with their values.
   Its rows change a value, take a key or run as the game's Settings rows do, through the same code as the co-op menu.
   Host a session asks first, then hosts with the rules set on the page, the pause menu staying open. Invite a friend
-  and Write a bug report run in place too. Find a session, Join with a code, Guide and Chat close the pause menu, then
-  run. The page has no Test tools: they stay in the co-op menu. The page and its mouse were tested in game; its rows
-  were not tested in game yet.
+  and Write a bug report run in place too. Find a session (its searches, sessions and joins), Join with a code (a
+  picker over the code's characters) and Guide show their own rows on the page. Chat closes the pause menu, then opens
+  the chat box. The page has no Test tools: they stay in the co-op menu. The page and its mouse were tested in game;
+  its rows were not tested in game yet.
 - While at least one other player is linked with you, the game's tutorial popups and record popups are off in your
   game (Hide popups online, on by default). Your own values come back when you leave. The game's settings file keeps
   them the whole time. Not tested in game yet.
