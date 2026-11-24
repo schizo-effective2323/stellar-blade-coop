@@ -26,6 +26,13 @@ Stellar Blade Online has two parts, both in the mod folder `Mods/StellarCoop/`:
   - `coop_pause_close`, an exported function that Lua calls on the game thread when the pause menu's Online tab closes
     the pause menu. It runs the game's own close, the one Back uses (see [Pause
     menu](../players/interface.md#pause-menu)).
+  - `coop_pause_enter` and `coop_pause_page`, exported functions that Lua calls on the game thread for the pause
+    menu's Online page, tab 9 of the game's pause menu. `coop_pause_enter` runs the shown page's deactivate as the
+    game's tab change does, then writes 9 as the current tab. Lua passes 5 arguments and gets back 1 (entered), 2
+    (tab 9 already shows), 3 (no pause menu open), 4 (the game's tab lock is on) or 5 (off). `coop_pause_page` answers
+    the open menu's tab: Lua passes 12 arguments and gets back the tab 1 to 9, 10 (another number), 11 (no pause menu
+    open) or 12 (off). Off means another build, `coop off` or the tab's fault. While tab 9 shows, the input hook keeps
+    the game's Back from the pause menu, so Lua handles Back on its page.
 
 ```
    your game                                                      friend's game

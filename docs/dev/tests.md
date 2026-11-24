@@ -1690,9 +1690,13 @@ and `tools/install.py` names its program after that path (`tests/native/game/cod
   `PadKeys` (the controller pushed furthest, `clear()`);
 - `ui_pause_tab_test`: the Online tab's decision on the GameMenu logic's input (RB on the highest enabled tab while the
   game's tab lock is off opens it; any other tab, action or lock passes the action on to the game; a tab list the game
-  never builds passes too; a press and its release within 500 ms open once) and its pinned slot, function, FName
-  global and offsets, the game's own close of the pause menu with the logic's vtable, type and entry offset, the
-  answers Lua reads from `coop_pause_close`;
+  never builds passes too; a press and its release within 500 ms open once, on any tab, so the release after Lua
+  entered tab 9 is dropped; on tab 9 the game's Back is held with or without the lock while LB, RB and the pause key
+  pass) and its pinned slot, function, three FName globals and offsets, the game's own close of the pause menu with the
+  logic's vtable, type and entry offset, the answers Lua reads from `coop_pause_close`, `coop_pause_enter` and
+  `coop_pause_page`; `page_of` over a fake of the game's tab to page map (a two-entry chain, an empty bucket, a map
+  with no entry, the inline bucket, a chain that loops ending after 16 hops) and the tab answer (1 to 9 kept, any
+  other number 10);
 - `online_session_options_test`: the game's Tutorial and RecordPopup options during online play (an option On at link
   forced Off with On kept, the save slot handed the kept value while it is forced, the value back at unlink; an option
   already Off left alone; the player's On during online play kept with no new force until unlink; a value the game never

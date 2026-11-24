@@ -287,7 +287,7 @@ moved, the ambiguous ones and the missing ones:
 
 ```
 0x141ce8050  function  kSave                     found 0x141ce8050
-287 found (0 moved), 0 ambiguous, 0 missing
+289 found (0 moved), 0 ambiguous, 0 missing
 ```
 
 Then comes the same report for the entries of `ue4ss.json`, after the line `UE4SS signature targets (ue4ss.json):`. For
