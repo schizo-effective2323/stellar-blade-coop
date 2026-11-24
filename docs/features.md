@@ -54,7 +54,8 @@ achievements, which cannot be taken back.
   shows the status and F8 leaves the session. On any controller the game reads (a DualSense with Steam Input off
   included), View held for 1 s opens the menu. The mouse works in it too.
 - The game's pause menu gets an Online tab after Settings. RB on Settings (E on the keyboard) or a click on the tab
-  closes the pause menu and opens the co-op menu. Not tested in game yet.
+  opens the Online page, laid out like the game's Settings page: SBO's settings and session rows with their values.
+  Its Open the co-op menu row closes the pause menu and opens the co-op menu. Not tested in game yet.
 - While at least one other player is linked with you, the game's tutorial popups and record popups are off in your
   game (Hide popups online, on by default). Your own values come back when you leave. The game's settings file keeps
   them the whole time. Not tested in game yet.
