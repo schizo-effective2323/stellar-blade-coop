@@ -321,6 +321,17 @@ function Tab.new(o)
         if page.off() then return fault(now) end
         if action=='open_menu' then close(now,true) elseif action=='close' then close(now,false) end
     end
+    -- A key pressed (main/keys.lua's F-keys, keybind.text's name) while the page shows: true when one of its key rows
+    -- waited for it. A page that turned off doing it takes the fault path.
+    function self.capture(name,now)
+        if not showing then return false end
+        local took=page.capture(name)
+        if page.off() then
+            fault(now)
+            return true
+        end
+        return took
+    end
     -- coop off: the page hidden with SB's close, as Back; no more buttons. The native part puts its slot back.
     function self.stop()
         if showing then

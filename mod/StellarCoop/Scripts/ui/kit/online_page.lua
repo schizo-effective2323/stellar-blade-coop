@@ -18,10 +18,13 @@
 -- elsewhere on a row is select. Each press runs through the co-op menu's own model and code (o.act: ui/kit/menu.lua's
 -- act), so both menus change a value and run a row the same way. A press the co-op menu's rules refuse (a row not
 -- shown now, a range at its end, a write refused) plays SB's refusal sound and changes nothing; the pane says why when
--- there is a why. Select or a click on Open the co-op menu or a Test tools row opens the co-op menu. Every engine call
--- runs in pcall on the game thread. An engine error that is not a part's own turns the page off until the mod reloads
--- with one line; the Online tab then opens the co-op menu as before. A look a part refuses is logged once a kind. Only
--- UI: no save, no SetInputMode, no Slate focus taken. main/input.lua builds it behind its own guard.
+-- there is a why. Select on a key row waits for the next key as the co-op menu does: the row reads Press a key, the
+-- pane says which keys; an F-key (main/keys.lua through ui/kit/pause_tab.lua's capture) is checked against the other
+-- keys by the co-op menu's own bind, Enter puts back its default, Esc or B stops the wait, the mouse and the other
+-- words do nothing meanwhile. Select or a click on Open the co-op menu or a Test tools row opens the co-op menu. Every
+-- engine call runs in pcall on the game thread. An engine error that is not a part's own turns the page off until the
+-- mod reloads with one line; the Online tab then opens the co-op menu as before. A look a part refuses is logged once
+-- a kind. Only UI: no save, no SetInputMode, no Slate focus taken. main/input.lua builds it behind its own guard.
 -- tests/lua/ui/kit/online_page_test.lua covers it over fakes.
 local U=require('core.unreal')
 local Keep=require('core.keep')
@@ -183,6 +186,7 @@ function Page.specs(cats,cur,w,gw,ctx)
             local row=line.row
             local s={kind=Page.kind(row),row=row,label=Page.label(w,gw,row,ctx),value=Page.value(w,row,ctx),
                 look=(not cur.list and cur.top+i==cur.row) and 'focus' or 'normal'}
+            if row.bind and row.key==cur.capturing then s.value=w.press end -- Waiting for a key, as in the co-op menu.
             if s.kind=='slider' then s.percent=percent(row,ctx) end
             out.rows[i]=s
         end
@@ -239,7 +243,8 @@ local FILL={
 -- ctx=function() online_model's ctx (mode, chat, code, stranger, values, members, pages), theme=ui/kit/kit.lua's
 -- THEME, pointer=function() the mouse in the viewport's layout units (ui/kit/kit.lua's pointer): x, y, or nil,
 -- act=function(action, key, text, ctx) the co-op menu's run of what its model answered (ui/kit/menu.lua's act): ok,
--- note}.
+-- note, bind=function(key, name) the co-op menu's take of a key pressed for a key row (ui/kit/menu.lua's bind):
+-- taken, written, note}.
 function Page.new(o)
     local log,theme=o.log,o.theme
     local wanted={}
@@ -487,9 +492,13 @@ function Page.new(o)
         if how=='change' then action,key,text=m.change(ctx,ctx.values,dir)
         else action,key,text=m.select(ctx,now,ctx.values) end
         if not action then refuse(); return nil end -- A range at its end, a confirm whose row went.
-        -- shortcut: a key row refuses until the page takes a key (V6); a row that needs the game world opens the co-op
-        -- menu (stage 1's path) until the page closes the pause menu and runs it.
-        if action=='rebind' then refuse(); return nil end
+        if action=='rebind' then -- The row waits for the next key: capture, or Enter for its default.
+            cur.capturing,cur.note=key,o.words().capture
+            sound('confirm')
+            return nil
+        end
+        -- shortcut: a row that needs the game world opens the co-op menu (stage 1's path) until the page closes the
+        -- pause menu and runs it.
         if Model.AWAY[action] or action=='report' then sound('confirm'); return 'open_menu' end
         local ok,n=o.act(action,key,text,ctx)
         cur.note=n
@@ -516,11 +525,29 @@ function Page.new(o)
         keep(id,row)
         return a,b
     end
+    -- A key pressed (keybind.text's: 'Shift+F7', 'Enter') for the key row that waits: through the co-op menu's bind,
+    -- which checks it against the other keys. Taken: the wait ends. Refused: the wait goes on, the why in the pane.
+    local function take(name)
+        local taken,ok,n=o.bind(cur.capturing,name)
+        cur.note=n
+        if taken then cur.capturing=nil end
+        sound(taken and ok and 'change' or 'refuse')
+        ctx=o.ctx()
+    end
     -- A navigation word while shown, at now: in the rows, left, right and select press the cursor's row; other words
-    -- move the cursor (Page.move). The page drawn again; the answer: 'close', 'open_menu' and a module page, or nil.
+    -- move the cursor (Page.move). While a key row waits: back stops the wait, select puts back its default, the other
+    -- words do nothing. The page drawn again; the answer: 'close', 'open_menu' and a module page, or nil.
     function self.nav(word,now)
         if off or not shown then return nil end
         local ok,a,b=pcall(function()
+            if cur.capturing then
+                if word=='back' then
+                    cur.capturing,cur.note=nil,nil
+                    sound('back')
+                elseif word=='select' then take('Enter') end -- Space or the pad's A, as Enter: the default.
+                draw()
+                return nil
+            end
             local was=where()
             cur.over=nil -- The keys take the cursor back from the mouse's list item.
             local line=not cur.list and cats[cur.cat] and lines(cats[cur.cat])[cur.row]
@@ -554,10 +581,20 @@ function Page.new(o)
             return kind,i,x
         end
     end
+    -- A key pressed while shown (main/keys.lua's F-keys): true when a key row waited for it, taken or refused.
+    function self.capture(name)
+        if off or not shown or not cur.capturing then return false end
+        local ok,why=pcall(function()
+            take(name)
+            draw()
+        end)
+        if not ok then fail(why) end
+        return true
+    end
     -- A left click while shown, at now: the list item or row under the mouse selected; on a row, the press its place
-    -- makes (Page.word_at) and act's answer.
+    -- makes (Page.word_at) and act's answer. Nothing while a key row waits.
     function self.click(now)
-        if off or not shown then return nil end
+        if off or not shown or cur.capturing then return nil end
         local ok,a,b=pcall(function()
             local kind,i,x=under()
             local shown_cat=cur.cat
@@ -579,7 +616,7 @@ function Page.new(o)
     -- takes the cursor and its focus look. A list item is lit only, as in SB's Settings: a click shows its rows. Both
     -- play SB's move sound. A resting mouse never moves anything, even while the keys move the cursor under it.
     function self.tick(now)
-        if off or not shown or now<hover_at then return end
+        if off or not shown or now<hover_at or cur.capturing then return end
         hover_at=now+Page.HOVER
         local ok,why=pcall(function()
             local kind,i=under()

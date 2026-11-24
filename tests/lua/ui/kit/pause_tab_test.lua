@@ -19,7 +19,8 @@
 -- Open the co-op menu closes then opens the co-op menu, back in the list closes only; the entry's locked and none
 -- change nothing with one line each, off or a page that does not build take the path before the page; a page that turns
 -- off while shown closes and opens the co-op menu; coop off hides it with SB's close. The page's nav and click get the
--- clock; their 'close' (the Online tab written off on the page) closes the pause menu with no co-op menu.
+-- clock; their 'close' (the Online tab written off on the page) closes the pause menu with no co-op menu. An F-key goes
+-- to the page's capture only while the page shows.
 package.path='mod/StellarCoop/Scripts/?.lua;'..package.path
 local MASTER='/Game/Art/UI/Widget/GameMenu/WB_GameMenu_Master.WB_GameMenu_Master'
 local MASTER_KEEPER=MASTER..'.StellarCoop_PauseTabKeeper'
@@ -283,6 +284,11 @@ local function fake_page()
         shown=function() return p.on end,
         nav=function(word,now) note('nav',word); p.nav_at=now; return p.answer end,
         click=function(now) note('click'); p.click_at=now; return p.clicked end,
+        capture=function(name)
+            note('capture',name)
+            if p.capture_off then p.off,p.on=true,false end
+            return p.capturing
+        end,
         tick=function(now) p.ticks[#p.ticks+1]=now; if p.tick_off then p.off,p.on=true,false end end,
         visibility=function() return p.vis end,
         forget=function() note('forget'); p.on=false end,
@@ -413,4 +419,18 @@ s.now=8; s.tab.event(91); s.now=9
 p.clicked='close'; s.tab.click(91.5)
 assert(p.click_at==91.5 and s.closes==2 and not s.tab.page_shown(),'Off by a click: closed')
 s.paused=false; s.tab.tick(92); assert(s.opens==0,'No co-op menu')
+-- An F-key (main/keys.lua): false while the page is hidden, the page's capture while it shows; a page that turns off
+-- in it takes the fault path.
+s.paused=true
+assert(s.tab.capture('F7',93)==false and not p.calls[#p.calls]:find('capture',1,true),'Hidden: not asked')
+local m23=menu(); construct(m23)
+s.now=8; s.tab.event(94); s.now=9
+p.capturing=true
+assert(s.tab.capture('Shift+F7',94.5)==true and p.calls[#p.calls]=='capture Shift+F7','Shown: the page\'s')
+p.capturing=false
+assert(s.tab.capture('F7',94.6)==false,'No key row waits: not taken')
+p.capture_off=true
+assert(s.tab.capture('F7',94.7)==true and s.closes==3 and not s.tab.page_shown()
+    and logged('online page: off while shown; the pause menu closes and the co-op menu opens as before'))
+p.capture_off,p.off=false,false
 print('pause_tab_test ok')

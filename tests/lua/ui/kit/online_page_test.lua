@@ -22,7 +22,9 @@
 -- value, the wrap, a row shown or hidden by it with the cursor kept), a range held at its end with the refusal sound,
 -- a click on each half of a value part, a write refused with its note in the pane, nothing on left or right of an
 -- action row, the Online tab written off answering 'close', a row no longer shown refused and gone, Leave asked again
--- after a move, a mute row kept under the cursor, an act that raises turning the page off.
+-- after a move, a mute row kept under the cursor, a key row waiting for a key (Press a key, the capture words, a key
+-- refused or taken through a fake bind, select for the default, back to stop, the mouse and the other words doing
+-- nothing meanwhile), an act that raises turning the page off.
 package.path='mod/StellarCoop/Scripts/?.lua;'..package.path
 local U=require('core.unreal')
 local T=require('ui.text')
@@ -238,11 +240,14 @@ local ctx={mode='none',values=Model.read(''),pages={PAGE}} -- Solo, its own valu
 local mouse=nil -- The kit's pointer: {x, y} or nil.
 local sounds={} -- The kit's sounds asked, by name.
 -- The co-op menu's act (ui/kit/menu.lua's): each call as 'action key text'; act_ok and act_note its answer, a set
--- written into the ctx's values when ok; act_raise: it raises that.
+-- written into the ctx's values when ok; act_raise: it raises that. Its bind: each call as 'key name'; bound its
+-- answer (taken, written, note), the key written into the ctx's values when taken and written.
 local acts,act_ok,act_note,act_raise={},true,nil,nil
+local binds,bound={},{true,true,nil}
 local function new()
     events,logs,made,constructed,raising,no_canvas,mouse,sounds={},{},{},{},{},false,nil,{}
     acts,act_ok,act_note,act_raise={},true,nil,nil
+    binds,bound={},{true,true,nil}
     return Page.new({log=function(line) logs[#logs+1]=line end,words=function() return w end,
         guide_words=function() return gw end,ctx=function() return ctx end,theme=THEME,
         pointer=function() if mouse then return mouse[1],mouse[2] end end,
@@ -253,6 +258,11 @@ local function new()
             acts[#acts+1]=a..' '..tostring(k)..' '..tostring(t)
             if a=='set' and act_ok then ctx.values[k]=t end
             return act_ok,act_note
+        end,
+        bind=function(k,name)
+            binds[#binds+1]=k..' '..name
+            if bound[1] and bound[2] then ctx.values[k]=name end
+            return bound[1],bound[2],bound[3]
         end})
 end
 local function first_made(kind) for _,m in ipairs(made) do if m.kind==kind then return m.o end end end
@@ -485,6 +495,36 @@ do
     ctx.members={{id='8',name='B',linked=true,muted=false}}
     page.nav('right',24)
     assert(acts[#acts]=='mute 8 false' and heard()=='change' and pane()=='Mute B',pane())
+    -- A key row: select waits for the next key (Press a key in the row, the capture words in the pane, SB's confirm
+    -- cue); the keys move nothing meanwhile. Each key goes through the co-op menu's bind: refused, the wait goes on
+    -- with its note; taken, the row shows it. Enter (select) asks for the default; back stops the wait with no bind.
+    page.nav('back',30)
+    to('Controls')
+    page.nav('right',30)
+    assert(pane()=='Open this menu' and page.capture('F6')==false,'No wait: a key is not the page\'s')
+    page.nav('select',30)
+    assert(latest('option','Open this menu').props.Text_ItemValue=='Press a key' and desc()==w.capture
+        and heard()=='confirm',tostring(latest('option','Open this menu').props.Text_ItemValue))
+    page.nav('down',30); page.nav('left',30); page.nav('right',30)
+    assert(pane()=='Open this menu' and desc()==w.capture and #binds==0,'Waiting: the other words do nothing')
+    mouse={row_at(3)}; page.tick(30); mouse={row_at(4)}; page.tick(31)
+    assert(page.click(31)==nil and pane()=='Open this menu','Waiting: the mouse moves nothing')
+    mouse=nil
+    bound={false,nil,'Show the status already uses this key.'}
+    assert(page.capture('F6')==true and binds[1]=='menu_key F6' and heard()=='refuse'
+        and desc()=='Show the status already uses this key.'
+        and latest('option','Open this menu').props.Text_ItemValue=='Press a key','Refused: still waiting')
+    bound={true,true,nil}
+    assert(page.capture('F7')==true and heard()=='change' and desc()==''
+        and latest('option','Open this menu').props.Text_ItemValue=='F7','Taken: the row shows it')
+    assert(page.capture('F8')==false and #binds==2,'Not waiting any more')
+    page.nav('select',32); page.nav('select',32)
+    assert(binds[3]=='menu_key Enter' and ctx.values.menu_key=='Enter','Select while waiting: the default asked')
+    page.nav('select',33); page.nav('back',33)
+    assert(#binds==3 and heard()=='back' and desc()==''
+        and latest('option','Open this menu').props.Text_ItemValue=='Enter','Back: the wait stopped, no bind')
+    page.nav('back',33)
+    to('Session'); page.nav('right',34); to('Who can join')
     -- An act that raises: the page off with one line.
     act_raise='no act today'
     page.nav('right',25)

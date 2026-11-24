@@ -22,7 +22,8 @@ local print,log=M.print,M.log
 -- (a left click selects the row under the mouse, a right click goes back), then the left one the co-op saves'
 -- question's (the choice under the mouse); closed, they are the game's. A left click over the pause menu's Online tab
 -- enters its Online page (ui/kit/pause_tab.lua). While that page shows, the navigation keys, Enter and Esc go to it
--- before anything else (E and F do nothing there). A key callback runs on UE4SS's key thread: it
+-- before anything else (E and F do nothing there). An F-key goes to its key row while one waits for a key.
+-- A key callback runs on UE4SS's key thread: it
 -- only hands the press to the game thread, where the console's checks (coop off included) apply. A modified F-key is
 -- bound before the plain one, so if UE4SS also calls the plain bind for a Shift+F5, the plain press that follows at
 -- once is the same press, dropped. The status key gives a one-line summary, in the log in English and on screen in the
@@ -49,9 +50,10 @@ if M.settings then
         local base=name:match('^%a+%+(F%d+)$')
         if base then modified_at[base]=os.clock()
         elseif modified_at[name] and os.clock()-modified_at[name]<0.2 then return end
-        -- Typing, the host's question or the emote wheel open: our keys do nothing.
+        -- Typing, the host's question or the emote wheel open: our keys do nothing. A key row waiting for a key, in the
+        -- co-op menu or on the pause menu's Online page, takes it.
         if M.wheel.is_open() or M.box.is_open() or M.code_box.is_open() or M.approval.is_open() or M.menu.capture(name)
-            then return end
+            or M.pause_tab.capture(name,os.clock()) then return end
         for _,action in ipairs(ACTIONS) do
             if M.settings[action..'_key'].name==name then
                 log('key '..name..': '..action)

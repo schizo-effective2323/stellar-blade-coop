@@ -561,6 +561,21 @@ end)()
     in_world=false
 end)()
 
+-- An F-key while a key row of the pause menu's Online page waits for a key: the pause tab's capture takes it and no
+-- action of ours runs; with no wait the key runs as before.
+;(function()
+    settings_text,status_text,link_mode,in_world,photo_mode='',plain,'none',true,false
+    load_main(true)
+    kit_ready=true; quarter()
+    pt.page,pt.capturing=true,true
+    key('F7')
+    assert(table.concat(pt.captures,' ')=='F7' and not logged('key F7: follow'),'Taken by the key row')
+    pt.capturing=false
+    key('F7')
+    assert(table.concat(pt.captures,' ')=='F7 F7' and logged('key F7: follow'),'No wait: F7 runs as before')
+    pt.page,in_world,kit_ready=false,false,false
+end)()
+
 -- The controllers the mod reads, said the same way in INSTALL.md and docs/players/interface.md (any controller the game
 -- reads, XInput only as the fallback); no comment still says only an XInput pad can answer the saves' question or the
 -- guide.
