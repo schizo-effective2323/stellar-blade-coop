@@ -18,7 +18,8 @@
 -- fault path); the page hides when SB shows another tab or the menu closed; it forgets the master when that is gone;
 -- Open the co-op menu closes then opens the co-op menu, back in the list closes only; the entry's locked and none
 -- change nothing with one line each, off or a page that does not build take the path before the page; a page that turns
--- off while shown closes and opens the co-op menu; coop off hides it with SB's close.
+-- off while shown closes and opens the co-op menu; coop off hides it with SB's close. The page's nav and click get the
+-- clock; their 'close' (the Online tab written off on the page) closes the pause menu with no co-op menu.
 package.path='mod/StellarCoop/Scripts/?.lua;'..package.path
 local MASTER='/Game/Art/UI/Widget/GameMenu/WB_GameMenu_Master.WB_GameMenu_Master'
 local MASTER_KEEPER=MASTER..'.StellarCoop_PauseTabKeeper'
@@ -280,8 +281,8 @@ local function fake_page()
     p.page={build=function(m) note('build'); p.master=m; return p.built,not p.built and 'no canvas' or nil end,
         show=function(on) note('show',tostring(on)); if not p.off then p.on=on end end,
         shown=function() return p.on end,
-        nav=function(word) note('nav',word); return p.answer end,
-        click=function() note('click'); return p.clicked end,
+        nav=function(word,now) note('nav',word); p.nav_at=now; return p.answer end,
+        click=function(now) note('click'); p.click_at=now; return p.clicked end,
         tick=function(now) p.ticks[#p.ticks+1]=now; if p.tick_off then p.off,p.on=true,false end end,
         visibility=function() return p.vis end,
         forget=function() note('forget'); p.on=false end,
@@ -398,4 +399,18 @@ local m19=menu(); construct(m19)
 s.tab.event(80)
 s.tab.stop()
 assert(not s.tab.page_shown() and s.closes==8 and logged('online page hidden: coop off') and not s.tab.armed())
+-- The page's nav and click get the clock (a confirm row's 3 s window). The Online tab written off on the page (nav or
+-- a click answering close): SB's close, no co-op menu after it.
+reset()
+p=fake_page()
+s=new(p.page); s.tab.tick(0)
+local m21=menu(); construct(m21)
+s.tab.event(90); s.now=9
+p.answer='close'; s.tab.nav('right',90.5)
+assert(p.nav_at==90.5 and s.closes==1 and not s.tab.page_shown(),'Off by the keys: closed')
+local m22=menu(); construct(m22)
+s.now=8; s.tab.event(91); s.now=9
+p.clicked='close'; s.tab.click(91.5)
+assert(p.click_at==91.5 and s.closes==2 and not s.tab.page_shown(),'Off by a click: closed')
+s.paused=false; s.tab.tick(92); assert(s.opens==0,'No co-op menu')
 print('pause_tab_test ok')

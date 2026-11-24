@@ -287,14 +287,15 @@ function Tab.new(o)
             log('pause tab: LB or RB at an end of the tab row with no Online tab shown; nothing opened')
         end
     end
-    -- A left click while armed and paused: the page's while it shows (Open the co-op menu runs), else the page entered
-    -- when the mouse is over our Button_Action. Its IsHovered and the button's, logged each click.
+    -- A left click while armed and paused: the page's while it shows (Open the co-op menu runs; the Online tab written
+    -- off closes the pause menu), else the page entered when the mouse is over our Button_Action. Its IsHovered and the
+    -- button's, logged each click.
     function self.click(now)
         if not self.armed() or not o.paused() then return end
         if showing then
-            local action=page.click()
+            local action=page.click(now)
             if page.off() then return fault(now) end
-            if action=='open_menu' then close(now,true) end
+            if action=='open_menu' then close(now,true) elseif action=='close' then close(now,false) end
             return
         end
         local ok,over=pcall(function()
@@ -312,10 +313,11 @@ function Tab.new(o)
         enter(now,'a click')
     end
     -- A navigation word on the game thread while the page shows ('up', 'down', 'left', 'right', 'select', 'back'), at
-    -- now: Open the co-op menu closes the pause menu and opens the co-op menu; back in the list closes the pause menu.
+    -- now: Open the co-op menu closes the pause menu and opens the co-op menu; back in the list and the Online tab
+    -- written off on the page close the pause menu.
     function self.nav(word,now)
         if not showing then return end
-        local action=page.nav(word)
+        local action=page.nav(word,now)
         if page.off() then return fault(now) end
         if action=='open_menu' then close(now,true) elseif action=='close' then close(now,false) end
     end

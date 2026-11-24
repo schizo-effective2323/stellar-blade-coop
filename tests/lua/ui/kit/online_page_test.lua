@@ -3,10 +3,11 @@
 -- SBO License 1.0 or later, in LICENSE and at github.com/MotherSphere/stellar-blade-coop; NOTICE adds a permission.
 -- The pause menu's Online page (ui/kit/online_page.lua) over fakes. Pure: each row's part kind; its words and value as
 -- the co-op menu draws them; the cursor over ui/kit/online_model.lua's categories in solo and while hosting (the list
--- wraps, right and select land on Open the co-op menu, the rows skip headers and wrap, select there opens the co-op
--- menu, select elsewhere and left do nothing, back goes to the list, back in the list closes, a long category keeps the
--- cursor inside the 12 slots); what is under the mouse in the boxes the page places its parts in (a list item, a row,
--- never a header or a slot past the rows, edges exclusive). Engine: the build adds one collapsed canvas last to the
+-- wraps, right and select land on Open the co-op menu, the rows skip headers and wrap, select and left in the rows
+-- move nothing, back goes to the list, back in the list closes, a long category keeps the cursor inside the 12 slots);
+-- what a press asks of each kind of row (Page.press) and which press a click makes on a row's value part
+-- (Page.word_at); what is under the mouse in the boxes the page places its parts in (a list item, a row, never a header
+-- or a slot past the rows, edges exclusive). Engine: the build adds one collapsed canvas last to the
 -- master's root, nothing in it before the show; each of the six SB classes says once that it was built; each part's
 -- Blueprint texts are set before it enters the canvas and its TextBlocks and calls after; a class whose Create raises
 -- is drawn with a TextBlock and a Border in its place, one line for it, the others SB's; show makes the canvas
@@ -17,7 +18,11 @@
 -- look (tick, every HOVER s) only notes what is under the mouse at its first look, then the item the mouse moved onto
 -- takes the cursor, while a resting mouse never does, even after the keys moved the cursor; a refused look is logged
 -- once; a canvas that cannot be made turns the page off with one line; visibility() names SB's eight pages with their
--- state.
+-- state. The rows act through the co-op menu's model and a fake act: right, left and select on a list row (the next
+-- value, the wrap, a row shown or hidden by it with the cursor kept), a range held at its end with the refusal sound,
+-- a click on each half of a value part, a write refused with its note in the pane, nothing on left or right of an
+-- action row, the Online tab written off answering 'close', a row no longer shown refused and gone, Leave asked again
+-- after a move, a mute row kept under the cursor, an act that raises turning the page off.
 package.path='mod/StellarCoop/Scripts/?.lua;'..package.path
 local U=require('core.unreal')
 local T=require('ui.text')
@@ -75,7 +80,7 @@ for _,cats in ipairs({solo,hosting}) do
     Page.move(cur,cats,'down'); assert(cur.cat==1,'and down')
     assert(Page.move(cur,cats,'left')==nil and cur.list,'Left does nothing')
     Page.move(cur,cats,'right'); assert(not cur.list and id_at(cats,cur)=='open_menu','Right: Open the co-op menu')
-    assert(Page.move(cur,cats,'select')=='open_menu','Select on it opens the co-op menu')
+    assert(Page.move(cur,cats,'select')==nil and not cur.list,'Select in the rows: a press, which the page\'s nav runs')
     Page.move(cur,cats,'back'); assert(cur.list,'Back: the list')
     Page.move(cur,cats,'select'); assert(not cur.list and id_at(cats,cur)=='open_menu','Select: the same')
     Page.move(cur,cats,'down')
@@ -88,6 +93,35 @@ for _,cats in ipairs({solo,hosting}) do
     assert(Page.move(cur,cats,'back')=='close' and cur.list,'Back in the list closes the pause menu')
 end
 assert(Page.move(Page.cursor(),{},'back')=='close' and Page.move(Page.cursor(),{},'down')==nil,'No category')
+-- Pure: what a press asks of each kind of row, as SB's Settings rows take it.
+do
+    local function said(row,word)
+        local a,b=Page.press(row,word)
+        return tostring(a)..' '..tostring(b)
+    end
+    for _,key in ipairs({'who_can_join','max_players','pause_tab','emote_pad','photo_freeze_max'}) do
+        assert(said(opt(key),'select')=='select nil' and said(opt(key),'left')=='change -1'
+            and said(opt(key),'right')=='change 1',key)
+    end
+    for _,row in ipairs({opt('menu_key'),main('host'),opt('reset_keys'),main('leave')}) do
+        local what=row.id or row.key
+        assert(said(row,'select')=='select nil' and said(row,'left')=='nil nil' and said(row,'right')=='nil nil',what)
+    end
+    for _,word in ipairs({'select','left','right'}) do assert(said(mute,word)=='select nil','A mute row: '..word) end
+    assert(said(O.OPEN_MENU,'select')=='open_menu nil' and said(O.OPEN_MENU,'left')=='nil nil')
+    local tools={id='page',page=PAGE}
+    assert(Page.press(tools,'select')=='open_menu' and select(2,Page.press(tools,'select'))==PAGE
+        and said(tools,'right')=='nil nil','A Test tools row opens the co-op menu on its page')
+    assert(said(opt('who_can_join'),'up')=='nil nil' and said(opt('who_can_join'),'back')=='nil nil')
+    -- A click: the value part of a rolling or slider row runs from x 1286 to 2246 in the page's units (the rows at
+    -- 676, the value 610 in, 960 wide), its left half down, its right half up; elsewhere on a row, select.
+    local who=opt('who_can_join')
+    assert(Page.word_at(who,1286)=='left' and Page.word_at(who,1300)=='left' and Page.word_at(who,1765)=='left')
+    assert(Page.word_at(who,1766)=='right' and Page.word_at(who,2240)=='right' and Page.word_at(who,2246)=='select')
+    assert(Page.word_at(who,1285)=='select' and Page.word_at(who,700)=='select')
+    assert(Page.word_at(opt('max_players'),1300)=='left' and Page.word_at(mute,2000)=='right')
+    assert(Page.word_at(main('host'),1300)=='select' and Page.word_at(opt('menu_key'),2000)=='select','Option rows')
+end
 -- Pure: what is under the mouse. List items 356 by 100 from 200, 384; rows 1640 by 130 from 676, 384 (WB_Setting_Set's
 -- layout, Page.AT).
 local function row_at(i) return 1000,384+(i-1)*130+65 end
@@ -200,15 +234,26 @@ local function master()
     return m,root
 end
 local THEME={text='text',grey='grey',beta='beta',focus='focus',clear='clear'}
-local ctx=SOLO
+local ctx={mode='none',values=Model.read(''),pages={PAGE}} -- Solo, its own values: the presses write them.
 local mouse=nil -- The kit's pointer: {x, y} or nil.
 local sounds={} -- The kit's sounds asked, by name.
+-- The co-op menu's act (ui/kit/menu.lua's): each call as 'action key text'; act_ok and act_note its answer, a set
+-- written into the ctx's values when ok; act_raise: it raises that.
+local acts,act_ok,act_note,act_raise={},true,nil,nil
 local function new()
     events,logs,made,constructed,raising,no_canvas,mouse,sounds={},{},{},{},{},false,nil,{}
+    acts,act_ok,act_note,act_raise={},true,nil,nil
     return Page.new({log=function(line) logs[#logs+1]=line end,words=function() return w end,
         guide_words=function() return gw end,ctx=function() return ctx end,theme=THEME,
         pointer=function() if mouse then return mouse[1],mouse[2] end end,
-        sound=function(name) sounds[#sounds+1]=name end})
+        sound=function(name) sounds[#sounds+1]=name end,
+        act=function(a,k,t,c)
+            assert(c==ctx,'The ctx read for the press')
+            if act_raise then error(act_raise) end
+            acts[#acts+1]=a..' '..tostring(k)..' '..tostring(t)
+            if a=='set' and act_ok then ctx.values[k]=t end
+            return act_ok,act_note
+        end})
 end
 local function first_made(kind) for _,m in ipairs(made) do if m.kind==kind then return m.o end end end
 local function made_n(kind)
@@ -279,8 +324,8 @@ local parts=#made
 page.nav('right'); page.nav('down'); page.nav('up')
 assert(#made==parts,'Moving in the rows makes no part again')
 -- A click: the row under the kit's pointer selected; on Open the co-op menu it answers open_menu.
-mouse={row_at(4)} -- Slot 4: Host a session.
-assert(page.click()==nil)
+mouse={row_at(4)} -- Slot 4: Host a session, a row that needs the game world: the co-op menu until the page runs it.
+assert(page.click(1)=='open_menu' and #acts==0 and sounds[#sounds]=='confirm')
 local function part(title)
     local found
     for _,x in ipairs(made) do if x.kind=='option' and x.o.props.Text_TitleValue==title then found=x.o end end
@@ -341,6 +386,112 @@ assert(not page.shown() and canvas.props.visibility==1 and page.nav('back')==nil
 page.forget()
 local m2,root2=master()
 assert(page.build(m2) and #root2.props.children==1)
+
+-- The rows act as SB's Settings rows: each press through the co-op menu's model for that row, then its act (the fake
+-- above). Solo, Session.
+do
+    ctx={mode='none',values=Model.read(''),pages={PAGE}}
+    page=new()
+    page.build(master())
+    page.show(true)
+    local d=first_made('detail')
+    local function pane() return d.props.Text_ItemName.props.text end
+    local function desc() return d.props.Text_Desc.props.text end
+    local function to(label)
+        for _=1,40 do if pane()==label then return end page.nav('down',0) end
+        error('no row '..label)
+    end
+    local function heard() return sounds[#sounds] end
+    local function latest(kind,title) -- The newest part of kind made for that row.
+        for i=#made,1,-1 do
+            local x=made[i]
+            local p=x.o.props
+            if x.kind==kind and (p.Text_TitleValue==title or p.TextTitleValue==title) then return x.o end
+        end
+    end
+    local function rolling(title) return latest('rolling',title).props.Text_Btn_name.props.text end
+    page.nav('right',0)
+    to('Who can join')
+    -- Right: the next value written, SB's select cue, the part made again; Friends join without asking hides (Public
+    -- and Invitation only) and the cursor stays on Who can join.
+    page.nav('right',1)
+    assert(acts[#acts]=='set who_can_join friends' and heard()=='change' and pane()=='Who can join'
+        and rolling('Who can join')=='Friends only',tostring(acts[#acts]))
+    assert(called(latest('rolling','Friends join without asking'),'RemoveFromParent')==1,'Friends join: hidden')
+    page.nav('down',1); assert(pane()=='Players','Down from Who can join: Players, the hidden row skipped')
+    page.nav('up',1)
+    -- Left goes down and wraps as the co-op menu's list rows do; select is the next value.
+    page.nav('left',2); page.nav('left',2)
+    assert(table.concat(acts,'|',2)=='set who_can_join public|set who_can_join closed',table.concat(acts,'|'))
+    page.nav('select',3); assert(acts[#acts]=='set who_can_join public' and rolling('Who can join')=='Public')
+    -- Players (2 to 4, at 4): right at the end is refused with SB's refusal sound, no note; left steps down by 1.
+    to('Players')
+    local n=#acts
+    page.nav('right',4)
+    assert(#acts==n and heard()=='refuse' and desc()=='' and pane()=='Players','At its end: refused')
+    page.nav('left',4)
+    assert(acts[#acts]=='set max_players 3' and heard()=='change'
+        and latest('slider','Players').props.CurrentPercent==0.5,'Made again at 3 of 2 to 4')
+    -- A click on Who can join's value part: its left half down, its right half up; elsewhere on the row, select.
+    local y=select(2,row_at(8)) -- Slot 8: Who can join (Friends join without asking under it while Public).
+    mouse={1300,y}; page.click(5); assert(acts[#acts]=='set who_can_join closed' and pane()=='Who can join')
+    mouse={2240,y}; page.click(5); assert(acts[#acts]=='set who_can_join public')
+    mouse={700,y}; page.click(5); assert(acts[#acts]=='set who_can_join friends')
+    mouse=nil
+    -- A write the co-op menu refuses: SB's refusal sound, its note in the pane; a move clears the note.
+    act_ok,act_note=false,'Not saved: x'
+    page.nav('right',6)
+    assert(acts[#acts]=='set who_can_join invitation' and heard()=='refuse' and desc()=='Not saved: x'
+        and ctx.values.who_can_join=='friends','Refused: nothing changed')
+    act_ok,act_note=true,nil
+    page.nav('down',6); assert(desc()=='','A move clears the note')
+    -- Left or right on Open the co-op menu or on Host a session: nothing, no sound.
+    n=#acts
+    for _,label in ipairs({'Open the co-op menu','Host a session'}) do
+        to(label)
+        local s=#sounds
+        assert(page.nav('left',7)==nil and page.nav('right',7)==nil and #acts==n and #sounds==s,label)
+    end
+    -- The Online tab written off on the page: 'close', the pause menu closes as Back closes it.
+    page.nav('back',8)
+    to('Display')
+    page.nav('right',8)
+    to('Online tab in the pause menu')
+    assert(page.nav('right',8)=='close' and acts[#acts]=='set pause_tab off')
+    ctx.values.pause_tab='on'
+    -- Hosting: a row the co-op menu does not show now (no code) is refused and goes at the redraw; the cursor on the
+    -- category's first row.
+    ctx={mode='host',chat=true,code='0CS-CBMH',stranger={id='9',name='S'},values=Model.read(''),pages={PAGE},
+        members={{id='7',name='A',linked=true,muted=false},{id='8',name='B',linked=true,muted=false}}}
+    page.show(true)
+    page.nav('right',9)
+    to('Copy my code')
+    n=#acts
+    ctx.code=nil
+    page.nav('select',9)
+    assert(#acts==n and sounds[#sounds-1]=='refuse' and heard()=='tab' and pane()=='Open the co-op menu',pane())
+    for _=1,6 do page.nav('down',9); assert(pane()~='Copy my code','Copy my code went') end
+    ctx.code='0CS-CBMH'
+    -- Leave asks twice within 3 s (the co-op menu's model); a move in between forgets the first Select.
+    to('Leave the session')
+    page.nav('select',20); page.nav('down',20); page.nav('up',20); page.nav('select',21)
+    assert(table.concat(acts,'|',n+1)=='confirm_leave nil nil|confirm_leave nil nil',table.concat(acts,'|',n+1))
+    page.nav('select',22); assert(acts[#acts]=='leave nil nil' and heard()=='confirm','The second Select leaves')
+    -- A mute row: right mutes her (its select); the cursor stays on her row when the row above it goes.
+    page.nav('back',23)
+    to('Players')
+    page.nav('right',23); page.nav('down',23)
+    assert(pane()=='Mute B')
+    ctx.members={{id='8',name='B',linked=true,muted=false}}
+    page.nav('right',24)
+    assert(acts[#acts]=='mute 8 false' and heard()=='change' and pane()=='Mute B',pane())
+    -- An act that raises: the page off with one line.
+    act_raise='no act today'
+    page.nav('right',25)
+    assert(page.off() and not page.shown() and lines_with('online page: off until the mod reloads: ')==1
+        and logged('no act today'),table.concat(logs,'|'))
+    ctx=SOLO
+end
 
 -- A refused look: logged once a kind. A pane with no Thumbnail: one line, the page shown.
 do
