@@ -32,7 +32,9 @@
 -- all keys asking first then running, a key row waiting for a key (Press a key, the capture words, a key
 -- refused or taken through a fake bind, select for the default, back to stop, the mouse and the other words doing
 -- nothing meanwhile), an act that raises turning the page off. The state read again every Page.REFRESH s while the
--- page shows (an online session that begins or ends, the cursor kept or put on its category's first row).
+-- page shows (an online session that begins or ends, the cursor kept or put on its category's first row). A sub-page's
+-- rows (their kind, words, value and press); the Guide sub-page in Help's rows (a header, one row a guide page, its
+-- body in the pane, the list kept, back to Guide, a click opening it, a click on a list item leaving it).
 package.path='mod/StellarCoop/Scripts/?.lua;'..package.path
 local U=require('core.unreal')
 local T=require('ui.text')
@@ -130,6 +132,13 @@ do
         end
     end
     assert(said({id='page',page=PAGE},'select')=='select nil','Page.press opens the co-op menu no more')
+    -- A sub-page's row: its own kind, words and value; select is its press, left and right on a rolling one only.
+    local p1={sub='guide',id='p1',kind='option',text='T',shown='',desc='D'}
+    assert(Page.kind(p1)=='option' and Page.label(w,gw,p1,CTX)=='T' and Page.value(w,p1,CTX)=='','A sub-page row')
+    assert(said(p1,'select')=='sub 1' and said(p1,'left')=='nil nil' and said(p1,'right')=='nil nil')
+    local c1={sub='join_code',id='c1',kind='rolling',text='1',shown='_'}
+    assert(Page.kind(c1)=='rolling' and Page.value(w,c1,CTX)=='_' and said(c1,'left')=='sub -1'
+        and said(c1,'right')=='sub 1' and said(c1,'select')=='sub 1' and said(c1,'up')=='nil nil','A rolling one')
     assert(said(opt('who_can_join'),'up')=='nil nil' and said(opt('who_can_join'),'back')=='nil nil')
     -- A click: the value part of a rolling or slider row runs from x 1406 to 2366 in the page's units (the rows at
     -- 736, drawn 60 right of it, the value 610 in, 960 wide), its left half down, its right half up; elsewhere on a
@@ -570,7 +579,48 @@ do
     n=#acts
     away('Find a session','find'); away('Join with a code','join_code')
     page.nav('back',15); to('Help'); page.nav('right',15)
-    away('Guide','guide')
+    -- Guide opens in the rows: a header Guide, then a row a guide page with its title, SB's value word off; the list
+    -- stays with Help in SB's select look; the pane the page's title and its body. Nothing is run or asked.
+    local function rows_shown() -- The headers' and rows' words shown, top down.
+        local shown={}
+        for _,x in ipairs(made) do
+            local p=x.o.props
+            if (x.kind=='header' or x.kind=='option') and called(x.o,'RemoveFromParent')==0 then
+                shown[#shown+1]={y=select(2,placed(x.o)),word=x.kind=='header' and 'H:'..p.Category_Name
+                    or p.Text_TitleValue..'='..tostring(p.Text_ItemValue)}
+            end
+        end
+        table.sort(shown,function(a,b) return a.y<b.y end)
+        local out={}
+        for i,s in ipairs(shown) do out[i]=s.word end
+        return table.concat(out,'|')
+    end
+    local function tabs_shown()
+        local k=0
+        for _,x in ipairs(made) do if x.kind=='tab' and called(x.o,'RemoveFromParent')==0 then k=k+1 end end
+        return k
+    end
+    to('Guide')
+    assert(page.nav('select',15)==nil and #acts==n and heard()=='tab','Guide: a sub-page, nothing run')
+    local want={'H:Guide'}
+    for i,p in ipairs(gw.pages) do want[i+1]=p.title..'=' end
+    assert(#gw.pages==9 and rows_shown()==table.concat(want,'|'),rows_shown())
+    assert(tabs_shown()==10 and tab_part('Help').calls[#tab_part('Help').calls][1]=='Select','The list stays')
+    assert(pane()==gw.pages[1].title and desc()==gw.pages[1].body,pane())
+    page.nav('down',15); assert(pane()==gw.pages[2].title and desc()==gw.pages[2].body,'Down: the next page')
+    local s=#sounds
+    assert(page.nav('select',15)==nil and page.nav('right',15)==nil and #acts==n and #sounds==s,'A page: nothing')
+    -- Back: on Guide again, the category's rows. A click on Guide opens it too; a click on a list item shows that
+    -- category's rows, the sub-page gone.
+    assert(page.nav('back',15)==nil and pane()=='Guide' and heard()=='tab' and rows_shown()
+        =='H:Help|Guide=nil|Write a bug report=nil',rows_shown())
+    mouse={row_at(2,{1})}
+    assert(page.click(15)==nil and pane()==gw.pages[1].title and heard()=='tab' and #acts==n,'A click opens it')
+    mouse={item_at(1)}
+    assert(page.click(15)==nil and pane()=='Session' and rows_shown():find('^H:Play online|Host a session=nil'),
+        rows_shown())
+    mouse=nil
+    to('Help'); page.nav('right',15)
     -- Write a bug report runs in place: the pause menu stays.
     to('Write a bug report')
     assert(page.nav('select',15)==nil and acts[#acts]=='report nil nil' and heard()=='confirm','The report in place')

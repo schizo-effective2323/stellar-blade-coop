@@ -23,8 +23,10 @@
 -- the row reads Press a key, the pane says which keys; an F-key (main/keys.lua through ui/kit/pause_tab.lua's capture)
 -- is checked against the other keys by the co-op menu's own bind, Enter puts back its default, Esc or B stops the wait,
 -- the mouse and the other words do nothing meanwhile. Host a session asks first (a second Select within 3 s, as Leave),
--- then hosts in place with the Create a session screen's request; Invite and Write a bug report run in place too. On a
--- row that still needs the game world (Find a session, Join with a code, Chat, Guide) it answers 'away':
+-- then hosts in place with the Create a session screen's request; Invite and Write a bug report run in place too.
+-- Guide opens a sub-page: its rows show in place of the category's (the left list stays), back returns to its row, a
+-- click on a list item shows that category. On a row that still needs the game world (Find a session, Join with a
+-- code, Chat) it answers 'away':
 -- ui/kit/pause_tab.lua closes the pause menu, then runs the row as the co-op menu does. The Test tools and the
 -- developer pages stay in the co-op menu (F5), the menu for admins and debugging: the page has no row that opens it.
 -- Every engine call runs in pcall on the game thread. An engine error that is not a part's own turns the page off until
@@ -63,31 +65,36 @@ Page.KINDS={'tab','header','option','rolling','slider','detail'}
 -- init 0x141d90210), for the log line that says what SB's deactivate left shown.
 Page.SB_PAGES={'WB_Equip_Set','WB_QuestJournal','WB_Map_Set','WB_Bag_Set','WB_NewSkill_Master','WB_Album_Set',
     'WB_Manual_Set','WB_GameMenu_Setting'}
--- The rows that still close the pause menu first: Chat needs the game's text box; S1 to S3 of stage 3 take Guide,
--- Find a session and Join with a code out.
-local AWAY={chat=true,find=true,join_code=true,guide=true}
+-- The rows that still close the pause menu first: Chat needs the game's text box; S2 and S3 of stage 3 take Find a
+-- session and Join with a code out.
+local AWAY={chat=true,find=true,join_code=true}
 local COLLAPSED,HIT_TEST_INVISIBLE,SELF_HIT_TEST_INVISIBLE=1,3,4 -- ESlateVisibility.
 local SHOWN={[0]='Visible','Collapsed','Hidden','HitTestInvisible','SelfHitTestInvisible'}
 local WIDGETS='/Script/UMG.Default__WidgetBlueprintLibrary'
 local BOLD='/Game/Art/Font/Bold.Bold' -- The kit's item font (ui/kit/kit.lua's GAME_FONT), for the kit's drawing.
 
 -- A row's part: a range is a slider, a choice, a toggle or a mute row a rolling row, any other an option row (the
--- action rows, the key rows, Copy my code).
+-- action rows, the key rows, Copy my code). A sub-page's row names its own.
 function Page.kind(row)
+    if row.kind then return row.kind end
     if row.key and row.min then return 'slider' end
     if row.member or row.key and row.values then return 'rolling' end
     return 'option'
 end
--- A row's words, as ui/kit/menu.lua's draw makes them (w: ui/text's, gw: ui/text/guide's, ctx: online_model's).
+-- A row's words, as ui/kit/menu.lua's draw makes them (w: ui/text's, gw: ui/text/guide's, ctx: online_model's). A
+-- sub-page's row carries its own.
 function Page.label(w,gw,row,ctx)
+    if row.text then return row.text end
     if row.member then return w.lobby.set.mute:format(Join.name(row.name) or '') end
     if row.id=='guide' then return gw.row end
     local label=w.row[row.id or row.key] or ''
     if row.id=='remove' then label=label:format(Join.name(ctx.stranger and ctx.stranger.name) or w.ask.someone) end
     return label
 end
--- A row's value in w's words, as the co-op menu shows it, or nil (an action row: SB's own word stays).
+-- A row's value in w's words, as the co-op menu shows it, or nil (an action row: SB's own word stays). A sub-page's
+-- row: its own ('' keeps SB's word off).
 function Page.value(w,row,ctx)
+    if row.sub then return row.shown end
     if row.id=='copy' then return ctx.code end
     if row.member then return w.value[row.muted and 'on' or 'off'] end
     local v=row.key and ctx.values and ctx.values[row.key]
@@ -99,11 +106,12 @@ local function percent(row,ctx)
     local n=tonumber(ctx.values and ctx.values[row.key]) or tonumber(row.default) or row.min
     return math.max(0,math.min(1,(n-row.min)/(row.max-row.min)))
 end
--- A category's lines: its sections' headers ({head=id}) and rows ({row=row}) in order.
+-- A category's lines: its sections' headers ({head=id, label= a sub-page's own words or nil}) and rows ({row=row}) in
+-- order.
 local function lines(cat)
     local out={}
     for _,sec in ipairs(cat.sections) do
-        out[#out+1]={head=sec.id}
+        out[#out+1]={head=sec.id,label=sec.label}
         for _,row in ipairs(sec.rows) do out[#out+1]={row=row} end
     end
     return out
@@ -162,9 +170,14 @@ function Page.move(cur,cats,word)
 end
 -- What a press (word: 'select', 'left' or 'right') asks of a row: 'change' and -1 or 1 for left or right on a setting
 -- row with values or a range; 'select' for select on any other row and for left or right on a mute row (drawn as a
--- two-value row: the arrows mute or unmute); else nil (left or right on an action or key row).
+-- two-value row: the arrows mute or unmute); 'sub' and -1 or 1 for select on a sub-page's row and for left or right on
+-- its rolling rows; else nil (left or right on an action or key row).
 function Page.press(row,word)
     if word~='select' and word~='left' and word~='right' then return nil end
+    if row.sub then -- A sub-page's row: its own press (left and right on a rolling one only).
+        if word=='select' or row.kind=='rolling' then return 'sub',word=='left' and -1 or 1 end
+        return nil
+    end
     if row.member or word=='select' then return 'select' end
     if row.key and not row.bind then return 'change',word=='left' and -1 or 1 end
 end
@@ -194,7 +207,8 @@ end
 -- {title=, desc=}. look:
 -- 'focus' (the cursor), 'select' (the category the rows show while the cursor is in them, and the list item under
 -- the mouse, cur.over) or 'normal'. The pane's description is the last press's note
--- (cur.note: a confirm's question, a refusal's why, the reload note) while the cursor is in the rows.
+-- (cur.note: a confirm's question, a refusal's why, the reload note) while the cursor is in the rows, else the
+-- row's own (a sub-page's row.desc). A header shows its section's label when it has one (a sub-page's).
 function Page.specs(cats,cur,w,gw,ctx)
     local out={list={},rows={},detail={title='',desc=''}}
     if #cats==0 then
@@ -214,7 +228,7 @@ function Page.specs(cats,cur,w,gw,ctx)
         local line=p and list[p.i]
         if not line then out.rows[i]=false
         elseif line.head then
-            out.rows[i]={kind='header',head=true,label=w.online_page.sec[line.head] or line.head,y=p.y}
+            out.rows[i]={kind='header',head=true,label=line.label or w.online_page.sec[line.head] or line.head,y=p.y}
         else
             local row=line.row
             local s={kind=Page.kind(row),row=row,label=Page.label(w,gw,row,ctx),value=Page.value(w,row,ctx),
@@ -227,7 +241,7 @@ function Page.specs(cats,cur,w,gw,ctx)
     -- The F5 menu's rows have no description today: the pane shows the name alone, its media part collapsed (draw).
     local line=not cur.list and list[cur.row]
     out.detail.title=line and line.row and Page.label(w,gw,line.row,ctx) or out.list[cur.cat].label
-    out.detail.desc=not cur.list and cur.note or ''
+    out.detail.desc=not cur.list and (cur.note or line and line.row and line.row.desc) or ''
     return out
 end
 
@@ -417,9 +431,54 @@ function Page.new(o)
         end
         if have then look(have,s.look or 'normal') end
     end
+    -- A press the co-op menu's rules refuse: SB's refusal sound, nothing changed, the why in the pane (or none).
+    local function refuse(n) sound('refuse'); cur.note=n end
+    -- The sub-pages: a row of the page (Guide) shows its own rows in place of its category's while the cursor is in
+    -- them (cur.sub: {id=, row= the row that opened it, rows= its rows by id}); back returns to that row. A sub-page's
+    -- row is made once (sub_row) and keeps its table at each draw, so keep, where and moved follow it as they follow
+    -- the model's rows. Each sub-page: open (nil, or a function: true when it can show), sections (sub, w, gw, the
+    -- row that opened it: its sections now, nil when it cannot show any more), press (sub, row, dir, now: act's
+    -- answer).
+    local function sub_row(sub,id,fields)
+        local row=sub.rows[id] or {sub=sub.id,id=id}
+        sub.rows[id]=row
+        for k,v in pairs(fields) do row[k]=v end
+        return row
+    end
+    local subs={}
+    -- The guide's pages (ui/text/guide.lua's): one row a page with its title, its body in the pane. The pane's
+    -- description wraps: WB_Setting_SlotDetail's Text_Desc is a RichTextBlock with AutoWrapText true in
+    -- SettingDetail_ScrollBox (its scroll bar collapsed), SizeBox_Contents 780 by 1344 (the class export of 26123051).
+    -- Its header and 9 rows fit the rows window. Select on a page does nothing.
+    subs.guide={sections=function(sub,w,gw,opener)
+        local rows={}
+        for i,p in ipairs(gw.pages) do rows[i]=sub_row(sub,'p'..i,{kind='option',text=p.title,shown='',desc=p.body}) end
+        return {{id='guide',label=Page.label(w,gw,opener,ctx),rows=rows}}
+    end,press=function() return nil end}
+    -- online_model's categories for the ctx now, the sub-page in its opener's category (the cursor's). No sub-page any
+    -- more when no category lists its opener (an online session began) or it cannot show: keep then puts the cursor on
+    -- the category's first row.
+    local function categories()
+        local list=model.categories(ctx)
+        local sub=cur.sub
+        if not sub then return list end
+        cur.sub=nil
+        for i,cat in ipairs(list) do
+            for _,sec in ipairs(cat.sections) do
+                for _,row in ipairs(sec.rows) do
+                    if row==sub.row then
+                        local sections=subs[sub.id].sections(sub,o.words(),o.guide_words(),row)
+                        if sections then cur.sub,cur.cat,list[i]=sub,i,{id=cat.id,sections=sections} end
+                        return list
+                    end
+                end
+            end
+        end
+        return list
+    end
     local function draw()
         local w,gw=o.words(),o.guide_words()
-        cats=model.categories(ctx)
+        cats=categories()
         local s=Page.specs(cats,cur,w,gw,ctx)
         local A=Page.AT
         for i=1,LIST do sync(slots.list,i,s.list[i],A.list.x,A.list.y+(i-1)*A.list.pitch) end
@@ -509,15 +568,18 @@ function Page.new(o)
         cur.note=nil
         return true
     end
-    -- A press the co-op menu's rules refuse: SB's refusal sound, nothing changed, the why in the pane (or none).
-    local function refuse(n) sound('refuse'); cur.note=n end
     -- A press (Page.press's words) on row at now, through the co-op menu's model for that row (online_model's owner:
     -- the same change, select, show rules and confirm window as the co-op menu) and its code (o.act). The ctx is read
     -- again before and after. 'away' and the row's id for a row of AWAY (it still needs the game world), 'close' once
-    -- the Online tab was written off (the pause menu closes as Back closes it), else nil.
+    -- the Online tab was written off (the pause menu closes as Back closes it), else nil. A row that opens a sub-page
+    -- opens it (press then puts the cursor on its first row); a sub-page's row runs its sub-page's press.
     local function act(row,word,now)
         local how,dir=Page.press(row,word)
         if not how then return nil end
+        if how=='sub' then
+            if not cur.sub then refuse(); return nil end
+            return subs[row.sub].press(cur.sub,row,dir,now)
+        end
         ctx=o.ctx()
         local m=model.owner(row)
         if not m then refuse(); return nil end
@@ -532,6 +594,15 @@ function Page.new(o)
             sound('confirm')
             return nil
         end
+        if subs[action] then
+            if subs[action].open and not subs[action].open() then
+                log('online page: '..action..' not shown: the online session module is off')
+                refuse()
+                return nil
+            end
+            cur.sub={id=action,row=row,rows={}}
+            return nil
+        end
         -- A row that still needs the game world runs once SB closed the pause menu (ui/kit/pause_tab.lua). Host a
         -- session, Invite and Write a bug report run here (the user's decision of stage 3).
         if AWAY[action] then sound('confirm'); return 'away',action end
@@ -544,7 +615,7 @@ function Page.new(o)
     -- The cursor on row again in category id after a press: the categories may have changed (a row shown or hidden,
     -- the session's categories gone); a row gone (or none) puts it on its category's first row.
     local function keep(id,row)
-        cats=model.categories(ctx)
+        cats=categories()
         if #cats==0 then return end
         for i,cat in ipairs(cats) do if cat.id==id then cur.cat=i end end
         cur.cat=math.min(cur.cat,#cats)
@@ -583,8 +654,9 @@ function Page.new(o)
         ctx=o.ctx()
     end
     -- A navigation word while shown, at now: in the rows, left, right and select press the cursor's row; other words
-    -- move the cursor (Page.move). While a key row waits: back stops the wait, select puts back its default, the other
-    -- words do nothing. The page drawn again; the answer: 'close', 'away' and a row's id, or nil.
+    -- move the cursor (Page.move); back in a sub-page's rows returns to the row that opened it. While a key row waits:
+    -- back stops the wait, select puts back its default, the other words do nothing. The page drawn again; the answer:
+    -- 'close', 'away' and a row's id, or nil.
     function self.nav(word,now)
         if off or not shown then return nil end
         local ok,a,b=pcall(function()
@@ -601,6 +673,10 @@ function Page.new(o)
             local line=not cur.list and cats[cur.cat] and lines(cats[cur.cat])[cur.row]
             local a,b
             if line and line.row and (word=='select' or word=='left' or word=='right') then a,b=press(word,now)
+            elseif word=='back' and cur.sub and not cur.list then -- Out of the sub-page, on the row that opened it.
+                local opener=cur.sub.row
+                cur.sub=nil
+                keep(cats[cur.cat].id,opener)
             else a=Page.move(cur,cats,word) end
             if moved(was) then sound(cur.list and 'wheel_move' or 'tab') end
             draw()
@@ -609,12 +685,14 @@ function Page.new(o)
         if not ok then fail(a); return nil end
         return a,b
     end
-    -- The cursor on what is under the mouse (Page.under's kind and slot): a category in the list, or a row; true when
-    -- there is one.
+    -- The cursor on what is under the mouse (Page.under's kind and slot): a category in the list (a sub-page shown
+    -- goes: the category's own rows), or a row; true when there is one.
     local function point(kind,i)
         local was=where()
         if kind=='list' then
-            if i~=cur.cat or not cur.list then cur.list,cur.cat,cur.row,cur.top=true,i,first(lines(cats[i])),0 end
+            if i~=cur.cat or not cur.list then
+                cur.sub,cur.list,cur.cat,cur.row,cur.top=nil,true,i,first(lines(cats[i])),0
+            end
         elseif kind=='row' then cur.list,cur.row=false,cur.top+i
         else return false end
         moved(was)
@@ -651,9 +729,10 @@ function Page.new(o)
                 if cur.cat~=shown_cat then sound('tab') end
                 return nil
             end
-            local was=where()
+            local was,sub=where(),cur.sub
             local a,b=press(Page.word_at(lines(cats[cur.cat])[cur.row].row,x),now)
             moved(was) -- A row gone: the cursor on another one.
+            if cur.sub~=sub then sound('tab') end -- A sub-page opened: the cursor on its first row, as the keys sound.
             draw()
             return a,b
         end)
