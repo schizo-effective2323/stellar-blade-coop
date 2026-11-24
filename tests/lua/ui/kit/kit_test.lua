@@ -1628,6 +1628,9 @@ do
     assert(VOLUMES.wheel_open==1 and VOLUMES.wheel_move==1)
     assert(PATHS.tab==obj('/Game/Sound/UI/MainMenu/UI_Tab_2_Cue') and VOLUMES.tab==1
         and PATHS.tab_top==obj('/Game/Sound/UI/MainMenu/UI_Tab_1_Cue') and VOLUMES.tab_top==1)
+    -- SB's Settings rows: the button row's SelectedSound, the rolling row's CantSound.
+    assert(PATHS.confirm==obj('/Game/Sound/UI/MainMenu/UI_Setting_Confirm_Cue') and VOLUMES.confirm==1)
+    assert(PATHS.refuse==obj('/Game/Sound/UI/ui_beep') and VOLUMES.refuse==1)
     local sound=false
     for _,a in ipairs(Ui.ASSETS) do assert(a.volume or not sound,a[1]..': a texture after a sound'); sound=a.volume~=nil end
 end

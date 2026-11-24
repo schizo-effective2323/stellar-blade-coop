@@ -103,7 +103,11 @@ for _,a in ipairs({{'mark',TEX..'Item/CommonIcon/4DotMark'},{'link',TEX..'Common
         -- (FocusChangedSound of WB_Setting_Tab and of WB_Setting_DetailBase).
         -- shortcut: tab_top is a pick by its name for the Online tab; the cue SB's own tab row plays is native and
         -- not read yet, change it once it is.
-        {'tab',SOUND..'MainMenu/UI_Tab_2_Cue',1},{'tab_top',SOUND..'MainMenu/UI_Tab_1_Cue',1}}) do
+        {'tab',SOUND..'MainMenu/UI_Tab_2_Cue',1},{'tab_top',SOUND..'MainMenu/UI_Tab_1_Cue',1},
+        -- confirm: the SelectedSound of WB_Setting_Button_Slot (an action run); refuse: the CantSound of
+        -- WB_Setting_Rolling_Slot (a SoundWave, as ui_move). Read in their class exports:
+        -- /Game/Sound/UI/MainMenu/UI_Setting_Confirm_Cue.0 and /Game/Sound/UI/ui_beep.0.
+        {'confirm',SOUND..'MainMenu/UI_Setting_Confirm_Cue',1},{'refuse',SOUND..'ui_beep',1}}) do
     table.insert(Ui.ASSETS,{a[1],path(a[2]),volume=a[3],alt=a.alt and path(a.alt)})
 end
 -- The F-key icons but F10's (the console's), key_f1 to key_f12, for the emote wheel's key: before the sounds.
