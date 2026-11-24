@@ -403,6 +403,17 @@ return {
         top='Фотоохота: %s.',entry='%d. %s %d',sep=', ',placed='Ваше место: %d из %d.'},
     -- The pause menu's Online tab (ui/kit/pause_tab.lua): its word and the notice when the game stays paused.
     pause_tab={tab='Онлайн',stuck='Игра осталась на паузе, поэтому меню кооператива не открылось.'},
+    -- The pause menu's Online page (ui/kit/online_page.lua): the left list's categories, the section headers and
+    -- the action row that opens the co-op menu.
+    online_page={cat={session='Сессия',players='Игроки',world='Общий мир',combat='Бой',modes='Режимы игры',
+        controls='Управление',display='Экран',others='Другие игроки',photo='Фоторежим',saves='Сохранения',
+        help='Справка',tools='Тестирование'},
+        sec={menu='Меню кооператива',play='Игра онлайн',current='Эта сессия',hosting='Хост',members='Участники',
+        sharing='Что общее',travel='Перемещение',difficulty='Сложность',rules='Правила',modes='Режимы',
+        keyboard='Клавиатура и мышь',controller='Контроллер',features='Функции',all='Все клавиши',interface='Интерфейс',
+        names='Имена',sky='Небо',look='Внешний вид',sound='Звук',motion='Движение',chat='Чат',photo='Фоторежим',
+        saves='Сохранения',help='Справка',tools='Тестовые инструменты'},
+        open_menu='Открыть меню кооператива'},
     -- The emote wheel (ui/kit/wheel.lua, eve/ui/wheel.lua): its hints, the centre's word while nothing is pointed at
     -- (after StringTable_UI's UI_HUD_Gesture) and why it did not open.
     wheel={title='Социальное действие',release='Отпустить: показать',point='Навести',next='Следующая категория',

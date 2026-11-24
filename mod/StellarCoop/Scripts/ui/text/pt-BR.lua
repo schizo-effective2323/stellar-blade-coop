@@ -413,6 +413,17 @@ return {
         top='Caça fotográfica: %s.',entry='%d. %s %d',sep=', ',placed='Sua posição: %d de %d.'},
     -- The pause menu's Online tab (ui/kit/pause_tab.lua): its word and the notice when the game stays paused.
     pause_tab={tab='Online',stuck='O jogo continuou pausado, então o menu co-op não abriu.'},
+    -- The pause menu's Online page (ui/kit/online_page.lua): the left list's categories, the section headers and
+    -- the action row that opens the co-op menu.
+    online_page={cat={session='Sessão',players='Jogadores',world='Mundo em comum',combat='Combate',
+        modes='Modos de jogo',controls='Teclas',display='Tela',others='Outros jogadores',photo='Modo foto',
+        saves='Jogos salvos',help='Ajuda',tools='Testes'},
+        sec={menu='Menu co-op',play='Jogar online',current='Esta sessão',hosting='Anfitrião',members='Membros',
+        sharing='O que é compartilhado',travel='Viagem',difficulty='Dificuldade',rules='Regras',modes='Modos',
+        keyboard='Teclado e mouse',controller='Controle',features='Recursos',all='Todas as teclas',
+        interface='Interface',names='Nomes',sky='Céu',look='Aparência',sound='Som',motion='Movimento',chat='Chat',
+        photo='Modo de fotografia',saves='Jogos salvos',help='Ajuda',tools='Ferramentas de teste'},
+        open_menu='Abrir o menu co-op'},
     -- The emote wheel (ui/kit/wheel.lua, eve/ui/wheel.lua): its hints, the centre's word while nothing is pointed at
     -- (after StringTable_UI's UI_HUD_Gesture) and why it did not open.
     wheel={title='Ação social',release='Soltar: reproduzir',point='Apontar',next='Próxima categoria',

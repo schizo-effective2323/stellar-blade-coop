@@ -357,6 +357,15 @@ return {
         entry='%d位 %s %d',sep='、',placed='あなたの順位：%d位（%d人中）。'},
     -- The pause menu's Online tab (ui/kit/pause_tab.lua): its word and the notice when the game stays paused.
     pause_tab={tab='オンライン',stuck='ゲームが一時停止したままのため、協力プレイメニューを開けませんでした。'},
+    -- The pause menu's Online page (ui/kit/online_page.lua): the left list's categories, the section headers and
+    -- the action row that opens the co-op menu.
+    online_page={cat={session='セッション',players='プレイヤー',world='共有ワールド',combat='戦闘',modes='ゲームモード',controls='操作',
+        display='ディスプレイ',others='他のプレイヤー',photo='フォトモード',saves='セーブ',help='ヘルプ',tools='テストツール'},
+        sec={menu='協力プレイメニュー',play='オンラインでプレイ',current='このセッション',hosting='ホスト',members='メンバー',sharing='共有する内容',
+        travel='移動',difficulty='難易度',rules='ルール',modes='モード',keyboard='キーボードとマウス',controller='コントローラー',features='機能',
+        all='すべてのキー',interface='インターフェース',names='名前',sky='空',look='外見',sound='サウンド',motion='動き',chat='チャット',
+        photo='フォトモード',saves='セーブ',help='ヘルプ',tools='テストツール'},
+        open_menu='協力プレイメニューを開く'},
     -- The emote wheel (ui/kit/wheel.lua, eve/ui/wheel.lua): its hints, the centre's word while nothing is pointed at
     -- (after StringTable_UI's UI_HUD_Gesture) and why it did not open.
     wheel={title='ソーシャルアクション',release='離す：再生',point='指す',next='次のカテゴリー',world='エモートホイールはメニューを開いていないゲーム世界でのみ開きます。',

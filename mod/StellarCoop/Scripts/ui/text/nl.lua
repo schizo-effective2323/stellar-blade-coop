@@ -410,6 +410,17 @@ return {
         entry='%d. %s %d',sep=', ',placed='Je plaats: %d van %d.'},
     -- The pause menu's Online tab (ui/kit/pause_tab.lua): its word and the notice when the game stays paused.
     pause_tab={tab='Online',stuck='De game bleef gepauzeerd, dus het co-opmenu ging niet open.'},
+    -- The pause menu's Online page (ui/kit/online_page.lua): the left list's categories, the section headers and
+    -- the action row that opens the co-op menu.
+    online_page={cat={session='Sessie',players='Spelers',world='Gedeelde wereld',combat='Vechten',modes='Spelmodi',
+        controls='Besturing',display='Weergave',others='Andere spelers',photo='Fotomodus',saves='Opgeslagen games',
+        help='Hulp',tools='Testhulpmiddelen'},
+        sec={menu='Co-opmenu',play='Online spelen',current='Deze sessie',hosting='Hosten',members='Leden',
+        sharing='Wat gedeeld wordt',travel='Reizen',difficulty='Spelniveau',rules='Regels',modes='Modi',
+        keyboard='Toetsenbord en muis',controller='Controller',features='Functies',all='Alle toetsen',
+        interface='Interface',names='Namen',sky='Lucht',look='Uiterlijk',sound='Geluid',motion='Beweging',chat='Chat',
+        photo='Fotomodus',saves='Opgeslagen games',help='Hulp',tools='Testhulpmiddelen'},
+        open_menu='Co-opmenu openen'},
     -- The emote wheel (ui/kit/wheel.lua, eve/ui/wheel.lua): its hints, the centre's word while nothing is pointed at
     -- (after StringTable_UI's UI_HUD_Gesture) and why it did not open.
     wheel={title='Sociale actie',release='Loslaten: afspelen',point='Richten',next='Volgende categorie',

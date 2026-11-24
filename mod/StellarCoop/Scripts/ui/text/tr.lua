@@ -411,6 +411,17 @@ return {
         top='Fotoğraf avı: %s.',entry='%d. %s %d',sep=', ',placed='Sıran: %d / %d.'},
     -- The pause menu's Online tab (ui/kit/pause_tab.lua): its word and the notice when the game stays paused.
     pause_tab={tab='Çevrimiçi',stuck='Oyun duraklatılmış kaldığı için co-op menüsü açılmadı.'},
+    -- The pause menu's Online page (ui/kit/online_page.lua): the left list's categories, the section headers and
+    -- the action row that opens the co-op menu.
+    online_page={cat={session='Oturum',players='Oyuncular',world='Ortak dünya',combat='Çatışma',modes='Oyun modları',
+        controls='Kontroller',display='Görüntü',others='Diğer oyuncular',photo='Fotoğraf modu',saves='Kayıtlar',
+        help='Yardım',tools='Test araçları'},
+        sec={menu='Co-op menüsü',play='Çevrim içi oyna',current='Bu oturum',hosting='Ev sahipliği',members='Üyeler',
+        sharing='Paylaşılanlar',travel='Seyahat',difficulty='Zorluk',rules='Kurallar',modes='Modlar',
+        keyboard='Klavye ve fare',controller='Oyun kumandası',features='Özellikler',all='Tüm tuşlar',interface='Arayüz',
+        names='İsimler',sky='Gökyüzü',look='Görünüm',sound='Ses',motion='Hareket',chat='Sohbet',photo='Fotoğraf modu',
+        saves='Kayıtlar',help='Yardım',tools='Test araçları'},
+        open_menu='Co-op menüsünü aç'},
     -- The emote wheel (ui/kit/wheel.lua, eve/ui/wheel.lua): its hints, the centre's word while nothing is pointed at
     -- (after StringTable_UI's UI_HUD_Gesture) and why it did not open.
     wheel={title='Sosyal eylem',release='Bırak: oynat',point='İşaret et',next='Sonraki kategori',

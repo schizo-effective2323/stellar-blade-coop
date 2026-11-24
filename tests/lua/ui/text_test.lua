@@ -25,7 +25,8 @@
 -- count word and difficulty on both sides; its English; the bike's refusals with each side word and a six-digit
 -- distance or another map's 32-byte name, the paid fetch's offer after them with the longest key name and betacrystal,
 -- the fetch's other lines with a 32-byte money name, within 200 bytes; the 20 module names in every table; the notice
--- of a module that failed to load with the longest of them within 200 bytes.
+-- of a module that failed to load with the longest of them within 200 bytes; the Online page's words, one for each
+-- category and section of ui/kit/online_model.lua, each within its column.
 package.path='mod/StellarCoop/Scripts/?.lua;'..package.path
 local T=require('ui.text')
 local R=require('online.modes.nightop.recruiter_text')
@@ -536,5 +537,25 @@ end
 local n=0
 for _ in pairs(T.en.emote.names) do n=n+1 end
 assert(n==#EMOTES,'T.en.emote.names: '..n..' names')
+-- The pause menu's Online page (ui/kit/online_page.lua): a word for each category and section of
+-- ui/kit/online_model.lua and for no other id; in every language a category's word within its left list item (Bold 34
+-- in SB's 356-unit button: 16 columns), a section's word and Open the co-op menu within 40 columns.
+local O=require('ui.kit.online_model')
+local cats,secs={},{}
+for _,cat in ipairs(O.CATEGORIES) do
+    cats[cat.id]=true
+    for _,sec in ipairs(cat.sections) do secs[sec.id]=true end
+end
+local page=T.en.online_page
+for id in pairs(cats) do assert(type(page.cat[id])=='string','T.en.online_page.cat.'..id..': missing') end
+for id in pairs(secs) do assert(type(page.sec[id])=='string','T.en.online_page.sec.'..id..': missing') end
+for id in pairs(page.cat) do assert(cats[id],'T.en.online_page.cat.'..id..': no such category') end
+for id in pairs(page.sec) do assert(secs[id],'T.en.online_page.sec.'..id..': no such section') end
+for name in pairs(R.TEXT) do
+    local p=T.pick(name).online_page
+    for k,text in pairs(p.cat) do fits(name..'.online_page.cat.'..k,text,16) end
+    for k,text in pairs(p.sec) do fits(name..'.online_page.sec.'..k,text,40) end
+    fits(name..'.online_page.open_menu',p.open_menu,40)
+end
 
 print('ui_text_test ok')

@@ -503,6 +503,17 @@ return {
         top='Photo hunt: %s.',entry='%d. %s %d',sep=', ',placed='You placed %d of %d.'},
     -- The pause menu's Online tab (ui/kit/pause_tab.lua): its word and the notice when the game stays paused.
     pause_tab={tab='Online',stuck='The game stayed paused, so the co-op menu did not open.'},
+    -- The pause menu's Online page (ui/kit/online_page.lua): the left list's categories, the section headers and
+    -- the action row that opens the co-op menu.
+    online_page={cat={session='Session',players='Players',world='Shared world',combat='Combat',modes='Game modes',
+        controls='Controls',display='Display',others='Other players',photo='Photo mode',saves='Saves',help='Help',
+        tools='Test tools'},
+        sec={menu='Co-op menu',play='Play online',current='This session',hosting='Hosting',members='Members',
+        sharing='What is shared',travel='Travel',difficulty='Difficulty',rules='Rules',modes='Modes',
+        keyboard='Keyboard and mouse',controller='Controller',features='Features',all='All keys',interface='Interface',
+        names='Names',sky='Sky',look='Look',sound='Sound',motion='Motion',chat='Chat',photo='Photo mode',saves='Saves',
+        help='Help',tools='Test tools'},
+        open_menu='Open the co-op menu'},
     -- The emote wheel (ui/kit/wheel.lua, eve/ui/wheel.lua): its hints, the centre's word while nothing is pointed at
     -- (after StringTable_UI's UI_HUD_Gesture) and why it did not open.
     wheel={title='Social action',release='Release: play',point='Point',next='Next category',

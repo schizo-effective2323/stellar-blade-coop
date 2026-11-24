@@ -399,6 +399,17 @@ return {
         entry='%d. %s %d',sep=', ',placed='Du kom på plats %d av %d.'},
     -- The pause menu's Online tab (ui/kit/pause_tab.lua): its word and the notice when the game stays paused.
     pause_tab={tab='Online',stuck='Spelet förblev pausat, så co-op-menyn öppnades inte.'},
+    -- The pause menu's Online page (ui/kit/online_page.lua): the left list's categories, the section headers and
+    -- the action row that opens the co-op menu.
+    online_page={cat={session='Session',players='Spelare',world='Delad värld',combat='Strid',modes='Spellägen',
+        controls='Kontroller',display='Visning',others='Andra spelare',photo='Fotoläge',saves='Sparfiler',help='Hjälp',
+        tools='Testverktyg'},
+        sec={menu='Co-op-meny',play='Spela online',current='Denna session',hosting='Värd',members='Medlemmar',
+        sharing='Vad som delas',travel='Resor',difficulty='Svårighetsgrad',rules='Regler',modes='Lägen',
+        keyboard='Tangentbord och mus',controller='Handkontroll',features='Funktioner',all='Alla tangenter',
+        interface='Gränssnitt',names='Namn',sky='Himmel',look='Utseende',sound='Ljud',motion='Rörelse',chat='Chatt',
+        photo='Fotoläge',saves='Sparfiler',help='Hjälp',tools='Testverktyg'},
+        open_menu='Öppna co-op-menyn'},
     -- The emote wheel (ui/kit/wheel.lua, eve/ui/wheel.lua): its hints, the centre's word while nothing is pointed at
     -- (after StringTable_UI's UI_HUD_Gesture) and why it did not open.
     wheel={title='Social handling',release='Släpp: spela upp',point='Peka',next='Nästa kategori',

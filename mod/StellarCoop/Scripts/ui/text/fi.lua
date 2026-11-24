@@ -413,6 +413,17 @@ return {
         top='Valokuvajahti: %s.',entry='%d. %s %d',sep=', ',placed='Sijoituksesi: %d/%d.'},
     -- The pause menu's Online tab (ui/kit/pause_tab.lua): its word and the notice when the game stays paused.
     pause_tab={tab='Online',stuck='Peli jäi tauolle, joten co-op-valikko ei avautunut.'},
+    -- The pause menu's Online page (ui/kit/online_page.lua): the left list's categories, the section headers and
+    -- the action row that opens the co-op menu.
+    online_page={cat={session='Istunto',players='Pelaajat',world='Jaettu maailma',combat='Taistelu',modes='Pelitilat',
+        controls='Näppäimet',display='Näyttö',others='Muut pelaajat',photo='Kuvaustila',saves='Tallennukset',
+        help='Ohje',tools='Testityökalut'},
+        sec={menu='Co-op-valikko',play='Pelaa verkossa',current='Tämä istunto',hosting='Isännöinti',members='Jäsenet',
+        sharing='Mitä jaetaan',travel='Matkustus',difficulty='Vaikeustaso',rules='Säännöt',modes='Tilat',
+        keyboard='Näppäimistö ja hiiri',controller='Ohjain',features='Ominaisuudet',all='Kaikki näppäimet',
+        interface='Käyttöliittymä',names='Nimet',sky='Taivas',look='Ulkonäkö',sound='Ääni',motion='Liike',
+        chat='Keskustelu',photo='Kuvaustila',saves='Tallennukset',help='Ohje',tools='Testityökalut'},
+        open_menu='Avaa co-op-valikko'},
     -- The emote wheel (ui/kit/wheel.lua, eve/ui/wheel.lua): its hints, the centre's word while nothing is pointed at
     -- (after StringTable_UI's UI_HUD_Gesture) and why it did not open.
     wheel={title='Sosiaalinen toiminto',release='Vapauta: toista',point='Osoita',next='Seuraava luokka',

@@ -402,6 +402,17 @@ return {
         top='Fotojakt: %s.',entry='%d. %s %d',sep=', ',placed='Du ble nummer %d av %d.'},
     -- The pause menu's Online tab (ui/kit/pause_tab.lua): its word and the notice when the game stays paused.
     pause_tab={tab='Online',stuck='Spillet ble stående på pause, så co-op-menyen åpnet seg ikke.'},
+    -- The pause menu's Online page (ui/kit/online_page.lua): the left list's categories, the section headers and
+    -- the action row that opens the co-op menu.
+    online_page={cat={session='Økt',players='Spillere',world='Delt verden',combat='Kamp',modes='Spillmoduser',
+        controls='Kontroller',display='Skjerm',others='Andre spillere',photo='Fotomodus',saves='Lagringer',help='Hjelp',
+        tools='Testverktøy'},
+        sec={menu='Co-op-meny',play='Spill på nett',current='Denne økten',hosting='Vert',members='Medlemmer',
+        sharing='Hva som deles',travel='Reise',difficulty='Vanskelighetsgrad',rules='Regler',modes='Moduser',
+        keyboard='Tastatur og mus',controller='Kontroller',features='Funksjoner',all='Alle taster',
+        interface='Grensesnitt',names='Navn',sky='Himmel',look='Utseende',sound='Lyd',motion='Bevegelse',chat='Chat',
+        photo='Fotomodus',saves='Lagringer',help='Hjelp',tools='Testverktøy'},
+        open_menu='Åpne co-op-menyen'},
     -- The emote wheel (ui/kit/wheel.lua, eve/ui/wheel.lua): its hints, the centre's word while nothing is pointed at
     -- (after StringTable_UI's UI_HUD_Gesture) and why it did not open.
     wheel={title='Sosial handling',release='Slipp: spill av',point='Pek',next='Neste kategori',
