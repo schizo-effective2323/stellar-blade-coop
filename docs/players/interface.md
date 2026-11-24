@@ -727,6 +727,8 @@ Most points have their own log line.
 
 - `coop-link.log`: `pause tab on: 0x145c26768 swapped from the GameMenu logic's input to our hook` at start, then
   `pause tab: RB on Settings or LB on the first tab opened the Online tab (<n> this run)` at each of those presses.
+  `pause tab: RB on tab 8 went to SB (lock <n>, <n> tabs enabled)`, or `LB on tab 1`, says the game took a press where
+  the Online page could have opened, with the game's tab lock byte. It is written 8 times a run at most.
   `pause tab: an action kept from SB on the Online page, Back or one SB ignores there (<n> this run)` counts the presses
   the native part keeps from the game while the page shows. `pause tab refused: ...` means another mod holds that
   pointer or its page would not change: RB on Settings goes to Equipment as in the game. A click on the tab still opens

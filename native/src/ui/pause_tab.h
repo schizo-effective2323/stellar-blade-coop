@@ -76,7 +76,10 @@ public:
     if (current == kPage && action == Action::other)
       return Verdict::held;
     const bool next = action == Action::right_shoulder;
-    if ((!next && action != Action::left_shoulder) || lock != 0)
+    // SB's tab change refuses only while its lock byte is 1 (0x141d926db: cmp byte ptr [rcx+0x188], 1). Any other
+    // value lets SB change the tab, so it lets SBO's page open too: in SBO Xion a value other than 0 and 1 sent RB
+    // on Settings to Equipment.
+    if ((!next && action != Action::left_shoulder) || lock == 1)
       return Verdict::pass;
     if (opened_ && action == opened_by_ && now_ms - opened_at_ < kLatchMs)
       return Verdict::drop; // On any tab: the release of the press that opened, once Lua has entered tab 9.

@@ -59,6 +59,8 @@ int main() {
   { Gate g; assert(g.decide(8, all, 8, 0, rb, 1000) == Verdict::open); }      // RB on Settings.
   { Gate g; assert(g.decide(7, all, 8, 0, rb, 1000) == Verdict::pass); }      // Not the last tab.
   { Gate g; assert(g.decide(8, all, 8, 1, rb, 1000) == Verdict::pass); }      // SB's tab lock.
+  { Gate g; assert(g.decide(8, all, 8, 2, rb, 1000) == Verdict::open); }      // Another value: SB changes tabs.
+  { Gate g; assert(g.decide(1, all, 8, 255, lb, 1000) == Verdict::open); }    // The same for LB.
   { Gate g; assert(g.decide(8, all, 8, 0, passes, 1000) == Verdict::pass); }  // The pause key.
   // LB on the lowest enabled tab mirrors RB on the highest: SB's previous would wrap to Settings there.
   { Gate g; assert(g.decide(1, all, 8, 0, lb, 1000) == Verdict::open); }      // LB on Equipment.

@@ -13,6 +13,9 @@ using GameMenuInput = void (*)(void *logic, void *event);
 // an open waiting for coop_pad. pause_tab_faulted: the hook's latch, every call straight on from then.
 std::atomic<bool> pause_tab_want{true}, pause_tab_live{false}, pause_tab_asked{false}, pause_tab_faulted{false};
 std::atomic<uint32_t> pause_tab_opens{0}, pause_tab_held{0}; // This run's, for the worker's lines.
+// The last RB on SB's tab 8 or LB on its tab 1 that went to SB, where SBO's page could have opened, for the worker's
+// line: how many this run << 32 | the tab << 24 | the lock byte << 16 | the enabled count << 8 | 1 for RB.
+std::atomic<uint64_t> pause_tab_passed{0};
 std::atomic<uint64_t> pause_tab_fault_code{0}, pause_tab_fault_rva{0}, pause_tab_fault_address{0};
 coop::pause_tab::Gate pause_tab_gate; // The game thread's only: SB calls the slot there.
 
@@ -27,9 +30,15 @@ __declspec(noinline) coop::pause_tab::Verdict pause_tab_decide(uintptr_t logic, 
                         : is(kLeftShoulder) ? Action::left_shoulder
                         : is(kGameMenu)     ? Action::passes
                                             : Action::other;
-  return pause_tab_gate.decide(at<int32_t>(logic + kCurrent), at<const int32_t *>(logic + kEnabled),
-                               at<int32_t>(logic + kEnabledCount), at<uint8_t>(logic + kLock), action,
-                               GetTickCount64());
+  const int32_t current = at<int32_t>(logic + kCurrent), count = at<int32_t>(logic + kEnabledCount);
+  const uint8_t lock = at<uint8_t>(logic + kLock);
+  const Verdict verdict =
+      pause_tab_gate.decide(current, at<const int32_t *>(logic + kEnabled), count, lock, action, GetTickCount64());
+  const bool rb = action == Action::right_shoulder;
+  if (verdict == Verdict::pass && ((rb && current == 8) || (action == Action::left_shoulder && current == 1)))
+    pause_tab_passed = ((pause_tab_passed.load() >> 32) + 1) << 32 | uint64_t(uint8_t(current)) << 24 |
+                       uint64_t(lock) << 16 | uint64_t(uint8_t(count)) << 8 | (rb ? 1 : 0);
+  return verdict;
 }
 // The slot's target once swapped. An open marks the event for coop_pad and returns, a drop returns, a held action (on
 // the Online page, anything but the shoulders and the pause key: Back, which Lua takes, or a name SB ignores there)
