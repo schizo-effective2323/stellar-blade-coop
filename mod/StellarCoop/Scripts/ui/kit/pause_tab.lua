@@ -6,23 +6,24 @@
 -- the master (ui/kit/online_page.lua). The button and its Button_Action take the mouse as SB's last button's do (their
 -- visibilities copied): the class binds that Button's OnHovered and OnUnhovered to its Hover and UnHover animations
 -- (WB_Common_Tab_Btn's ComponentDelegateBinding), so the hover look plays as on SB's tabs. SB binds each tab's click
--- once, at its GameMenu logic's init (FUN_141d929b0 -> FUN_141d7f2f0 -> FUN_141d49700, OnClicked on Button_Action at
--- the path WB_Tap_Set/WB_Common_Tabs/<the tab's ESBUILogicType name>, resolved by name in FUN_142535310): ours is made
--- later under another name, so SB's click binding never reaches it. A left click (main/keys.lua's mouse bind) asks the
--- Button's IsHovered. RB on Settings reaches the
--- tab through the native part (ui/pause_tab.h: RB on the highest enabled tab and LB on the lowest become coop_pad's
--- event 12; the keyboard's keys too, as SB maps them to the same actions). Either one enters the page: the native
--- part's coop_pause_enter runs the shown SB page's deactivate (as SB's own tab change does), then writes 9 as the open
--- tab. The page shows. Our button takes SB's focus look; SB's button of the tab left loses it. While the page shows,
--- the open tab is read each frame (coop_pause_page). SB's previous and next (LB, RB, the arrows), a click on one of
--- SB's tabs and SB's close (the pause key) leave tab 9 by SB's own code: the page hides as soon as the tab is not 9.
--- The native part keeps SB's Back from SB on tab 9, so main/keys.lua and main/input.lua hand Esc, the pad's B and the
--- navigation words to the page (nav). Back in its left list runs SB's close (coop_pause_close, what SB's Back runs).
--- Open the co-op menu runs SB's close, then the co-op menu. The page hides at coop off (with SB's close) and when the
--- master is gone. With no page (it did not load or build, or an older DLL without the two exports) the tab does what it
--- did before the page: SB's close, then the co-op menu once the game is unpaused, as menu_key does; still paused after
--- WAIT s, it gives up with one log line and one notice. A page that turns off while shown hides, closes the pause menu
--- and opens the co-op menu, with one line. A close the native part cannot make at all stops the tab as an error does.
+-- once, at its GameMenu logic's init (FUN_141d90210, vtable 0x145c266f8 slot 7, calls FUN_141d929b0 -> FUN_141d7f2f0 ->
+-- FUN_141d49a00 -> FUN_141d49700: action 3 Bind, event 1 OnClicked on Button_Action at the path
+-- WB_Tap_Set/WB_Common_Tabs/<the tab's ESBUILogicType name>, split at '/' and resolved by name in FUN_142535310): ours
+-- is made later under another name, so SB's click binding never reaches it. A left click (main/keys.lua's mouse bind)
+-- asks the Button's IsHovered. RB on Settings reaches the tab through the native part (ui/pause_tab.h: RB on the
+-- highest enabled tab and LB on the lowest become coop_pad's event 12; the keyboard's keys too, as SB maps them to the
+-- same actions). Either one enters the page: the native part's coop_pause_enter runs the shown SB page's deactivate (as
+-- SB's own tab change does), then writes 9 as the open tab. The page shows. Our button takes SB's focus look; SB's
+-- button of the tab left loses it. While the page shows, the open tab is read each frame (coop_pause_page). SB's
+-- previous and next (LB, RB, the arrows), a click on one of SB's tabs and SB's close (the pause key) leave tab 9 by
+-- SB's own code: the page hides as soon as the tab is not 9. The native part keeps SB's Back from SB on tab 9, so
+-- main/keys.lua and main/input.lua hand Esc, the pad's B and the navigation words to the page (nav). Back in its left
+-- list runs SB's close (coop_pause_close, what SB's Back runs). Open the co-op menu runs SB's close, then the co-op
+-- menu. The page hides at coop off (with SB's close) and when the master is gone. With no page (it did not load or
+-- build, or an older DLL without the two exports) the tab does what it did before the page: SB's close, then the co-op
+-- menu once the game is unpaused, as menu_key does; still paused after WAIT s, it gives up with one log line and one
+-- notice. A page that turns off while shown hides, closes the pause menu and opens the co-op menu, with one line. A
+-- close the native part cannot make at all stops the tab as an error does.
 --
 -- The button copies its text style from SB's last button. A container rebuilt without it gets it again from the 250 ms
 -- loop while the game is paused. A rooted, never-shown master keeps the class in memory, so the hook stays on it. Every
