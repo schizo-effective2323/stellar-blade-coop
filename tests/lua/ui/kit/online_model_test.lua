@@ -201,8 +201,8 @@ for id in ids(page.categories(SOLO)):gmatch('%S+') do
 end
 
 -- The co-op menu's model behind each row: the Options page's for its rows and the mute rows, the main page's for its
--- rows, none for Open the co-op menu and a Test tools row. A row's confirm runs through that model's 3 s window;
--- forget() drops a first Select, as the co-op menu's move does.
+-- rows, none for Open the co-op menu and a Test tools row. A row's confirm runs through that model's 3 s window (Host
+-- a session's too, on the page only); forget() drops a first Select, as the co-op menu's move does.
 do
     local p=O.new()
     local function opt_row(id) for _,r in ipairs(Model.OPTIONS) do if (r.key or r.id)==id then return r end end end
@@ -229,6 +229,14 @@ do
     assert(mains.select(ctx,40,VALUES)=='confirm_leave')
     p.forget()
     assert(mains.select(ctx,41,VALUES)=='confirm_leave','Leave forgotten too')
+    -- Host a session asks twice on the page's main page (its confirm set), as Leave; forget() drops a first Select.
+    local host=main_row('host')
+    mains.point(SOLO,host)
+    assert(mains.current(SOLO)==host and mains.select(SOLO,50,VALUES)=='confirm_host'
+        and mains.select(SOLO,51,VALUES)=='host','Host a session: asked, then hosted')
+    assert(mains.select(SOLO,60,VALUES)=='confirm_host')
+    p.forget()
+    assert(mains.select(SOLO,61,VALUES)=='confirm_host','Host forgotten too')
 end
 
 -- Only the pause menu's Online page (ui/kit/online_page.lua) requires it: the co-op menu still draws model.lua's pages.

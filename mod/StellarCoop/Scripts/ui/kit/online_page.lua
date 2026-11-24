@@ -21,9 +21,11 @@
 -- there is a why. Select on a key row waits for the next key as the co-op menu does: the row reads Press a key, the
 -- pane says which keys; an F-key (main/keys.lua through ui/kit/pause_tab.lua's capture) is checked against the other
 -- keys by the co-op menu's own bind, Enter puts back its default, Esc or B stops the wait, the mouse and the other
--- words do nothing meanwhile. Select or a click on Open the co-op menu or a Test tools row opens the co-op menu. On a
--- row that needs the game world (Host a session, Find a session, Join with a code, Invite, Chat, Guide, Write a bug
--- report) it answers 'away': ui/kit/pause_tab.lua closes the pause menu, then runs the row as the co-op menu does.
+-- words do nothing meanwhile. Select or a click on Open the co-op menu or a Test tools row opens the co-op menu. Host
+-- a session asks first (a second Select within 3 s, as Leave), then hosts in place with the Create a session screen's
+-- request; Invite and Write a bug report run in place too. On a row that still needs the game world (Find a session,
+-- Join with a code, Chat, Guide) it answers 'away': ui/kit/pause_tab.lua closes the pause menu, then runs the row as
+-- the co-op menu does.
 -- Every engine call runs in pcall on the game thread. An engine error that is not a part's own turns the page off
 -- until the mod reloads with one line; the Online tab then opens the co-op menu as before. A look a part refuses is
 -- logged once a kind. Only UI: no save, no SetInputMode, no Slate focus taken. main/input.lua builds it behind its own
@@ -60,6 +62,9 @@ Page.KINDS={'tab','header','option','rolling','slider','detail'}
 -- init 0x141d90210), for the log line that says what SB's deactivate left shown.
 Page.SB_PAGES={'WB_Equip_Set','WB_QuestJournal','WB_Map_Set','WB_Bag_Set','WB_NewSkill_Master','WB_Album_Set',
     'WB_Manual_Set','WB_GameMenu_Setting'}
+-- The rows that still close the pause menu first: Chat needs the game's text box; S1 to S3 of stage 3 take Guide,
+-- Find a session and Join with a code out.
+local AWAY={chat=true,find=true,join_code=true,guide=true}
 local COLLAPSED,HIT_TEST_INVISIBLE,SELF_HIT_TEST_INVISIBLE=1,3,4 -- ESlateVisibility.
 local SHOWN={[0]='Visible','Collapsed','Hidden','HitTestInvisible','SelfHitTestInvisible'}
 local WIDGETS='/Script/UMG.Default__WidgetBlueprintLibrary'
@@ -513,8 +518,9 @@ function Page.new(o)
     local function refuse(n) sound('refuse'); cur.note=n end
     -- A press (Page.press's words) on row at now, through the co-op menu's model for that row (online_model's owner:
     -- the same change, select, show rules and confirm window as the co-op menu) and its code (o.act). The ctx is read
-    -- again before and after. 'open_menu' and the module page, 'away' and the row's id for a row that needs the game
-    -- world, 'close' once the Online tab was written off (the pause menu closes as Back closes it), else nil.
+    -- again before and after. 'open_menu' and the module page, 'away' and the row's id for a row of AWAY (it still
+    -- needs the game world), 'close' once the Online tab was written off (the pause menu closes as Back closes it),
+    -- else nil.
     local function act(row,word,now)
         local how,dir=Page.press(row,word)
         if not how then return nil end
@@ -533,9 +539,9 @@ function Page.new(o)
             sound('confirm')
             return nil
         end
-        -- A row that needs the game world runs once SB closed the pause menu (ui/kit/pause_tab.lua). Write a bug report
-        -- too, as decided on 2026-11-24, though the co-op menu runs it in place: its notice then shows over the game.
-        if Model.AWAY[action] or action=='report' then sound('confirm'); return 'away',action end
+        -- A row that still needs the game world runs once SB closed the pause menu (ui/kit/pause_tab.lua). Host a
+        -- session, Invite and Write a bug report run here (the user's decision of stage 3).
+        if AWAY[action] then sound('confirm'); return 'away',action end
         local ok,n=o.act(action,key,text,ctx)
         cur.note=n
         sound(not ok and 'refuse' or (action=='set' or action=='mute') and 'change' or 'confirm')

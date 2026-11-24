@@ -24,8 +24,9 @@
 -- value, the wrap, a row shown or hidden by it with the cursor kept), a range held at its end with the refusal sound,
 -- a click on each half of a value part, a write refused with its note in the pane, nothing on left or right of an
 -- action row, the Online tab written off answering 'close', a row no longer shown refused and gone, Leave asked again
--- after a move of the keys, of the mouse look or of a click and after its 3 s, its question in the pane, Copy my code
--- run in place, a run refused with its why, a mute row kept under the cursor and muted by select too, Remove and Reset
+-- after a move of the keys, of the mouse look or of a click and after its 3 s, its question in the pane, Host a session
+-- asking first then hosting in place, Copy my code, Invite and Write a bug report run in place, a run refused with its
+-- why, a mute row kept under the cursor and muted by select too, Remove and Reset
 -- all keys asking first then running, a key row waiting for a key (Press a key, the capture words, a key
 -- refused or taken through a fake bind, select for the default, back to stop, the mouse and the other words doing
 -- nothing meanwhile), an act that raises turning the page off.
@@ -282,7 +283,7 @@ local acts,act_ok,act_note,act_raise={},true,nil,nil
 local binds,bound={},{true,true,nil}
 -- A confirm's first step: the co-op menu's act answers with its question (ui/kit/menu.lua's here).
 local ASKS={confirm_leave=w.confirm_leave,confirm_remove=w.confirm_remove:format('S'),
-    confirm_reset_keys=w.confirm_reset_keys}
+    confirm_reset_keys=w.confirm_reset_keys,confirm_host=w.confirm_host}
 local function new()
     events,logs,made,constructed,raising,no_canvas,mouse,sounds={},{},{},{},{},false,nil,{}
     acts,act_ok,act_note,act_raise={},true,nil,nil
@@ -392,8 +393,9 @@ local parts=#made
 page.nav('right'); page.nav('down'); page.nav('up')
 assert(#made==parts,'Moving in the rows makes no part again')
 -- A click: the row under the kit's pointer selected; on Open the co-op menu it answers open_menu.
-mouse={row_at(4)} -- Slot 4: Host a session, a row that needs the game world: 'away' and its id, run after SB's close.
-assert(table.concat({page.click(1)},' ')=='away host' and #acts==0 and sounds[#sounds]=='confirm')
+mouse={row_at(4)} -- Slot 4: Host a session, which asks first: its question in the pane, nothing hosted yet.
+assert(table.concat({page.click(1)},' ')=='' and #acts==1 and acts[1]=='confirm_host nil nil'
+    and sounds[#sounds]=='confirm' and detail.props.Text_Desc.props.text==w.confirm_host,tostring(acts[1]))
 local function part(title)
     local found
     for _,x in ipairs(made) do if x.kind=='option' and x.o.props.Text_TitleValue==title then found=x.o end end
@@ -544,9 +546,23 @@ do
         local a,b=page.nav('select',7)
         assert(a=='away' and b==id and #acts==n and heard()=='confirm',label..': '..tostring(a)..' '..tostring(b))
     end
-    away('Host a session','host'); away('Find a session','find'); away('Join with a code','join_code')
-    page.nav('back',7); to('Help'); page.nav('right',7)
-    away('Guide','guide'); away('Write a bug report','report')
+    -- Host a session asks first (its question in the pane, SB's confirm cue, the pause menu stays), then hosts in
+    -- place on a second Select within 3 s; a Select 4 s after the first asks again.
+    to('Host a session')
+    assert(page.nav('select',7)==nil and acts[#acts]=='confirm_host nil nil' and desc()==w.confirm_host
+        and heard()=='confirm','Host a session asks first')
+    assert(page.nav('select',8)==nil and acts[#acts]=='host nil nil' and heard()=='confirm','The second Select hosts')
+    page.nav('select',10); page.nav('select',14)
+    assert(table.concat(acts,'|',#acts-1)=='confirm_host nil nil|confirm_host nil nil' and desc()==w.confirm_host,
+        'Past 3 s: asked again')
+    n=#acts
+    away('Find a session','find'); away('Join with a code','join_code')
+    page.nav('back',15); to('Help'); page.nav('right',15)
+    away('Guide','guide')
+    -- Write a bug report runs in place: the pause menu stays.
+    to('Write a bug report')
+    assert(page.nav('select',15)==nil and acts[#acts]=='report nil nil' and heard()=='confirm','The report in place')
+    n=#acts
     -- A Test tools row: 'open_menu' and its module page, SB's confirm cue.
     page.nav('back',7); to('Test tools'); page.nav('right',7)
     local a,b=page.nav('select',7); assert(a=='open_menu' and b==PAGE and heard()=='confirm' and #acts==n,tostring(a))
@@ -595,8 +611,11 @@ do
     act_ok,act_note=false,'x'
     page.nav('select',51); assert(acts[#acts]=='copy nil nil' and heard()=='refuse' and desc()=='x','Refused')
     act_ok,act_note=true,nil
+    -- Invite runs in place (Steam's overlay is no screen of ours); Chat still closes the pause menu first.
+    to('Invite a friend (Steam)')
+    assert(page.nav('select',52)==nil and acts[#acts]=='invite nil nil' and heard()=='confirm','Invite in place')
     n=#acts
-    away('Invite a friend (Steam)','invite'); away('Chat','chat')
+    away('Chat','chat')
     -- A mute row: right mutes her (its select); the cursor stays on her row when the row above it goes.
     page.nav('back',23)
     to('Players')

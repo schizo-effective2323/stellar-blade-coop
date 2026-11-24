@@ -87,8 +87,10 @@ M.LEFT_OUT={
 -- The page's categories now: {{id=, sections={{id=, rows={row, ...}}, ...}}, ...}. A section with no row shown and a
 -- category with no section left are dropped. ctx: model.lua's (mode, chat, code, stranger, values, members, pages).
 function M.new()
-    -- model.lua's pages make the module page rows and the mute rows, the same table for each at every call.
-    local self,main_page,options_page={},Model.new(),Model.new('options')
+    -- model.lua's pages make the module page rows and the mute rows, the same table for each at every call. The page
+    -- asks twice for Host a session, as for Leave (the user's decision of stage 3). The co-op menu's model hosts at
+    -- once.
+    local self,main_page,options_page={},Model.new(nil,{host=true}),Model.new('options')
     function self.categories(ctx)
         local state,out,made=M.state(ctx),{},{[MAIN.pages]={},[M.MUTES]={}}
         for _,row in ipairs(main_page.rows(ctx)) do if row.page then table.insert(made[MAIN.pages],row) end end
