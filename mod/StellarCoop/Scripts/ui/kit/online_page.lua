@@ -435,12 +435,12 @@ function Page.new(o)
     end
     -- A press the co-op menu's rules refuse: SB's refusal sound, nothing changed, the why in the pane (or none).
     local function refuse(n) sound('refuse'); cur.note=n end
-    -- The sub-pages: a row of the page (Guide) shows its own rows in place of its category's while the cursor is in
-    -- them (cur.sub: {id=, row= the row that opened it, rows= its rows by id}); back returns to that row. A sub-page's
-    -- row is made once (sub_row) and keeps its table at each draw, so keep, where and moved follow it as they follow
-    -- the model's rows. Each sub-page: open (nil, or a function: true when it can show), sections (sub, w, gw, the
-    -- row that opened it: its sections now, nil when it cannot show any more), press (sub, row, dir, now: act's
-    -- answer).
+    -- The sub-pages: a row of the page (Guide, Find a session, Join with a code) shows its own rows in place of its
+    -- category's while the cursor is in them (cur.sub: {id=, row= the row that opened it, rows= its rows by id}); back
+    -- returns to that row. A sub-page's row is made once (sub_row) and keeps its table at each draw, so keep, where and
+    -- moved follow it as they follow the model's rows. Each sub-page: open (nil, or a function: true when it can show),
+    -- sections (sub, w, gw, the row that opened it: its sections now, nil when it cannot show any more), press (sub,
+    -- row, dir, now: act's answer).
     local function sub_row(sub,id,fields)
         local row=sub.rows[id] or {sub=sub.id,id=id}
         sub.rows[id]=row
