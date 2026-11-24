@@ -528,6 +528,39 @@ end)()
     key('ESCAPE'); in_world,kit_ready=false,false
 end)()
 
+-- The Online page's rows run through the co-op menu's own act and bind (ui/kit/menu.lua), which read the words and
+-- the file again at each call: a value written as the menu writes it; a confirm in the player's words while the co-op
+-- menu never opened; a key refused with the clash note as the file holds it now, the file unchanged; a free key taken
+-- (the first menu_key written turns host_key off); pause_tab=off in effect at once.
+;(function()
+    local page_o
+    local real=package.loaded['ui.kit.online_page']
+    package.loaded['ui.kit.online_page']={new=function(o) page_o=o; return real.new(o) end}
+    settings_text,status_text,link_mode,in_world,photo_mode='menu_key=F5\n',plain,'none',true,false
+    load_main(true)
+    package.loaded['ui.kit.online_page']=real
+    local ok,note=page_o.act('set','who_can_join','friends',page_o.ctx())
+    assert(ok==true and note==nil and settings_text:find('\nwho_can_join=friends\n',1,true),settings_text)
+    assert(logged('menu: who_can_join=friends saved in coop-settings.txt'),'Logged as the menu logs it')
+    kit_language='fr-FR'
+    local fr=require('ui.text').pick('fr-FR','game').confirm_leave
+    assert(fr~=require('ui.text').en.confirm_leave and select(2,page_o.act('confirm_leave'))==fr,
+        'The player\'s words, the menu closed')
+    kit_language=nil
+    settings_text='status_key=Shift+F9\n'
+    local taken,written
+    taken,written,note=page_o.bind('menu_key','Shift+F9')
+    assert(taken==false and written==nil and note=='Show the status already uses this key.'
+        and settings_text=='status_key=Shift+F9\n',tostring(note))
+    taken,written,note=page_o.bind('menu_key','Shift+F7')
+    assert(taken==true and written==true and note==nil and settings_text:find('menu_key=Shift+F7\n',1,true)
+        and settings_text:find('host_key=none\n',1,true),settings_text)
+    assert(pt.o.enabled(),'The Online tab is on')
+    assert(page_o.act('set','pause_tab','off',page_o.ctx())==true and settings_text:find('pause_tab=off\n',1,true)
+        and not pt.o.enabled(),'pause_tab=off in effect at once')
+    in_world=false
+end)()
+
 -- The controllers the mod reads, said the same way in INSTALL.md and docs/players/interface.md (any controller the game
 -- reads, XInput only as the fallback); no comment still says only an XInput pad can answer the saves' question or the
 -- guide.

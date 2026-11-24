@@ -23,6 +23,9 @@ local M={}
 -- console's English refusal, under the rows.
 -- confirm: the row runs on a second Select within 3 s.
 local function none(c) return c.mode=='none' end
+-- The rows that need the game world: the co-op menu closes before it runs them (ui/kit/menu.lua's away); the pause
+-- menu's Online page closes the pause menu first (ui/kit/online_page.lua).
+M.AWAY={host=true,invite=true,find=true,join_code=true,chat=true,guide=true}
 M.MAIN={
     {head='session'},
     {id='host',show=none},

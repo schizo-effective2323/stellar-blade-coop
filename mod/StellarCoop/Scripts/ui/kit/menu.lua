@@ -26,7 +26,8 @@
 -- or linked. Under TEST TOOLS, one row a module page (o.pages: eve's, cutmenus' and fight.bosses' test tools, each
 -- listed while its module is on): Select opens it in the menu, its rows made by its module at each draw, Back comes
 -- back; a row's select or step runs its module's console words through M.run, its refusal shown under the rows. No
--- engine call here: the kit makes them.
+-- engine call here: the kit makes them. The pause menu's Online page (ui/kit/online_page.lua) runs its rows through
+-- act, away and bind, so both menus change a value and run a row with the same code.
 local M=require('ui.kit.model')
 local Link=require('core.link')
 local T=require('ui.text')
@@ -202,6 +203,72 @@ function Menu.new(o)
         return true
     end
     self.set=set -- The lobby's settings screen (online/lobby/ui/lobby.lua, through main.lua) writes the same way.
+    -- A row run in place, as model.lua's select or change gave it (confirm_leave, confirm_remove, confirm_reset_keys,
+    -- reset_keys, set, remove, mute, leave, report, copy): true or false, then the note in the player's words or nil.
+    -- Any other action: false, the note left as it was.
+    local function here(action,key,text,ctx)
+        note=nil
+        local ok,message=true,nil
+        if action=='confirm_leave' then note=words.confirm_leave
+        elseif action=='confirm_remove' then note=words.confirm_remove:format(stranger(ctx))
+        elseif action=='confirm_reset_keys' then note=words.confirm_reset_keys
+        elseif action=='reset_keys' then ok=set()
+        elseif action=='set' then ok=set(key,text)
+        elseif action=='remove' then ok,message=o.run('remove',ctx.stranger.id)
+        -- Her chat lines dropped, or heard again, for the game run.
+        elseif action=='mute' then ok,message=o.run(text and 'unmute' or 'mute',key)
+        elseif action=='leave' or action=='report' or action=='copy' then
+            ok,message=o.run(action)
+            if ok and action=='report' then note=words.report end
+        else return false end
+        if not ok and message then note=message end
+        return ok,note
+    end
+    -- A row of M.AWAY, once the menu is closed: the chat's box, the code box, the Sessions screen (in place of the
+    -- menu), the guide, coop host or coop invite.
+    local function away(action)
+        if action=='chat' then return o.chat.open()
+        elseif action=='join_code' then return o.code.open()
+        elseif action=='find' then
+            local ok,why=o.sessions.open()
+            if not ok then o.log('menu: no Sessions screen: '..why) end
+            return
+        elseif action=='guide' then
+            local ok,message=o.guide.open()
+            return o.log((ok and 'menu: ' or 'menu: no guide: ')..message)
+        end
+        return o.run(action)
+    end
+    -- A key pressed (keybind.text's: 'Shift+F7', 'Enter') for key setting key: true when taken as its new key (Enter:
+    -- its default), then whether it was written; false when refused, the note in the menu's words.
+    local function rebind(key,name)
+        local action,a,b=M.rebind(values,key,name)
+        if action then return true,set(a,b) end
+        if a=='clash' then note=words.clash:format(words.row[b] or b)
+        else note=a=='F10 opens the console' and words.f10 or words.keys end
+        return false
+    end
+    -- The words and the values now: the Online page calls in while this menu is closed, maybe before it ever opened.
+    local function fresh()
+        local culture=kit.language()
+        words,guide_words=T.pick(culture,settings.ui_language),G.pick(culture,settings.ui_language)
+        values=M.read(link.settings_text() or '')
+    end
+    -- The pause menu's Online page (ui/kit/online_page.lua through main/input.lua) runs its rows with these. act:
+    -- here's answer. away: a row of M.AWAY, or report (here's answer), once SB closed the pause menu and the game runs.
+    -- bind: taken, written and the note.
+    function self.act(action,key,text,ctx) fresh(); return here(action,key,text,ctx) end
+    function self.away(action)
+        fresh()
+        if action=='report' then return here('report') end
+        return away(action)
+    end
+    function self.bind(key,name)
+        fresh()
+        note=nil
+        local taken,ok=rebind(key,name)
+        return taken,ok,note
+    end
     -- coop keys reset: one key setting back to its default, as Enter while its row waits for a key, or every key with
     -- key nil, as the Reset all keys row; true and the keys now, or false and why, in English.
     function self.reset(key)
@@ -294,42 +361,13 @@ function Menu.new(o)
         elseif what=='select' then
             kit.sound('select')
             local action,key,text=model.select(ctx,os.clock(),values)
-            if action=='confirm_leave' then note=words.confirm_leave
-            elseif action=='confirm_remove' then note=words.confirm_remove:format(stranger(ctx))
-            elseif action=='confirm_reset_keys' then note=words.confirm_reset_keys
-            elseif action=='reset_keys' then set()
-            elseif action=='rebind' then capturing,note=key,words.capture
-            elseif action=='set' then set(key,text)
+            if action=='rebind' then capturing,note=key,words.capture
             elseif action=='run' then note=key.select and select(2,key.select()) or nil
             elseif action=='close' then return self.close()
-            elseif action=='chat' then
+            elseif M.AWAY[action] then
                 self.close()
-                return o.chat.open()
-            elseif action=='join_code' then
-                self.close()
-                return o.code.open()
-            elseif action=='find' then -- Find a session: the Sessions screen in place of the menu.
-                self.close()
-                local ok,why=o.sessions.open()
-                if not ok then o.log('menu: no Sessions screen: '..why) end
-                return
-            elseif action=='guide' then
-                self.close()
-                local ok,message=o.guide.open()
-                return o.log((ok and 'menu: ' or 'menu: no guide: ')..message)
-            elseif action=='remove' then
-                local ok,message=o.run('remove',ctx.stranger.id)
-                if not ok then note=message end
-            elseif action=='mute' then -- Her chat lines dropped, or heard again, for the game run.
-                local ok,message=o.run(text and 'unmute' or 'mute',key)
-                if not ok then note=message end
-            elseif action=='host' or action=='invite' then
-                self.close()
-                return o.run(action)
-            elseif action=='leave' or action=='report' or action=='copy' then
-                local ok,message=o.run(action)
-                if not ok then note=message elseif action=='report' then note=words.report end
-            end
+                return away(action)
+            elseif action then here(action,key,text,ctx) end -- options, main and page: false, the note kept.
         end
         draw()
     end
@@ -338,12 +376,7 @@ function Menu.new(o)
     function self.capture(name)
         if not (open and capturing) then return false end
         if kit.off() then self.close(); return false end
-        local action,a,b=M.rebind(values,capturing,name)
-        if action then
-            capturing=nil
-            set(a,b)
-        elseif a=='clash' then note=words.clash:format(words.row[b] or b)
-        else note=a=='F10 opens the console' and words.f10 or words.keys end
+        if rebind(capturing,name) then capturing=nil end
         draw()
         return true
     end

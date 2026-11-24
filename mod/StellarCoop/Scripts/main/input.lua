@@ -186,8 +186,9 @@ end
 local function pt_log(m) print('[StellarCoop][PT] '..tostring(m)..'\n') end
 -- The Online page (ui/kit/online_page.lua), made behind its own guard: a page that does not load or build is off until
 -- the mod reloads, with one line. The Online tab then opens the co-op menu as before; the kit, the co-op menu and the
--- keys go on. Its words are the co-op menu's. Its ctx (the fields online_model.lua reads) is read once a show: the
+-- keys go on. Its words are the co-op menu's. Its ctx (the fields online_model.lua reads) is read at each call: the
 -- link's state, the chat box, the module pages and the values of coop-settings.txt. Its mouse is the kit's pointer.
+-- Its rows change a value and take a key through the co-op menu's own act and bind (ui/kit/menu.lua).
 local page_built,page=pcall(function()
     local Model=require('ui.kit.model')
     return require('ui.kit.online_page').new({log=pt_log,words=M.words,
@@ -204,7 +205,8 @@ local page_built,page=pcall(function()
             return {mode=link.mode(),chat=M.box~=nil and M.box.can()==true,code=link.code(),stranger=link.stranger(),
                 values=values,members=link.members(),pages=pages,words=words}
         end,
-        theme=require('ui.kit.kit').THEME,pointer=function() if M.kit then return M.kit.pointer() end end})
+        theme=require('ui.kit.kit').THEME,pointer=function() if M.kit then return M.kit.pointer() end end,
+        act=function(...) return M.menu.act(...) end,bind=function(...) return M.menu.bind(...) end})
 end)
 if not page_built then
     pt_log('online page: off until the mod reloads: '..tostring(page))
