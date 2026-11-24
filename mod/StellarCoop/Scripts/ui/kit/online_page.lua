@@ -157,7 +157,7 @@ function Page.specs(cats,cur,w,gw,ctx)
             out.rows[i]=s
         end
     end
-    -- The F5 menu's rows have no description today: the pane shows the name alone.
+    -- The F5 menu's rows have no description today: the pane shows the name alone, its media part collapsed (draw).
     local line=not cur.list and list[cur.row]
     out.detail.title=line and line.row and Page.label(w,gw,line.row,ctx) or out.list[cur.cat].label
     return out
@@ -351,6 +351,14 @@ function Page.new(o)
         if not d then
             d=make('detail',s.detail,A.detail.x,A.detail.y)
             d.title_now,d.desc_now,slots.detail=s.detail.title,s.detail.desc,d
+            -- No item of the page has media (the F5 menu has none). SB's pane keeps its media part above the title:
+            -- WB_Setting_SlotDetail's Thumbnail (an Image, 780 by 468, in OL_Thumbnail, the first slot of
+            -- VerticalBox_235). Collapsed, the title moves up.
+            if not d.kit then
+                call('detail media',function()
+                    assert(U.valid(d.o.Thumbnail),'no Thumbnail'):SetVisibility(COLLAPSED)
+                end)
+            end
         elseif d.title_now~=s.detail.title or d.desc_now~=s.detail.desc then
             d.title_now,d.desc_now=s.detail.title,s.detail.desc
             if d.kit then

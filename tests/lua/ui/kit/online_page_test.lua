@@ -4,19 +4,20 @@
 -- The pause menu's Online page (ui/kit/online_page.lua) over fakes. Pure: each row's part kind; its words and value as
 -- the co-op menu draws them; the cursor over ui/kit/online_model.lua's categories in solo and while hosting (the list
 -- wraps, right and select land on Open the co-op menu, the rows skip headers and wrap, select there opens the co-op
--- menu, select elsewhere and left do nothing, back goes to the list, back in the list closes, a long category keeps
--- the cursor inside the 12 slots); what is under the mouse in the boxes the page places its parts in (a list item, a
--- row, never a header or a slot past the rows, edges exclusive). Engine: the build adds one collapsed canvas last to
--- the master's root, nothing in it before the show; each of the
--- six SB classes says once that it was built; each part's Blueprint texts are set before it enters the canvas and its
--- TextBlocks and calls after; a class whose Create raises is drawn with a TextBlock and a Border in its place, one line
--- for it, the others SB's; show makes the canvas SelfHitTestInvisible with the focused item's PlayFocusAnim and the
--- category's word in the pane; right gives Select, StateFocus on Open the co-op menu and its words in the pane; a click
--- (the kit's pointer) selects the row under the mouse, on Open the co-op menu it answers 'open_menu', on a header or
--- with no pointer it does nothing, on a list item it shows that category; the mouse look (tick, every HOVER s) only
--- notes what is under the mouse at its first look, then the item the mouse moved onto takes the cursor, while a
--- resting mouse never does, even after the keys moved the cursor; a refused look is logged once; a canvas that cannot
--- be made turns the page off with one line; visibility() names SB's eight pages with their state.
+-- menu, select elsewhere and left do nothing, back goes to the list, back in the list closes, a long category keeps the
+-- cursor inside the 12 slots); what is under the mouse in the boxes the page places its parts in (a list item, a row,
+-- never a header or a slot past the rows, edges exclusive). Engine: the build adds one collapsed canvas last to the
+-- master's root, nothing in it before the show; each of the six SB classes says once that it was built; each part's
+-- Blueprint texts are set before it enters the canvas and its TextBlocks and calls after; a class whose Create raises
+-- is drawn with a TextBlock and a Border in its place, one line for it, the others SB's; show makes the canvas
+-- SelfHitTestInvisible with the focused item's PlayFocusAnim and the category's word in the pane, no description, the
+-- pane's Thumbnail collapsed (one line when the pane has none); right gives Select, StateFocus on Open the co-op menu
+-- and its words in the pane; a click (the kit's pointer) selects the row under the mouse, on Open the co-op menu it
+-- answers 'open_menu', on a header or with no pointer it does nothing, on a list item it shows that category; the mouse
+-- look (tick, every HOVER s) only notes what is under the mouse at its first look, then the item the mouse moved onto
+-- takes the cursor, while a resting mouse never does, even after the keys moved the cursor; a refused look is logged
+-- once; a canvas that cannot be made turns the page off with one line; visibility() names SB's eight pages with their
+-- state.
 package.path='mod/StellarCoop/Scripts/?.lua;'..package.path
 local U=require('core.unreal')
 local T=require('ui.text')
@@ -175,7 +176,7 @@ StaticConstructObject=function(class,outer)
     return fake(class.props.umg..'#'..count)
 end
 local SUB={tab={'Text_side_name'},rolling={'Text_Title','Text_Btn_name'},slider={'Text_VolumeValue'},
-    detail={'Text_ItemName','Text_Desc'}}
+    detail={'Text_ItemName','Text_Desc','Thumbnail'}}
 local PC=fake('pc')
 U.controller=function() return PC end
 for _,umg in ipairs({'CanvasPanel','Border','TextBlock'}) do objects['/Script/UMG.'..umg]=fake(umg,{umg=umg}) end
@@ -255,9 +256,11 @@ assert(rolling.props.Text_TitleValue=='Who can join' and rolling.props.Text_Btn_
 assert(slider.props.ItemTextRange.Min==2 and slider.props.ItemTextRange.Max==4 and slider.props.CurrentPercent==1
     and slider.props.Text_VolumeValue.props.text=='4','Max players at 4 of 2 to 4')
 assert(tab.props.visibility==3 and option.props.visibility==3,'SB\'s parts never take the mouse')
--- Looks: the first item focused, the pane the category's word.
+-- Looks: the first item focused, the pane the category's word with no description and its media part collapsed.
 assert(called(tab,'PlayFocusAnim')==1 and detail.props.Text_ItemName.props.text=='Session'
     and detail.props.Text_Desc.props.text=='')
+assert(detail.props.Thumbnail.props.visibility==1 and called(detail.props.Thumbnail,'SetVisibility')==1,
+    'The pane\'s Thumbnail collapsed once: no item has media')
 -- Right: the item selected, Open the co-op menu focused, its words in the pane.
 assert(page.nav('right')==nil)
 local open_menu
@@ -326,7 +329,7 @@ page.forget()
 local m2,root2=master()
 assert(page.build(m2) and #root2.props.children==1)
 
--- A refused look: logged once a kind.
+-- A refused look: logged once a kind. A pane with no Thumbnail: one line, the page shown.
 do
     page=new()
     local m3=master()
@@ -335,12 +338,14 @@ do
     objects['/Script/UMG.Default__WidgetBlueprintLibrary'].props.Create=function(...)
         local x=saved(...)
         if x.name:find('^tab') then x.props.PlayFocusAnim=function() error('not callable') end end
+        if x.name:find('^detail') then x.props.Thumbnail=nil end
         return x
     end
     page.show(true)
     page.nav('down'); page.nav('up')
     assert(lines_with('online page: tab look refused: not callable')==1 and page.shown() and not page.off(),
         table.concat(logs,'|'))
+    assert(lines_with('online page: detail media refused: no Thumbnail')==1,table.concat(logs,'|'))
     objects['/Script/UMG.Default__WidgetBlueprintLibrary'].props.Create=saved
 end
 
