@@ -291,7 +291,7 @@ s.tab.event(10)
 assert(s.tabs==1 and s.enters==1 and table.concat(p.calls,',')=='build,show true' and p.master==m12,
     table.concat(p.calls,','))
 assert(b12[9].focus==1 and b12[8].defocus==1 and b12[7].defocus==0 and s.closes==0,'Ours focused, Settings defocused')
-assert(s.tab.page_shown() and logged('online page shown (from tab 8, by RB)')
+assert(s.tab.page_shown() and logged('online page shown (from tab 8, by LB or RB)')
     and logs[#logs]=="online page: SB's pages after the deactivate: WB_GameMenu_Setting=Hidden",logs[#logs])
 s.now=9
 s.tab.tick(10.2); assert(not logged('0.5 s after'),'Not yet')

@@ -2,9 +2,10 @@
 // SPDX-License-Identifier: LicenseRef-SBO-1.0-or-later
 // SBO License 1.0 or later, in LICENSE and at github.com/MotherSphere/stellar-blade-coop; NOTICE adds a permission.
 // The Online tab's decision (ui/pause_tab.h), checked on the build machine: RB opens it only on the GameMenu logic's
-// highest enabled tab while SB's tab lock is off, a list SB never builds passes on, one open a press and release; the
-// close is SB's own, its result counts the ones Lua reads. On the Online page (tab 9) SB's Back is held while the
-// shoulders and the pause key reach SB. page_of finds a tab's page in a fake of SB's tab -> page TMap.
+// highest enabled tab and LB only on its lowest, while SB's tab lock is off; a list SB never builds passes on; one open
+// a press and release of the same shoulder; the close is SB's own, its result counts the ones Lua reads. On the Online
+// page (tab 9) SB's Back is held while the shoulders and the pause key reach SB. page_of finds a tab's page in a fake
+// of SB's tab -> page TMap.
 #include "ui/pause_tab.h"
 
 #include <cassert>
@@ -53,12 +54,28 @@ int main() {
   static_assert(int(Enter::entered) == 1 && int(Enter::shown) == 2 && int(Enter::none) == 3 &&
                 int(Enter::locked) == 4 && int(Enter::off) == 5); // coop_pause_enter's result counts.
   static_assert(int(Tab::other) == 10 && int(Tab::none) == 11 && int(Tab::off) == 12); // coop_pause_page's, past 9.
-  const Action rb = Action::right_shoulder, passes = Action::passes, other = Action::other;
+  const Action rb = Action::right_shoulder, lb = Action::left_shoulder, passes = Action::passes, other = Action::other;
   const int32_t all[] = {1, 2, 3, 4, 5, 6, 7, 8};
   { Gate g; assert(g.decide(8, all, 8, 0, rb, 1000) == Verdict::open); }      // RB on Settings.
   { Gate g; assert(g.decide(7, all, 8, 0, rb, 1000) == Verdict::pass); }      // Not the last tab.
   { Gate g; assert(g.decide(8, all, 8, 1, rb, 1000) == Verdict::pass); }      // SB's tab lock.
-  { Gate g; assert(g.decide(8, all, 8, 0, passes, 1000) == Verdict::pass); }  // LB or the pause key.
+  { Gate g; assert(g.decide(8, all, 8, 0, passes, 1000) == Verdict::pass); }  // The pause key.
+  // LB on the lowest enabled tab mirrors RB on the highest: SB's previous would wrap to Settings there.
+  { Gate g; assert(g.decide(1, all, 8, 0, lb, 1000) == Verdict::open); }      // LB on Equipment.
+  { Gate g; assert(g.decide(8, all, 8, 0, lb, 1000) == Verdict::pass); }      // LB on Settings: SB's previous.
+  { Gate g; assert(g.decide(2, all, 8, 0, lb, 1000) == Verdict::pass); }      // Not the first tab.
+  { Gate g; assert(g.decide(1, all, 8, 1, lb, 1000) == Verdict::pass); }      // SB's tab lock.
+  { Gate g; assert(g.decide(1, all, 8, 0, rb, 1000) == Verdict::pass); }      // RB on Equipment: SB's next.
+  { const int32_t no_first[] = {8, 3, 2}; Gate g; assert(g.decide(2, no_first, 3, 0, lb, 0) == Verdict::open); }
+  { Gate g; assert(g.decide(9, all, 8, 0, lb, 1000) == Verdict::pass); }      // LB on the Online page: Settings.
+  { Gate g; // An LB press and its release: one open; RB inside that latch is another press and reaches SB.
+    assert(g.decide(1, all, 8, 0, lb, 1000) == Verdict::open);
+    assert(g.decide(9, all, 8, 0, lb, 1100) == Verdict::drop && g.decide(9, all, 8, 0, rb, 1200) == Verdict::pass);
+    assert(g.decide(9, all, 8, 0, lb, 1500) == Verdict::pass); // A later LB on the page: SB's previous, Settings.
+  }
+  { Gate g; // The RB latch keeps LB: an LB on Equipment just after RB opened still opens.
+    assert(g.decide(8, all, 8, 0, rb, 1000) == Verdict::open && g.decide(1, all, 8, 0, lb, 1100) == Verdict::open);
+  }
   { Gate g; assert(g.decide(8, all, 8, 0, other, 1000) == Verdict::pass); }   // Back on an SB page.
   { Gate g; assert(g.decide(9, all, 8, 0, rb, 1000) == Verdict::pass); }      // RB on the Online page: SB's next.
   { Gate g;                                                                    // A list SB never builds.

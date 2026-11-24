@@ -374,8 +374,8 @@ void sboxion_pass();
 // Every pass: logs the photo hunt's fault once (online/modes/photohunt/photohunt_worker.inc).
 void photohunt_pass();
 // The pause menu's Online tab (ui/pause_tab_game.inc, ui/pause_tab.h), worker thread. Lua's pausetab on or off
-// (Command::pausetab): RB on the pause menu's last tab opens the Online tab only while on (on until Lua says off). A
-// change is logged.
+// (Command::pausetab): RB on the pause menu's last tab or LB on its first opens the Online tab only while on (on until
+// Lua says off). A change is logged.
 void ask_pause_tab(bool on);
 // The game's tutorial and record popups during online play (online/session/options_game.inc, online/session/options.h),
 // worker thread. Lua's popups on or off (Command::popups): the game thread turns both options Off while a peer is

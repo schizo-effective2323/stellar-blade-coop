@@ -264,14 +264,14 @@
 // status() says which source runs (pad=slate or pad=xinput).
 //
 // The pause menu's Online tab (ui/pause_tab.h): once a run the worker swaps the GameMenu logic's input slot of the
-// game's image for a hook on the game thread. RB on the highest enabled tab (Settings), while SB's tab lock is off and
-// Lua's pausetab is on, becomes coop_pad's event 12 in place of SB's wrap to Equipment; every other action runs SB's
-// function with the same arguments. Coop off and a fault of the hook give the slot back. coop_pause_close closes the
-// pause menu for the tab with SB's own close, the one SB's Back runs, so its menu-close save and the shown tab's
-// deactivate run as in the game. coop_pause_enter enters the Online page, tab 9: it runs the shown page's deactivate
-// as SB's tab change does, then writes 9 as the current tab. coop_pause_page reads the open menu's tab for Lua's poll.
-// While tab 9 shows, the hook keeps every action but the shoulders and the pause key from SB, so SB's Back reaches
-// only Lua. Both exports run on the pinned build before coop off, under the hook's latch.
+// game's image for a hook on the game thread. RB on the highest enabled tab (Settings) and LB on the lowest one, while
+// SB's tab lock is off and Lua's pausetab is on, become coop_pad's event 12 in place of SB's wraps; every other action
+// runs SB's function with the same arguments. Coop off and a fault of the hook give the slot back. coop_pause_close
+// closes the pause menu for the tab with SB's own close, the one SB's Back runs, so its menu-close save and the shown
+// tab's deactivate run as in the game. coop_pause_enter enters the Online page, tab 9: it runs the shown page's
+// deactivate as SB's tab change does, then writes 9 as the current tab. coop_pause_page reads the open menu's tab for
+// Lua's poll. While tab 9 shows, the hook keeps every action but the shoulders and the pause key from SB, so SB's Back
+// reaches only Lua. Both exports run on the pinned build before coop off, under the hook's latch.
 //
 // The game's tutorial and record popups during online play (online/session/options.h): once a run the worker swaps the
 // save slots of SB's Tutorial and RecordPopup options, both or neither, for wrappers. Every 250 ms in game, while a
@@ -472,10 +472,10 @@
 
 // Called by Lua for each pad event it takes (package.loadlib(dll, "coop_pad")), in lua_CFunction's shape, the Lua state
 // ignored. The DLL links no Lua, so the event is the result count: Lua passes 13 arguments and gets that many of them
-// back, 0 for none or ui/pad.h's event 1 to 13, so this never returns more than 13. Event 12 is the Online tab's (RB
-// on the pause menu's last tab, pause_tab_game.inc's hook), posted before the pads' next one; event 13 is D-pad Left
-// held 300 ms (the emote wheel). Polls the pads at most once per 8 ms, so Lua can take several events in one frame.
-// Never throws, never waits.
+// back, 0 for none or ui/pad.h's event 1 to 13, so this never returns more than 13. Event 12 is the Online tab's (RB on
+// the pause menu's last tab or LB on its first, pause_tab_game.inc's hook), posted before the pads' next one; event 13
+// is D-pad Left held 300 ms (the emote wheel). Polls the pads at most once per 8 ms, so Lua can take several events in
+// one frame. Never throws, never waits.
 extern "C" __declspec(dllexport) int coop_pad(void *) noexcept {
   using namespace coop::pose;
   const uint64_t now = GetTickCount64();

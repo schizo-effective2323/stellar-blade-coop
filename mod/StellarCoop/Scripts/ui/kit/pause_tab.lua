@@ -5,19 +5,19 @@
 -- after them. SB's GameMenu logic maps tabs 1 to 8 to its own pages in code, so the Online page is SBO's own widget in
 -- the master (ui/kit/online_page.lua). The button is Visible with its Button_Action HitTestInvisible: SB's Button never
 -- takes the click. A left click (main/keys.lua's mouse bind) asks the button's IsHovered. RB on Settings reaches the
--- tab through the native part (ui/pause_tab.h: RB on the highest enabled tab becomes coop_pad's event 12; E on the
--- keyboard too, as SB maps it to the same action). Either one enters the page: the native part's coop_pause_enter
--- runs the shown SB page's deactivate (as SB's own tab change does), then writes 9 as the open tab. The page shows.
--- Our button takes SB's focus look; SB's button of the tab left loses it. While the page shows, the open tab is read
--- each frame (coop_pause_page). SB's previous and next (LB, RB, the arrows), a click on one of SB's tabs and SB's
--- close (the pause key) leave tab 9 by SB's own code: the page hides as soon as the tab is not 9. The native part
--- keeps SB's Back from SB on tab 9, so main/keys.lua and main/input.lua hand Esc, the pad's B and the navigation words
--- to the page (nav). Back in its left list runs SB's close (coop_pause_close, what SB's Back runs). Open the co-op menu
--- runs SB's close, then the co-op menu. The page hides at coop off (with SB's close) and when the master is gone.
--- With no page (it did not load or build, or an older DLL without the two exports) the tab does what it did before
--- the page: SB's close, then the co-op menu once the game is unpaused, as menu_key does; still paused after WAIT s, it
--- gives up with one log line and one notice. A page that turns off while shown hides, closes the pause menu and opens
--- the co-op menu, with one line. A close the native part cannot make at all stops the tab as an error does.
+-- tab through the native part (ui/pause_tab.h: RB on the highest enabled tab and LB on the lowest become coop_pad's
+-- event 12; the keyboard's keys too, as SB maps them to the same actions). Either one enters the page: the native
+-- part's coop_pause_enter runs the shown SB page's deactivate (as SB's own tab change does), then writes 9 as the open
+-- tab. The page shows. Our button takes SB's focus look; SB's button of the tab left loses it. While the page shows,
+-- the open tab is read each frame (coop_pause_page). SB's previous and next (LB, RB, the arrows), a click on one of
+-- SB's tabs and SB's close (the pause key) leave tab 9 by SB's own code: the page hides as soon as the tab is not 9.
+-- The native part keeps SB's Back from SB on tab 9, so main/keys.lua and main/input.lua hand Esc, the pad's B and the
+-- navigation words to the page (nav). Back in its left list runs SB's close (coop_pause_close, what SB's Back runs).
+-- Open the co-op menu runs SB's close, then the co-op menu. The page hides at coop off (with SB's close) and when the
+-- master is gone. With no page (it did not load or build, or an older DLL without the two exports) the tab does what it
+-- did before the page: SB's close, then the co-op menu once the game is unpaused, as menu_key does; still paused after
+-- WAIT s, it gives up with one log line and one notice. A page that turns off while shown hides, closes the pause menu
+-- and opens the co-op menu, with one line. A close the native part cannot make at all stops the tab as an error does.
 --
 -- The button copies its text style from SB's last button. A container rebuilt without it gets it again from the 250 ms
 -- loop while the game is paused. A rooted, never-shown master keeps the class in memory, so the hook stays on it. Every
@@ -256,12 +256,12 @@ function Tab.new(o)
         end)
         if not ok then fail(e) end
     end
-    -- RB on Settings (coop_pad's event 12): the page entered. With the tab on, no button made (no Construct seen yet)
-    -- and no close waiting, one line each time: the native part took the press.
+    -- RB on Settings or LB on the first tab (coop_pad's event 12): the page entered. With the tab on, no button made
+    -- (no Construct seen yet) and no close waiting, one line each time: the native part took the press.
     function self.event(now)
-        if self.armed() then return enter(now,'RB') end
+        if self.armed() then return enter(now,'LB or RB') end
         if not (failed or stopped or closed_at) and o.enabled() then
-            log('pause tab: RB on Settings with no Online tab shown; nothing opened')
+            log('pause tab: LB or RB at an end of the tab row with no Online tab shown; nothing opened')
         end
     end
     -- A left click while armed and paused: the page's while it shows (Open the co-op menu runs), else the page entered

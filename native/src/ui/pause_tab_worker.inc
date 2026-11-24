@@ -60,7 +60,8 @@ void pause_tab_pass() {
     pause_tab_install();
   if (const uint32_t opens = pause_tab_opens; opens != pause_tab_opens_logged) {
     pause_tab_opens_logged = opens;
-    say("pause tab: RB on Settings opened the Online tab (" + std::to_string(opens) + " this run)");
+    say("pause tab: RB on Settings or LB on the first tab opened the Online tab (" + std::to_string(opens) +
+        " this run)");
   }
   if (const uint32_t held = pause_tab_held; held != pause_tab_held_logged) {
     // One line as the count reaches 1, 10, 100 and so on: a held D-pad would write one at every pass.

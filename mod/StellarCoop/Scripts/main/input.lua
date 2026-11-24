@@ -87,7 +87,7 @@ end
 -- bike (D-pad Right held 1 s) gets EVE on the bike or off it as bike_key does, in a world with our HUD shown, none of
 -- our screens open (the host's question, the Sessions screen and the Create a session screen included) and the game
 -- neither paused nor showing one of its own screens, such as its inventory or map; otherwise it logs why and does
--- nothing. pause_tab (RB on the pause menu's last tab, E on the keyboard: the native part's event 12) goes to the
+-- nothing. pause_tab (RB on the pause menu's last tab or LB on its first: the native part's event 12) goes to the
 -- Online tab only (ui/kit/pause_tab.lua), never to one of our screens. left and right (the D-pad or the left stick)
 -- that nothing above took switch the member spectate watches while our EVE is down in a shared boss fight
 -- (fight/enemies/spectate.lua).

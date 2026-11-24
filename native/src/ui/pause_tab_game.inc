@@ -23,9 +23,10 @@ __declspec(noinline) coop::pause_tab::Verdict pause_tab_decide(uintptr_t logic, 
   using namespace coop::pause_tab;
   const uint64_t name = at<uint64_t>(event + kEventName);
   const auto is = [name](uint64_t global) { return name && name == at<uint64_t>(base + (global - game::kImageBase)); };
-  const Action action = is(kRightShoulder)                    ? Action::right_shoulder
-                        : is(kLeftShoulder) || is(kGameMenu) ? Action::passes
-                                                              : Action::other;
+  const Action action = is(kRightShoulder) ? Action::right_shoulder
+                        : is(kLeftShoulder) ? Action::left_shoulder
+                        : is(kGameMenu)     ? Action::passes
+                                            : Action::other;
   return pause_tab_gate.decide(at<int32_t>(logic + kCurrent), at<const int32_t *>(logic + kEnabled),
                                at<int32_t>(logic + kEnabledCount), at<uint8_t>(logic + kLock), action,
                                GetTickCount64());
