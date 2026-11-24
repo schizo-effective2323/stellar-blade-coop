@@ -576,13 +576,15 @@ end)()
         and not pt.o.enabled(),'pause_tab=off in effect at once')
     -- Host a session from the page: the Create a session screen's request (its Start through
     -- online/session/wiring.lua), with Who can join's value in effect, no screen opened. Invite runs in place.
+    -- The kit is up here, so a host asked without Who can join's word would open the Create a session screen.
+    kit_ready=true; quarter()
     ok,note=page_o.act('host',nil,nil,page_o.ctx())
     assert(ok==true and note==nil and asked[#asked]=='host public 4' and not cr.open,tostring(asked[#asked]))
     local n=#asked
     cr.o.act({host='public'})
     assert(#asked==n+1 and asked[#asked]=='host public 4','Create a session\'s Start asks the same line')
     assert(page_o.act('invite')==true and asked[#asked]=='invite','Invite in place')
-    in_world=false
+    in_world,kit_ready=false,false
 end)()
 
 -- A row of the Online page that needs the game world, once the pause tab closed the pause menu (its away): the co-op

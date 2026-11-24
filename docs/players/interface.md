@@ -761,8 +761,8 @@ build when the game is closed. After each step keep `UE4SS.log` (the `[PT]`, `me
    place. Join with a place left `_`: the refusal beep, the pane says what a code looks like. Esc: back on Join with a
    code. Note whether `_` shows in the value's font.
 9. Session: Find a session. Expect: Search reading Public, Refresh, then the sessions or a status under a header.
-   `UE4SS.log`: `sessions: on the Online page, public`. Note whether Searching… turns into sessions or No open
-   session. while the game stays paused. Right on Search: Friends. Refresh twice fast: the beep, the pane says
+   `UE4SS.log`: `sessions: on the Online page, public`. Note whether Searching… turns into sessions or
+   `No open session.` while the game stays paused. Right on Search: Friends. Refresh twice fast: the beep, the pane says
    `You can search again in <n> s.` Esc: back on Find a session.
 10. Session: Host a session. Enter: the pane asks. Wait 4 s, Enter: it asks again. Enter twice fast. Expect: the pause
     menu stays open, no Create a session screen. Within a second or two the Session rows change to Invite a friend,
