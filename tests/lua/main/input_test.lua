@@ -546,6 +546,9 @@ end)()
     local fr=require('ui.text').pick('fr-FR','game').confirm_leave
     assert(fr~=require('ui.text').en.confirm_leave and select(2,page_o.act('confirm_leave'))==fr,
         'The player\'s words, the menu closed')
+    -- The next act starts with no note: the confirm question never rides on a later press.
+    ok,note=page_o.act('set','who_can_join','public',page_o.ctx())
+    assert(ok==true and note==nil,'No note left from the confirm: '..tostring(note))
     kit_language=nil
     settings_text='status_key=Shift+F9\n'
     local taken,written

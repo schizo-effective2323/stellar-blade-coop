@@ -248,7 +248,7 @@ pvp_spike=on
 # and each co-op save is copied before the game rewrites it (the 10 newest kept per slot).
 sbo_lobby=on
 # Online tab: on or off, on by default. On, the pause menu gets an Online tab after Settings. RB on Settings (E on
-# the keyboard) or a click on the tab closes the pause menu and opens the co-op menu.
+# the keyboard) or a click on the tab opens the Online page inside the pause menu.
 pause_tab=on
 # Popups during online play: on or off, on by default. On, the game's tutorial popups and record popups are off while
 # you play online with at least one other player. Your own values come back when you leave. The game's settings file
