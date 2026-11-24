@@ -64,6 +64,7 @@ return {
     sit='Hinsetzen',stand='Aufstehen',
     line={prompt='Koop-Leitung',free='Die Leitung ist frei. Hoste eine Sitzung oder tritt einem Freund bei.',
         open='Deine Sitzung ist offen. Lade von hier aus einen Freund ein.',linked='Du bist mit %s verbunden.'},
+    confirm_host='Zum Hosten einer Online-Sitzung innerhalb von 3 s erneut auswählen.',
     confirm_leave='Zum Verlassen innerhalb von 3 s erneut auswählen.',
     confirm_remove='Zum Entfernen und Blockieren von %s innerhalb von 3 s erneut auswählen.',
     confirm_reset_keys='Zum Zurücksetzen aller Tasten innerhalb von 3 s erneut auswählen.',

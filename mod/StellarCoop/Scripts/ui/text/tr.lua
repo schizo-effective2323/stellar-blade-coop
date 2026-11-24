@@ -63,6 +63,7 @@ return {
     sit='Otur',stand='Kalk',
     line={prompt='Co-op hattı',free='Hat boşta. Bir oturum kur ya da bir arkadaşına katıl.',
         open='Oturumun açık. Buradan bir arkadaşını davet et.',linked='%s ile hattasın.'},
+    confirm_host='Çevrim içi oturum kurmak için 3 sn içinde yeniden seç.',
     confirm_leave='Ayrılmak için 3 sn içinde yeniden seç.',
     confirm_remove='3 sn içinde yeniden seçersen %s çıkarılır ve engellenir.',
     confirm_reset_keys='Tüm tuşları sıfırlamak için 3 sn içinde yeniden seç.',

@@ -61,6 +61,7 @@ return {
     sit='Sett deg',stand='Reis deg',
     line={prompt='Co-op-linje',free='Linjen er ledig. Vær vert for en økt, eller bli med i en venns spill.',
         open='Økten din er åpen. Inviter en venn herfra.',linked='Koblet til %s.'},
+    confirm_host='Velg igjen innen 3 s for å være vert for en nettøkt.',
     confirm_leave='Velg igjen innen 3 s for å forlate økten.',
     confirm_remove='Velg igjen innen 3 s for å fjerne og blokkere %s.',
     confirm_reset_keys='Velg igjen innen 3 s for å tilbakestille alle taster.',

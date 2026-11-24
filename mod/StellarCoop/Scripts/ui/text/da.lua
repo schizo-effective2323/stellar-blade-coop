@@ -62,6 +62,7 @@ return {
     sit='Sæt dig',stand='Rejs dig',
     line={prompt='Co-op-linje',free='Linjen er ledig. Vær vært for en session, eller deltag i en vens spil.',
         open='Din session er åben. Invitér en ven herfra.',linked='Forbundet med %s.'},
+    confirm_host='Vælg igen inden for 3 s for at være vært for en onlinesession.',
     confirm_leave='Vælg igen inden for 3 s for at forlade sessionen.',
     confirm_remove='Vælg igen inden for 3 s for at fjerne og blokere %s.',
     confirm_reset_keys='Vælg igen inden for 3 s for at nulstille alle taster.',

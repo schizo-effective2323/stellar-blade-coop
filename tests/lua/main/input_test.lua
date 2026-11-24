@@ -531,7 +531,7 @@ end)()
 -- The Online page's rows run through the co-op menu's own act and bind (ui/kit/menu.lua), which read the words and
 -- the file again at each call: a value written as the menu writes it; a confirm in the player's words while the co-op
 -- menu never opened; a key refused with the clash note as the file holds it now, the file unchanged; a free key taken
--- (the first menu_key written turns host_key off); pause_tab=off in effect at once.
+-- (the first menu_key written turns host_key off); pause_tab=off in effect at once; Host a session and Invite run.
 ;(function()
     local page_o
     local real=package.loaded['ui.kit.online_page']
@@ -546,6 +546,9 @@ end)()
     local fr=require('ui.text').pick('fr-FR','game').confirm_leave
     assert(fr~=require('ui.text').en.confirm_leave and select(2,page_o.act('confirm_leave'))==fr,
         'The player\'s words, the menu closed')
+    fr=require('ui.text').pick('fr-FR','game').confirm_host
+    assert(fr~=require('ui.text').en.confirm_host and select(2,page_o.act('confirm_host'))==fr,
+        'Host a session asks first in the player\'s words')
     -- The next act starts with no note: the confirm question never rides on a later press.
     ok,note=page_o.act('set','who_can_join','public',page_o.ctx())
     assert(ok==true and note==nil,'No note left from the confirm: '..tostring(note))
@@ -561,6 +564,14 @@ end)()
     assert(pt.o.enabled(),'The Online tab is on')
     assert(page_o.act('set','pause_tab','off',page_o.ctx())==true and settings_text:find('pause_tab=off\n',1,true)
         and not pt.o.enabled(),'pause_tab=off in effect at once')
+    -- Host a session from the page: the Create a session screen's request (its Start through
+    -- online/session/wiring.lua), with Who can join's value in effect, no screen opened. Invite runs in place.
+    ok,note=page_o.act('host',nil,nil,page_o.ctx())
+    assert(ok==true and note==nil and asked[#asked]=='host public 4' and not cr.open,tostring(asked[#asked]))
+    local n=#asked
+    cr.o.act({host='public'})
+    assert(#asked==n+1 and asked[#asked]=='host public 4','Create a session\'s Start asks the same line')
+    assert(page_o.act('invite')==true and asked[#asked]=='invite','Invite in place')
     in_world=false
 end)()
 

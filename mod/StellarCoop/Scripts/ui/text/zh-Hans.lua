@@ -56,6 +56,7 @@ return {
     hint={move='移动',select='选中',back='返回',default='默认'},
     sit='坐下',stand='起身',
     line={prompt='合作线路',free='线路空闲。创建房间或加入好友。',open='你的房间已开启。可在此邀请好友。',linked='已与%s连线。'},
+    confirm_host='3秒内再次选中即可创建在线房间。',
     confirm_leave='3秒内再次选中即可离开。',confirm_remove='3秒内再次选中即可移除并屏蔽%s。',
     confirm_reset_keys='3秒内再次选中即可重置所有按键。',
     reload='已保存。模组重新加载后生效（启动游戏或按Ctrl+R）。',

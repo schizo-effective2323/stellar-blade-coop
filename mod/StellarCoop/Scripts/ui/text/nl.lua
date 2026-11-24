@@ -61,6 +61,7 @@ return {
     sit='Gaan zitten',stand='Opstaan',
     line={prompt='Co-oplijn',free='De lijn is vrij. Host een sessie of doe mee met een vriend.',
         open='Je sessie is open. Nodig hier een vriend uit.',linked='Verbonden met %s.'},
+    confirm_host='Selecteer binnen 3 s opnieuw om een onlinesessie te hosten.',
     confirm_leave='Selecteer binnen 3 s opnieuw om de sessie te verlaten.',
     confirm_remove='Selecteer binnen 3 s opnieuw om %s te verwijderen en te blokkeren.',
     confirm_reset_keys='Selecteer binnen 3 s opnieuw om alle toetsen te herstellen.',

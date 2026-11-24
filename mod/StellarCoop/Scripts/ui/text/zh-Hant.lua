@@ -54,6 +54,7 @@ return {
     hint={move='移動',select='選取',back='返回',default='預設'},
     sit='坐下',stand='起身',
     line={prompt='合作線路',free='線路空閒。建立房間或加入好友。',open='你的房間已開啟。可在此邀請好友。',linked='已與%s連線。'},
+    confirm_host='請在3秒內再次選取以建立線上房間。',
     confirm_leave='請在3秒內再次選取以離開。',confirm_remove='請在3秒內再次選取以移除並封鎖%s。',
     confirm_reset_keys='請在3秒內再次選取以重設所有按鍵。',
     reload='已儲存。模組重新載入後生效（啟動遊戲或按Ctrl+R）。',

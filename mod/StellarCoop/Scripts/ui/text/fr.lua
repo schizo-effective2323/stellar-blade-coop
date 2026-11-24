@@ -61,6 +61,7 @@ return {
     sit="S'asseoir",stand='Se lever',
     line={prompt='Ligne co-op',free='La ligne est libre. Hébergez une session ou rejoignez un ami.',
         open='Votre session est ouverte. Invitez un ami depuis cette ligne.',linked='En ligne avec %s.'},
+    confirm_host='Choisissez encore dans les 3 s pour héberger une session en ligne.',
     confirm_leave='Choisissez encore dans les 3 s pour quitter.',
     confirm_remove='Choisissez encore dans les 3 s pour retirer et bloquer %s.',
     confirm_reset_keys='Choisissez encore dans les 3 s pour réinitialiser toutes les touches.',

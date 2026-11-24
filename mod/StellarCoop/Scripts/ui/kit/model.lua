@@ -4,7 +4,8 @@
 -- The co-op menu's model (UI-DESIGN 4.1 and its Options table), no engine call: the main page's rows by session state,
 -- the co-op line's (a camp phone booth's page: the main page's session rows, Co-op menu and Hang up),
 -- the Options tree (every co-op setting as a toggle, a choice, a range or a key; Reset all keys too), a cursor that
--- skips section headers and wraps, Leave, Remove and Reset all keys only on a second Select of that row within 3 s,
+-- skips section headers and wraps, Leave, Remove and Reset all keys only on a second Select of that row within 3 s
+-- (Host a session too on the pause menu's Online page),
 -- values read as the mod reads coop-settings.txt (link.parse_settings) and each change as the one value to write there
 -- (settings_file.set). Rows and values are ids; ui_text gives their words.
 local SF=require('core.settings_file')
@@ -219,8 +220,9 @@ function M.rebind(values,key,text)
     if other then return nil,'clash',other end
     return 'set',key,new.name
 end
--- start: the page it opens on, 'main' (the default) or 'line'.
-function M.new(start)
+-- start: the page it opens on, 'main' (the default) or 'line'. confirm: a set of row ids that also run on a second
+-- Select within 3 s on this model only (the pause menu's Online page gives {host=true}); nil for the co-op menu.
+function M.new(start,confirm)
     local self,page,id,index,asked={},start or 'main',nil,1,nil -- asked: {id=, at=} the first Select of a confirm row.
     local mod=nil -- The module page open (page 'module').
     local function name(row)
@@ -301,7 +303,8 @@ function M.new(start)
     -- Select (now in seconds): the row's id for the caller ('host', 'leave', 'invite', 'copy', 'remove', 'find',
     -- 'join_code', 'chat', 'guide', 'report', 'close', which Hang up gives too, 'reset_keys'); 'mute', her SteamID and
     -- whether she is muted now (the caller mutes or unmutes her); 'confirm_leave',
-    -- 'confirm_remove' or 'confirm_reset_keys' (the row runs on a second Select of it within 3 s); 'options' or
+    -- 'confirm_remove', 'confirm_reset_keys' or, with confirm's host, 'confirm_host' (the row runs on a second Select
+    -- of it within 3 s); 'options' or
     -- 'main' (the page changed: Co-op menu gives 'main'); 'rebind', key; or a setting's next value, as change(). nil
     -- when a first Select on Leave or Remove is pending (under 3 s old) and that row went (the session ended, the
     -- player left): the press was meant for it, not for its place.
@@ -316,7 +319,7 @@ function M.new(start)
             asked=nil
             if live then return nil end
         end
-        if row.confirm then
+        if row.confirm or confirm and confirm[row.id] then
             if asked and asked.id==row.id and now-asked.at<=3 then asked=nil; return row.id end
             asked={id=row.id,at=now}
             return 'confirm_'..row.id

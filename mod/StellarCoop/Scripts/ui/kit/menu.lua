@@ -27,8 +27,9 @@
 -- listed while its module is on): Select opens it in the menu, its rows made by its module at each draw, Back comes
 -- back; a row's select or step runs its module's console words through M.run, its refusal shown under the rows. No
 -- engine call here: the kit makes them. The pause menu's Online page (ui/kit/online_page.lua) runs its rows through
--- act, away and bind, so both menus change a value and run a row with the same code. Its Test tools rows open this
--- menu on their page (toggle's p).
+-- act, away and bind, so both menus change a value and run a row with the same code. Its Host a session and Invite
+-- run through act, in place: Host with the Create a session screen's request. Its Test tools rows open this menu on
+-- their page (toggle's p).
 local M=require('ui.kit.model')
 local Link=require('core.link')
 local T=require('ui.text')
@@ -205,20 +206,25 @@ function Menu.new(o)
     end
     self.set=set -- The lobby's settings screen (online/lobby/ui/lobby.lua, through main.lua) writes the same way.
     -- A row run in place, as model.lua's select or change gave it (confirm_leave, confirm_remove, confirm_reset_keys,
-    -- reset_keys, set, remove, mute, leave, report, copy): true or false, then the note in the player's words or nil.
-    -- Any other action: false, the note left as it was.
+    -- confirm_host, reset_keys, set, remove, mute, leave, report, copy; host and invite from the Online page only):
+    -- true or false, then the note in the player's words or nil. Any other action: false, the note left as it was.
     local function here(action,key,text,ctx)
         note=nil
         local ok,message=true,nil
         if action=='confirm_leave' then note=words.confirm_leave
         elseif action=='confirm_remove' then note=words.confirm_remove:format(stranger(ctx))
         elseif action=='confirm_reset_keys' then note=words.confirm_reset_keys
+        elseif action=='confirm_host' then note=words.confirm_host
         elseif action=='reset_keys' then ok=set()
         elseif action=='set' then ok=set(key,text)
         elseif action=='remove' then ok,message=o.run('remove',ctx.stranger.id)
         -- Her chat lines dropped, or heard again, for the game run.
         elseif action=='mute' then ok,message=o.run(text and 'unmute' or 'mute',key)
-        elseif action=='leave' or action=='report' or action=='copy' then
+        -- The Online page hosts here with the Create a session screen's request: online/session/wiring.lua's create
+        -- act runs M.run('host',a.host) with Who can join's value in effect (create_model.lua's Start).
+        elseif action=='host' then ok,message=o.run('host',M.values(settings).who_can_join)
+        -- Invite: Steam's overlay, no screen of ours.
+        elseif action=='leave' or action=='report' or action=='copy' or action=='invite' then
             ok,message=o.run(action)
             if ok and action=='report' then note=words.report end
         else return false end

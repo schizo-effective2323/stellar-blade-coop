@@ -62,6 +62,7 @@ return {
     sit='Sätt dig',stand='Res dig',
     line={prompt='Co-op-linje',free='Linjen är ledig. Bli värd för en session eller gå med i en väns spel.',
         open='Din session är öppen. Bjud in en vän härifrån.',linked='Ansluten till %s.'},
+    confirm_host='Välj igen inom 3 s för att bli värd för en onlinesession.',
     confirm_leave='Välj igen inom 3 s för att lämna.',confirm_remove='Välj igen inom 3 s för att ta bort och blockera %s.',
     confirm_reset_keys='Välj igen inom 3 s för att återställa alla tangenter.',
     reload='Sparat. Gäller när modden laddas om (vid spelstart eller Ctrl+R).',

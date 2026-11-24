@@ -61,6 +61,7 @@ return {
     sit='Istu',stand='Nouse',
     line={prompt='Co-op-linja',free='Linja on vapaa. Isännöi istuntoa tai liity kaverin peliin.',
         open='Istuntosi on auki. Kutsu kaveri täältä.',linked='Yhteydessä: %s.'},
+    confirm_host='Isännöi verkkoistuntoa valitsemalla uudelleen 3 sekunnin kuluessa.',
     confirm_leave='Poistu valitsemalla uudelleen 3 sekunnin kuluessa.',
     confirm_remove='Poista ja estä %s valitsemalla uudelleen 3 sekunnin kuluessa.',
     confirm_reset_keys='Palauta kaikki näppäimet valitsemalla uudelleen 3 sekunnin kuluessa.',

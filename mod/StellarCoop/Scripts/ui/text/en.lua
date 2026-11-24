@@ -59,6 +59,7 @@ return {
     sit='Sit',stand='Stand up',
     line={prompt='Co-op line',free='The line is free. Host a session or join a friend.',
         open='Your session is open. Invite a friend from here.',linked='On the line with %s.'},
+    confirm_host='Select again within 3 s to host an online session.',
     confirm_leave='Select again within 3 s to leave.',confirm_remove='Select again within 3 s to remove and block %s.',
     confirm_reset_keys='Select again within 3 s to reset every key.',
     reload='Saved. It takes effect when the mod reloads (game start or Ctrl+R).',

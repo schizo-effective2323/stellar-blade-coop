@@ -63,6 +63,7 @@ return {
     sit='Sentarse',stand='Levantarse',
     line={prompt='Línea co-op',free='La línea está libre. Crea una sesión o únete a un amigo.',
         open='Tu sesión está abierta. Invita a un amigo desde aquí.',linked='En línea con %s.'},
+    confirm_host='Vuelve a seleccionar en menos de 3 s para crear una sesión en línea.',
     confirm_leave='Vuelve a seleccionar en menos de 3 s para salir.',
     confirm_remove='Vuelve a seleccionar en menos de 3 s para quitar y bloquear a %s.',
     confirm_reset_keys='Vuelve a seleccionar en menos de 3 s para restablecer todas las teclas.',

@@ -55,6 +55,17 @@ assert(menu.current({}).id=='options','A header in its place: the next row')
 -- Select: each row's action; Leave asks first and counts a second Select within 3 s.
 menu=M.new()
 assert(menu.select(NONE,0)=='host')
+-- The pause menu's Online page asks for a second Select on Host a session too (its model's confirm set); the co-op
+-- menu's model, made with none, hosts at once (above and below).
+do
+    local page=M.new(nil,{host=true})
+    assert(page.select(NONE,0)=='confirm_host' and page.select(NONE,1)=='host','Host: asked, then hosted')
+    assert(page.select(NONE,10)=='confirm_host' and page.select(NONE,14)=='confirm_host','Past 3 s: asked again')
+    page.move(NONE,1); page.move(NONE,-1)
+    assert(page.select(NONE,15)=='confirm_host','A move between two Selects: asked again')
+    assert(page.select(NONE,16)=='host')
+    assert(M.new().select(NONE,20)=='host','The co-op menu\'s model hosts at once')
+end
 menu.move(NONE,1)
 assert(menu.select(NONE,0)=='find')
 menu.move(NONE,1)
