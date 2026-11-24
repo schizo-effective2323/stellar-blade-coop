@@ -3,9 +3,10 @@
 -- SBO License 1.0 or later, in LICENSE and at github.com/MotherSphere/stellar-blade-coop; NOTICE adds a permission.
 -- The pause menu's Online page (ui/kit/online_page.lua) over fakes. Pure: each row's part kind; its words and value as
 -- the co-op menu draws them; the cursor over ui/kit/online_model.lua's categories in solo and while hosting (the list
--- wraps, right and select land on Open the co-op menu, the rows skip headers and wrap, select and left in the rows
+-- wraps, right and select land on the first row, the rows skip headers and wrap, select and left in the rows
 -- move nothing, back goes to the list, back in the list closes, a long category scrolls by height inside SB's rows
--- window with the cursor's line shown); what a press asks of each kind of row (Page.press) and which press a click
+-- window with the cursor's line shown); no Test tools category and no row that opens the co-op menu (F5 keeps them);
+-- what a press asks of each kind of row (Page.press) and which press a click
 -- makes on a row's value part (Page.word_at); what is under the mouse in the boxes where SB draws the page's parts (a
 -- list item, a row, never a header, a band or a line past the window, edges exclusive). Engine: the build adds one
 -- collapsed canvas last to the master's root, nothing in it before the show; each of the six SB classes says once that
@@ -14,9 +15,10 @@
 -- Blueprint texts are set before it enters the canvas and its TextBlocks and calls after; a class whose Create raises
 -- is drawn with a TextBlock and a Border in its place, one line for it, the others SB's; show makes the canvas
 -- SelfHitTestInvisible with the focused item's PlayFocusAnim and the category's word in the pane, no description, the
--- pane's Thumbnail collapsed (one line when the pane has none); right gives Select, StateFocus on Open the co-op menu
--- and its words in the pane; a click (the kit's pointer) selects the row under the mouse, on Open the co-op menu it
--- answers 'open_menu', on a header or with no pointer it does nothing, on a list item it shows that category; the mouse
+-- pane's Thumbnail collapsed (one line when the pane has none); right gives Select, StateFocus on Host a session
+-- and its words in the pane; a click (the kit's pointer) selects the row under the mouse, on Find a session it
+-- answers 'away', on Host a session it asks first, on a header or with no pointer it does nothing, on a list item it
+-- shows that category; the mouse
 -- look (tick, every HOVER s) only notes what is under the mouse at its first look, then the item the mouse moved onto
 -- takes the cursor, while a resting mouse never does, even after the keys moved the cursor; a refused look is logged
 -- once; a canvas that cannot be made turns the page off with one line; visibility() names SB's eight pages with their
@@ -44,7 +46,7 @@ local w,gw=T.en,G.en
 local function opt(key) for _,r in ipairs(Model.OPTIONS) do if r.key==key or r.id==key then return r end end end
 local function main(id) for _,r in ipairs(Model.MAIN) do if r.id==id then return r end end end
 local PAGE={title=function() return 'Tools' end,rows=function() return {} end}
-for _,row in ipairs({main('host'),O.OPEN_MENU,opt('menu_key'),{id='page',page=PAGE},opt('reset_keys')}) do
+for _,row in ipairs({main('host'),main('find'),opt('menu_key'),opt('reset_keys')}) do
     assert(Page.kind(row)=='option',tostring(row.id or row.key))
 end
 for _,row in ipairs({opt('who_can_join'),opt('pause_tab'),{id='mute',member='7',name='A',muted=false}}) do
@@ -65,9 +67,8 @@ assert(Page.label(w,gw,main('guide'),CTX)==gw.row and gw.row=='Guide')
 assert(Page.label(w,gw,main('copy'),CTX)=='Copy my code' and Page.value(w,main('copy'),CTX)=='0CS-CBMH')
 assert(Page.label(w,gw,opt('photo_freeze_max'),CTX)==w.row.photo_freeze_max
     and Page.value(w,opt('photo_freeze_max'),CTX)=='10 min')
-assert(Page.label(w,gw,O.OPEN_MENU,CTX)=='Open the co-op menu' and Page.value(w,O.OPEN_MENU,CTX)==nil)
+assert(Page.label(w,gw,main('host'),CTX)=='Host a session' and Page.value(w,main('host'),CTX)==nil)
 assert(Page.value(w,opt('menu_key'),CTX)=='F5' and Page.value(w,opt('who_can_join'),CTX)=='Public')
-assert(Page.label(w,gw,{id='page',page=PAGE},CTX)=='Tools')
 
 -- Pure: the cursor.
 local model=O.new()
@@ -86,12 +87,13 @@ for _,cats in ipairs({solo,hosting}) do
     Page.move(cur,cats,'up'); assert(cur.cat==#cats,'The list wraps up')
     Page.move(cur,cats,'down'); assert(cur.cat==1,'and down')
     assert(Page.move(cur,cats,'left')==nil and cur.list,'Left does nothing')
-    Page.move(cur,cats,'right'); assert(not cur.list and id_at(cats,cur)=='open_menu','Right: Open the co-op menu')
+    local first=cats==solo and 'host' or 'invite'
+    Page.move(cur,cats,'right'); assert(not cur.list and id_at(cats,cur)==first,'Right: the first row')
     assert(Page.move(cur,cats,'select')==nil and not cur.list,'Select in the rows: a press, which the page\'s nav runs')
     Page.move(cur,cats,'back'); assert(cur.list,'Back: the list')
-    Page.move(cur,cats,'select'); assert(not cur.list and id_at(cats,cur)=='open_menu','Select: the same')
+    Page.move(cur,cats,'select'); assert(not cur.list and id_at(cats,cur)==first,'Select: the same')
     Page.move(cur,cats,'down')
-    assert(id_at(cats,cur)==(cats==solo and 'host' or 'invite'),'Down skips the play header: '..id_at(cats,cur))
+    assert(id_at(cats,cur)==(cats==solo and 'find' or 'copy'),'Down: the next row: '..id_at(cats,cur))
     assert(Page.move(cur,cats,'select')==nil and Page.move(cur,cats,'left')==nil and not cur.list,
         'Select on another row and left do nothing')
     Page.move(cur,cats,'up'); Page.move(cur,cats,'up')
@@ -115,10 +117,18 @@ do
         assert(said(row,'select')=='select nil' and said(row,'left')=='nil nil' and said(row,'right')=='nil nil',what)
     end
     for _,word in ipairs({'select','left','right'}) do assert(said(mute,word)=='select nil','A mute row: '..word) end
-    assert(said(O.OPEN_MENU,'select')=='open_menu nil' and said(O.OPEN_MENU,'left')=='nil nil')
-    local tools={id='page',page=PAGE}
-    assert(Page.press(tools,'select')=='open_menu' and select(2,Page.press(tools,'select'))==PAGE
-        and said(tools,'right')=='nil nil','A Test tools row opens the co-op menu on its page')
+    -- No category is Test tools and no row opens the co-op menu, module pages in the ctx or not: F5 keeps them.
+    for _,cats in ipairs({solo,hosting}) do
+        for _,cat in ipairs(cats) do
+            assert(cat.id~='tools','No Test tools category')
+            for _,sec in ipairs(cat.sections) do
+                for _,row in ipairs(sec.rows) do
+                    assert(not row.page and said(row,'select')~='open_menu nil','A row that opens the co-op menu')
+                end
+            end
+        end
+    end
+    assert(said({id='page',page=PAGE},'select')=='select nil','Page.press opens the co-op menu no more')
     assert(said(opt('who_can_join'),'up')=='nil nil' and said(opt('who_can_join'),'back')=='nil nil')
     -- A click: the value part of a rolling or slider row runs from x 1406 to 2366 in the page's units (the rows at
     -- 736, drawn 60 right of it, the value 610 in, 960 wide), its left half down, its right half up; elsewhere on a
@@ -135,7 +145,7 @@ end
 -- every 120; the rows from y 452, a header 100 high with a band of 100 above it but the first, a row 130, each row
 -- drawn 1640 wide from x 796 (placed at 736, SB's render translation of 60). The middle of line i of a category shown
 -- from its first line, heads its header lines (solo's Session by default).
-local SESSION_HEADS,HOSTING_HEADS,CONTROLS_HEADS={1,3,7},{1,3,8},{1,10,12,16}
+local SESSION_HEADS,HOSTING_HEADS,CONTROLS_HEADS={1,5},{1,6},{1,10,12,16}
 local function row_at(i,heads)
     local head,y={},452
     for _,n in ipairs(heads or SESSION_HEADS) do head[n]=true end
@@ -158,9 +168,11 @@ do
     local y=select(2,row_at(2))
     assert(under(cur,796,y)=='row 2' and under(cur,795,y)=='' and under(cur,2435,y)=='row 2' and under(cur,2436,y)=='',
         'Where SB draws the row')
-    assert(under(cur,1000,552)=='row 2' and under(cur,1000,681)=='row 2' and under(cur,1000,682)==''
-        and under(cur,1000,781)=='' and under(cur,1000,882)=='row 4','A row 130 high, the band and the header no row')
-    assert(under(cur,row_at(10))=='row 10' and under(cur,row_at(11))=='','Past the last line')
+    assert(under(cur,1000,552)=='row 2' and under(cur,1000,681)=='row 2' and under(cur,1000,682)=='row 3'
+        and under(cur,1000,941)=='row 4' and under(cur,1000,942)=='' and under(cur,1000,1041)==''
+        and under(cur,1000,1141)=='' and under(cur,1000,1142)=='row 6',
+        'A row 130 high, the band and the header no row')
+    assert(under(cur,row_at(8))=='row 8' and under(cur,row_at(9))=='','Past the last line')
     assert(under(cur,700,500)=='','Between the list and the rows')
 end
 -- A long category (Controls: 4 headers, 13 rows) scrolls by height: the lines shown end inside SB's rows window (y
@@ -324,12 +336,12 @@ assert(page.build(m)==true and #root.props.children==1,'The same master: built o
 -- Show: SelfHitTestInvisible; solo's Session drawn from SB's six classes, each said once; the first item focused.
 page.show(true)
 assert(page.shown() and canvas.props.visibility==4,'Shown, hit tests to its children only')
-assert(made_n('tab')==11 and made_n('header')==3 and made_n('option')==4 and made_n('rolling')==2
+assert(made_n('tab')==10 and made_n('header')==2 and made_n('option')==3 and made_n('rolling')==2
     and made_n('slider')==1 and made_n('detail')==1,'Solo\'s Session: '..#made..' parts')
 for _,kind in ipairs(Page.KINDS) do
     assert(lines_with(Parts.CLASS[kind]:match('[^.]+$')..' built from SB\'s class')==1,kind)
 end
-assert(logged('online page: built in ') and logged(': 22 SB parts, 0 drawn by the kit'),table.concat(logs,'|'))
+assert(logged('online page: built in ') and logged(': 19 SB parts, 0 drawn by the kit'),table.concat(logs,'|'))
 -- Where the parts sit, as SB's Settings page puts its own: the list items from 200, 452 every 120; Session's lines from
 -- 736, 452, each header 100 high with a band of 100 above it but the first, each row 130; the pane at 2556, 452.
 local function placed(x)
@@ -344,8 +356,8 @@ do
             n=n+1
         elseif m.kind~='detail' then rows[#rows+1]=x..','..y end
     end
-    assert(n==11 and table.concat(rows,' ')=='736,452 736,552 736,782 736,882 736,1012 736,1142 736,1372 736,1472 '
-        ..'736,1602 736,1732',table.concat(rows,' '))
+    assert(n==10 and table.concat(rows,' ')=='736,452 736,552 736,682 736,812 736,1042 736,1142 736,1272 736,1402',
+        table.concat(rows,' '))
     local x,y=placed(first_made('detail'))
     assert(x==2556 and y==452,'The pane at '..x..', '..y)
 end
@@ -365,8 +377,8 @@ order(slider,{'.TextTitleValue','.CurrentPercent','.ItemTextRange'},
     {':UpdatePercentOffset','.Text_VolumeValue:SetText'})
 order(detail,{},{'.Text_ItemName:SetText','.Text_Desc:SetText'})
 assert(tab.props.TabName=='Session' and tab.props.Text_side_name.props.text=='Session')
-assert(header.props.Category_Name=='Co-op menu' and option.props.Text_TitleValue=='Open the co-op menu'
-    and option.props.Text_ItemValue==nil,'Open the co-op menu keeps SB\'s own value word')
+assert(header.props.Category_Name=='Play online' and option.props.Text_TitleValue=='Host a session'
+    and option.props.Text_ItemValue==nil,'Host a session keeps SB\'s own value word')
 assert(rolling.props.Text_TitleValue=='Who can join' and rolling.props.Text_Btn_name.props.text=='Public',
     tostring(rolling.props.Text_TitleValue))
 assert(slider.props.ItemTextRange.Min==2 and slider.props.ItemTextRange.Max==4 and slider.props.CurrentPercent==1
@@ -377,39 +389,38 @@ assert(called(tab,'PlayFocusAnim')==1 and detail.props.Text_ItemName.props.text=
     and detail.props.Text_Desc.props.text=='')
 assert(detail.props.Thumbnail.props.visibility==1 and called(detail.props.Thumbnail,'SetVisibility')==1,
     'The pane\'s Thumbnail collapsed once: no item has media')
--- Right: the item selected, Open the co-op menu focused, its words in the pane.
+-- Right: the item selected, Host a session focused, its words in the pane. Select asks first.
 assert(page.nav('right')==nil)
-local open_menu
-for _,x in ipairs(made) do
-    if x.kind=='option' and x.o.props.Text_TitleValue=='Open the co-op menu' then open_menu=x.o end
-end
-assert(called(tab,'StopFocusAnim')==1 and called(tab,'Select')==1,'The category selected')
-assert(open_menu.calls[#open_menu.calls][1]=='EventNotification' and open_menu.calls[#open_menu.calls][2]=='StateFocus')
-assert(detail.props.Text_ItemName.props.text=='Open the co-op menu' and detail.props.Text_Desc.props.text=='')
-assert(page.nav('select')=='open_menu' and page.nav('back')==nil and page.nav('back')=='close')
-assert(called(tab,'PlayFocusAnim')==2,'Back in the list: focused again')
--- Nothing made again while the rows stay: the same parts, looks on change only.
-local parts=#made
-page.nav('right'); page.nav('down'); page.nav('up')
-assert(#made==parts,'Moving in the rows makes no part again')
--- A click: the row under the kit's pointer selected; on Open the co-op menu it answers open_menu.
-mouse={row_at(4)} -- Slot 4: Host a session, which asks first: its question in the pane, nothing hosted yet.
-assert(table.concat({page.click(1)},' ')=='' and #acts==1 and acts[1]=='confirm_host nil nil'
-    and sounds[#sounds]=='confirm' and detail.props.Text_Desc.props.text==w.confirm_host,tostring(acts[1]))
 local function part(title)
     local found
     for _,x in ipairs(made) do if x.kind=='option' and x.o.props.Text_TitleValue==title then found=x.o end end
     return found
 end
 local host=part('Host a session')
-assert(host.calls[#host.calls][2]=='StateFocus' and open_menu.calls[#open_menu.calls][2]=='StateNormal')
-assert(detail.props.Text_ItemName.props.text=='Host a session')
-mouse={row_at(2)}
-assert(page.click()=='open_menu','A click on Open the co-op menu')
+assert(called(tab,'StopFocusAnim')==1 and called(tab,'Select')==1,'The category selected')
+assert(host.calls[#host.calls][1]=='EventNotification' and host.calls[#host.calls][2]=='StateFocus')
+assert(detail.props.Text_ItemName.props.text=='Host a session' and detail.props.Text_Desc.props.text=='')
+assert(page.nav('select',0)==nil and acts[1]=='confirm_host nil nil' and page.nav('back')==nil
+    and page.nav('back')=='close')
+assert(called(tab,'PlayFocusAnim')==2,'Back in the list: focused again')
+-- Nothing made again while the rows stay: the same parts, looks on change only.
+local parts=#made
+page.nav('right'); page.nav('down'); page.nav('up')
+assert(#made==parts,'Moving in the rows makes no part again')
+-- A click: the row under the kit's pointer selected. On Find a session, a row that still needs the game world: 'away'
+-- and its id, run after SB's close.
+mouse={row_at(3)}
+assert(table.concat({page.click(1)},' ')=='away find' and #acts==1 and sounds[#sounds]=='confirm')
+local find=part('Find a session')
+assert(find.calls[#find.calls][2]=='StateFocus' and host.calls[#host.calls][2]=='StateNormal')
+assert(detail.props.Text_ItemName.props.text=='Find a session')
+mouse={row_at(2)} -- Slot 2: Host a session, which asks first: its question in the pane, nothing hosted yet.
+assert(table.concat({page.click(2)},' ')=='' and #acts==2 and acts[2]=='confirm_host nil nil'
+    and sounds[#sounds]=='confirm' and detail.props.Text_Desc.props.text==w.confirm_host,tostring(acts[2]))
 mouse={row_at(1)}
-assert(page.click()==nil and detail.props.Text_ItemName.props.text=='Open the co-op menu','A header takes no click')
+assert(page.click()==nil and detail.props.Text_ItemName.props.text=='Host a session','A header takes no click')
 mouse=nil
-assert(page.click()==nil and detail.props.Text_ItemName.props.text=='Open the co-op menu','No pointer: nothing')
+assert(page.click()==nil and detail.props.Text_ItemName.props.text=='Host a session','No pointer: nothing')
 -- Another category: its rows made, the tab parts kept.
 mouse={item_at(5)} -- The fifth list item: Controls.
 local tabs,was=made_n('tab'),#made
@@ -429,22 +440,22 @@ page.show(true)
 local function pane() return detail.props.Text_ItemName.props.text end
 mouse={row_at(2)}
 page.tick(40); assert(pane()=='Session','The first look moves nothing')
-mouse={row_at(4)}
+mouse={row_at(3)}
 page.tick(40.05) -- The very next frame: the mouse answers at once, as SB's own menus do.
 page.tick(40.1)
-host=part('Host a session') -- The latest one: Session's rows were made again after Controls.
-assert(pane()=='Host a session' and host.calls[#host.calls][2]=='StateFocus','Moved onto Host a session')
+find=part('Find a session') -- The latest one: Session's rows were made again after Controls.
+assert(pane()=='Find a session' and find.calls[#find.calls][2]=='StateFocus','Moved onto Find a session')
 assert(sounds[#sounds]=='tab',"A row under the mouse: SB's Settings focus sound")
 local n=#sounds
-page.nav('up'); assert(pane()=='Open the co-op menu' and #sounds==n+1 and sounds[n+1]=='tab','The keys: the same sound')
-page.tick(40.3); assert(pane()=='Open the co-op menu' and #sounds==n+1,'A resting mouse never moves the cursor')
+page.nav('up'); assert(pane()=='Host a session' and #sounds==n+1 and sounds[n+1]=='tab','The keys: the same sound')
+page.tick(40.3); assert(pane()=='Host a session' and #sounds==n+1,'A resting mouse never moves the cursor')
 -- A list item under the mouse is lit and sounds; its rows show at a click only, as in SB's Settings.
 local function tab_part(name)
     for _,m in ipairs(made) do if m.kind=='tab' and m.o.props.TabName==name then return m.o end end
 end
 mouse={item_at(5)}
 page.tick(40.4)
-assert(pane()=='Open the co-op menu' and sounds[#sounds]=='wheel_move' and #sounds==n+2,
+assert(pane()=='Host a session' and sounds[#sounds]=='wheel_move' and #sounds==n+2,
     "Lit, not shown, with the sound of SB's list items")
 local controls,session=tab_part('Controls'),tab_part('Session')
 local boxes=called(controls,'PlayFocusAnim')
@@ -521,7 +532,7 @@ do
     assert(acts[#acts]=='set max_players 3' and heard()=='change'
         and latest('slider','Players').props.CurrentPercent==0.5,'Made again at 3 of 2 to 4')
     -- A click on Who can join's value part: its left half down, its right half up; elsewhere on the row, select.
-    local y=select(2,row_at(8)) -- Slot 8: Who can join (Friends join without asking under it while Public).
+    local y=select(2,row_at(6)) -- Slot 6: Who can join (Friends join without asking under it while Public).
     mouse={1420,y}; page.click(5); assert(acts[#acts]=='set who_can_join closed' and pane()=='Who can join')
     mouse={2360,y}; page.click(5); assert(acts[#acts]=='set who_can_join public')
     mouse={820,y}; page.click(5); assert(acts[#acts]=='set who_can_join friends')
@@ -533,9 +544,9 @@ do
         and ctx.values.who_can_join=='friends','Refused: nothing changed')
     act_ok,act_note=true,nil
     page.nav('down',6); assert(desc()=='','A move clears the note')
-    -- Left or right on Open the co-op menu or on Host a session: nothing, no sound.
+    -- Left or right on Host a session or on Join with a code: nothing, no sound.
     n=#acts
-    for _,label in ipairs({'Open the co-op menu','Host a session'}) do
+    for _,label in ipairs({'Host a session','Join with a code'}) do
         to(label)
         local s=#sounds
         assert(page.nav('left',7)==nil and page.nav('right',7)==nil and #acts==n and #sounds==s,label)
@@ -563,9 +574,8 @@ do
     to('Write a bug report')
     assert(page.nav('select',15)==nil and acts[#acts]=='report nil nil' and heard()=='confirm','The report in place')
     n=#acts
-    -- A Test tools row: 'open_menu' and its module page, SB's confirm cue.
-    page.nav('back',7); to('Test tools'); page.nav('right',7)
-    local a,b=page.nav('select',7); assert(a=='open_menu' and b==PAGE and heard()=='confirm' and #acts==n,tostring(a))
+    -- No Test tools in the list, though the ctx has a module page: F5 keeps them.
+    for _,x in ipairs(made) do assert(not (x.kind=='tab' and x.o.props.TabName=='Test tools'),'A Test tools item') end
     -- The Online tab written off on the page: 'close', the pause menu closes as Back closes it.
     page.nav('back',8)
     to('Display')
@@ -583,7 +593,7 @@ do
     n=#acts
     ctx.code=nil
     page.nav('select',9)
-    assert(#acts==n and sounds[#sounds-1]=='refuse' and heard()=='tab' and pane()=='Open the co-op menu',pane())
+    assert(#acts==n and sounds[#sounds-1]=='refuse' and heard()=='tab' and pane()=='Invite a friend (Steam)',pane())
     for _=1,6 do page.nav('down',9); assert(pane()~='Copy my code','Copy my code went') end
     ctx.code='0CS-CBMH'
     -- Leave asks twice within 3 s (the co-op menu's model); a move in between forgets the first Select.
@@ -595,8 +605,8 @@ do
     page.nav('select',30); page.nav('select',34)
     assert(table.concat(acts,'|',#acts-1)=='confirm_leave nil nil|confirm_leave nil nil' and desc()==w.confirm_leave
         and heard()=='confirm','Past 3 s: asked again')
-    -- The mouse look leaving the row and coming back forgets the first Select (slot 7 Leave, slot 9 Who can join).
-    local leave,who={row_at(7,HOSTING_HEADS)},{row_at(9,HOSTING_HEADS)}
+    -- The mouse look leaving the row and coming back forgets the first Select (slot 5 Leave, slot 7 Who can join).
+    local leave,who={row_at(5,HOSTING_HEADS)},{row_at(7,HOSTING_HEADS)}
     mouse=leave; page.tick(39.5)
     page.nav('select',40); mouse=who; page.tick(40.5); mouse=leave; page.tick(41); page.nav('select',41)
     assert(table.concat(acts,'|',#acts-1)=='confirm_leave nil nil|confirm_leave nil nil','Asked again after the mouse')
@@ -701,7 +711,7 @@ page.build(m4)
 page.show(true)
 assert(lines_with('WB_Setting_Rolling_Slot_C not built (')==1
     and logged('Create refused rolling); the kit\'s drawing in its place') and made_n('rolling')==0
-    and made_n('option')==4 and lines_with('built from SB\'s class')==5,
+    and made_n('option')==3 and lines_with('built from SB\'s class')==5,
     table.concat(logs,'|'))
 local texts={}
 for _,c in ipairs(constructed) do texts[c.umg]=(texts[c.umg] or 0)+1 end
@@ -710,7 +720,7 @@ local public=false
 for _,child in ipairs(m4.props.WidgetTree.props.RootWidget.props.children[1].props.children) do
     if child.props.text=='Public' or child.props.text=='Who can join' then public=true end
 end
-assert(public and logged(': 20 SB parts, 2 drawn by the kit'),table.concat(logs,'|'))
+assert(public and logged(': 17 SB parts, 2 drawn by the kit'),table.concat(logs,'|'))
 page.nav('down')
 assert(page.shown() and not page.off(),'The kit\'s drawing moves with the cursor')
 

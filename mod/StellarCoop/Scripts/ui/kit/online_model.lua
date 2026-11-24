@@ -25,16 +25,12 @@ local function main(id) return (assert(MAIN[id],id)) end -- In brackets: assert 
 local function opt(id) return (assert(OPT[id],id)) end
 -- The place of the mute rows (model.lua's, one per other player of the online session past the handshake).
 M.MUTES={mutes=true}
--- Open the co-op menu: the one row of the page that is not model.lua's. It closes the pause menu and opens the co-op
--- menu, as the Online tab did before the page, so the page loses none of the menu's functions.
-M.OPEN_MENU={id='open_menu'}
 local function section(id,...) return {id=id,rows={...}} end
 local function category(id,states,...) return {id=id,states=states,sections={...}} end
 -- In order. A row with a show function is listed while it shows (model.lua's: the session rows by state, Friends join
 -- without asking under Public and Invitation only). In a section, the rows the approved list names come first.
 M.CATEGORIES={
     category('session',BOTH,
-        section('menu',M.OPEN_MENU),
         section('play',main('host'),main('find'),main('join_code')),
         -- Chat shows with no session too: the loopback, the SBO lobby.
         section('current',main('invite'),main('copy'),main('chat'),main('leave')),
@@ -77,23 +73,21 @@ M.CATEGORIES={
             opt('photo_pause'))),
     category('saves',BOTH,section('saves',opt('auto_coop_save'))),
     category('help',BOTH,section('help',main('guide'),main('report'))),
-    category('tools',BOTH,section('tools',main('pages'))),
 }
 -- Today's rows the page leaves out, each with why.
 M.LEFT_OUT={
     [main('options')]='The page holds every option: no Options page to open.',
     [main('close')]='Esc and the key hints close the page.',
+    [main('pages')]='Test tools stay in the co-op menu (F5), the menu for admins and debugging.',
 }
 -- The page's categories now: {{id=, sections={{id=, rows={row, ...}}, ...}}, ...}. A section with no row shown and a
--- category with no section left are dropped. ctx: model.lua's (mode, chat, code, stranger, values, members, pages).
+-- category with no section left are dropped. ctx: model.lua's (mode, chat, code, stranger, values, members).
 function M.new()
-    -- model.lua's pages make the module page rows and the mute rows, the same table for each at every call. The page
-    -- asks twice for Host a session, as for Leave (the user's decision of stage 3). The co-op menu's model hosts at
-    -- once.
+    -- model.lua's Options page makes the mute rows, the same table for each at every call. The page asks twice for
+    -- Host a session, as for Leave (the user's decision of stage 3). The co-op menu's model hosts at once.
     local self,main_page,options_page={},Model.new(nil,{host=true}),Model.new('options')
     function self.categories(ctx)
-        local state,out,made=M.state(ctx),{},{[MAIN.pages]={},[M.MUTES]={}}
-        for _,row in ipairs(main_page.rows(ctx)) do if row.page then table.insert(made[MAIN.pages],row) end end
+        local state,out,made=M.state(ctx),{},{[M.MUTES]={}}
         for _,row in ipairs(options_page.rows(ctx)) do if row.member then table.insert(made[M.MUTES],row) end end
         for _,cat in ipairs(M.CATEGORIES) do
             if cat.states[state] then
@@ -112,14 +106,13 @@ function M.new()
         return out
     end
     -- The model.lua page whose change, select and confirm window a row runs through (the co-op menu's own logic): the
-    -- Options page for its rows and the mute rows, the main page for its rows; nil for Open the co-op menu and a Test
-    -- tools row.
+    -- Options page for its rows and the mute rows, the main page for its rows; nil for any other row.
     function self.owner(row)
         if row.member or OPT[row.key or row.id]==row then return options_page end
         if row.id and MAIN[row.id]==row then return main_page end
     end
-    -- The cursor left its row: a first Select of Leave, Remove or Reset all keys is forgotten, as the co-op menu's move
-    -- forgets it.
+    -- The cursor left its row: a first Select of Leave, Remove, Reset all keys or Host a session is forgotten, as the
+    -- co-op menu's move forgets it.
     function self.forget() main_page.close(); options_page.close() end
     return self
 end

@@ -357,15 +357,13 @@ return {
         entry='%d위 %s %d',sep=', ',placed='내 순위: %d위 (%d명 중).'},
     -- The pause menu's Online tab (ui/kit/pause_tab.lua): its word and the notice when the game stays paused.
     pause_tab={tab='온라인',stuck='게임이 일시 정지된 상태라 코옵 메뉴가 열리지 않았습니다.'},
-    -- The pause menu's Online page (ui/kit/online_page.lua): the left list's categories, the section headers and
-    -- the action row that opens the co-op menu.
+    -- The pause menu's Online page (ui/kit/online_page.lua): the left list's categories and the section headers.
     online_page={cat={session='세션',players='플레이어',world='공유 월드',combat='전투',modes='게임 모드',controls='조작',display='화면',
-        others='다른 플레이어',photo='포토 모드',saves='세이브',help='도움말',tools='테스트 도구'},
-        sec={menu='코옵 메뉴',play='온라인 플레이',current='이 세션',hosting='호스트',members='멤버',sharing='공유 항목',travel='이동',
+        others='다른 플레이어',photo='포토 모드',saves='세이브',help='도움말'},
+        sec={play='온라인 플레이',current='이 세션',hosting='호스트',members='멤버',sharing='공유 항목',travel='이동',
         difficulty='난이도',rules='규칙',modes='모드',keyboard='키보드와 마우스',controller='컨트롤러',features='기능',all='모든 키',
         interface='인터페이스',names='이름',sky='하늘',look='외형',sound='사운드',motion='움직임',chat='채팅',photo='포토 모드',saves='세이브',
-        help='도움말',tools='테스트 도구'},
-        open_menu='코옵 메뉴 열기'},
+        help='도움말'}},
     -- The emote wheel (ui/kit/wheel.lua, eve/ui/wheel.lua): its hints, the centre's word while nothing is pointed at
     -- (after StringTable_UI's UI_HUD_Gesture) and why it did not open.
     wheel={title='소셜 액션',release='떼기: 재생',point='가리키기',next='다음 분류',world='감정 표현 휠은 메뉴가 열려 있지 않은 게임 세계에서만 열립니다.',

@@ -502,7 +502,8 @@ end)()
     pt.page,pt.navs=false,{}
     key('DOWN_ARROW'); assert(focus()=='Find a session' and #pt.navs==0,'Not shown: the menu has its keys')
     key('ESCAPE'); assert(not kit_shown.menu and #pt.navs==0)
-    -- Its ctx: the link's state, the module pages, the settings' values, read at each call.
+    -- Its ctx: the link's state, the settings' values, read at each call. No module pages: the Test tools stay in the
+    -- co-op menu (F5).
     local captured
     local real=package.loaded['ui.kit.online_page']
     package.loaded['ui.kit.online_page']={new=function(o) captured=o; return real.new(o) end}
@@ -511,7 +512,7 @@ end)()
     load_main(true)
     local ctx=captured.ctx()
     assert(ctx.mode=='host' and ctx.code=='0CS-CBMH' and ctx.stranger.name=='S' and ctx.values.who_can_join=='friends'
-        and type(ctx.pages)=='table' and type(ctx.members)=='table' and ctx.words==captured.words(),'The page\'s ctx')
+        and ctx.pages==nil and type(ctx.members)=='table' and ctx.words==captured.words(),'The page\'s ctx')
     assert(captured.theme==require('ui.kit.kit').THEME and captured.guide_words().row=='Guide')
     wh.mouse={700,450}
     local x,y=captured.pointer()
@@ -591,17 +592,17 @@ end)()
     in_world,kit_ready=false,false
 end)()
 
--- A Test tools row of the Online page, once the pause tab closed the pause menu (its open with that module page): the
--- co-op menu opens on that page; with none, on its main page as before.
+-- The pause tab's open with a module page (its 'open_menu' answer; the Online page has no Test tools row since stage 3,
+-- F5 keeps them): the co-op menu opens on that page; with none, on its main page as before.
 ;(function()
-    local page_o
-    local real=package.loaded['ui.kit.online_page']
-    package.loaded['ui.kit.online_page']={new=function(o) page_o=o; return real.new(o) end}
+    local menu_o
+    local real=package.loaded['ui.kit.menu']
+    package.loaded['ui.kit.menu']={new=function(o) menu_o=o; return real.new(o) end}
     settings_text,status_text,link_mode,in_world,photo_mode='',plain,'none',true,false
     load_main(true)
-    package.loaded['ui.kit.online_page']=real
+    package.loaded['ui.kit.menu']=real
     kit_ready=true; quarter()
-    pt.o.open(page_o.ctx().pages[1]); assert(kit_shown.menu and menu_view.title.s=="EVE's cut moves",menu_view.title.s)
+    pt.o.open(menu_o.pages()[1]); assert(kit_shown.menu and menu_view.title.s=="EVE's cut moves",menu_view.title.s)
     key('ESCAPE'); key('ESCAPE'); pt.o.open(); assert(menu_view.title.s=='CO-OP' and focus()=='Host a session')
     key('ESCAPE'); in_world,kit_ready=false,false
 end)()

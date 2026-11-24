@@ -539,7 +539,7 @@ for _ in pairs(T.en.emote.names) do n=n+1 end
 assert(n==#EMOTES,'T.en.emote.names: '..n..' names')
 -- The pause menu's Online page (ui/kit/online_page.lua): a word for each category and section of
 -- ui/kit/online_model.lua and for no other id; in every language a category's word within its left list item (Bold 34
--- in SB's 356-unit button: 16 columns), a section's word and Open the co-op menu within 40 columns.
+-- in SB's 356-unit button: 16 columns), a section's word within 40 columns.
 local O=require('ui.kit.online_model')
 local cats,secs={},{}
 for _,cat in ipairs(O.CATEGORIES) do
@@ -555,7 +555,6 @@ for name in pairs(R.TEXT) do
     local p=T.pick(name).online_page
     for k,text in pairs(p.cat) do fits(name..'.online_page.cat.'..k,text,16) end
     for k,text in pairs(p.sec) do fits(name..'.online_page.sec.'..k,text,40) end
-    fits(name..'.online_page.open_menu',p.open_menu,40)
 end
 
 print('ui_text_test ok')

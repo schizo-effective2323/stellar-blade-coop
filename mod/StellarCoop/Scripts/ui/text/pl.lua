@@ -403,17 +403,15 @@ return {
         top='Polowanie na zdjęcia: %s.',entry='%d. %s %d',sep=', ',placed='Twoje miejsce: %d z %d.'},
     -- The pause menu's Online tab (ui/kit/pause_tab.lua): its word and the notice when the game stays paused.
     pause_tab={tab='Online',stuck='Gra pozostała wstrzymana, więc menu co-op się nie otworzyło.'},
-    -- The pause menu's Online page (ui/kit/online_page.lua): the left list's categories, the section headers and
-    -- the action row that opens the co-op menu.
+    -- The pause menu's Online page (ui/kit/online_page.lua): the left list's categories and the section headers.
     online_page={cat={session='Sesja',players='Gracze',world='Wspólny świat',combat='Walka',modes='Tryby gry',
         controls='Sterowanie',display='Wyświetlanie',others='Inni gracze',photo='Tryb zdjęć',saves='Zapisy',
-        help='Pomoc',tools='Narzędzia testów'},
-        sec={menu='Menu co-op',play='Graj online',current='Ta sesja',hosting='Hostowanie',members='Członkowie',
+        help='Pomoc'},
+        sec={play='Graj online',current='Ta sesja',hosting='Hostowanie',members='Członkowie',
         sharing='Co jest wspólne',travel='Podróż',difficulty='Poziom trudności',rules='Zasady',modes='Tryby',
         keyboard='Klawiatura i mysz',controller='Kontroler',features='Funkcje',all='Wszystkie klawisze',
         interface='Interfejs',names='Nazwy',sky='Niebo',look='Wygląd',sound='Dźwięk',motion='Ruch',chat='Czat',
-        photo='Tryb fotograficzny',saves='Zapisy',help='Pomoc',tools='Narzędzia testowe'},
-        open_menu='Otwórz menu co-op'},
+        photo='Tryb fotograficzny',saves='Zapisy',help='Pomoc'}},
     -- The emote wheel (ui/kit/wheel.lua, eve/ui/wheel.lua): its hints, the centre's word while nothing is pointed at
     -- (after StringTable_UI's UI_HUD_Gesture) and why it did not open.
     wheel={title='Akcja społeczna',release='Puść: odtwórz',point='Wskaż',next='Następna kategoria',

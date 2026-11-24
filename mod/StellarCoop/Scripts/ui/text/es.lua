@@ -414,17 +414,15 @@ return {
         top='Caza de fotos: %s.',entry='%d. %s %d',sep=', ',placed='Tu puesto: %d de %d.'},
     -- The pause menu's Online tab (ui/kit/pause_tab.lua): its word and the notice when the game stays paused.
     pause_tab={tab='En línea',stuck='El juego siguió en pausa, así que el menú co-op no se abrió.'},
-    -- The pause menu's Online page (ui/kit/online_page.lua): the left list's categories, the section headers and
-    -- the action row that opens the co-op menu.
+    -- The pause menu's Online page (ui/kit/online_page.lua): the left list's categories and the section headers.
     online_page={cat={session='Sesión',players='Jugadores',world='Mundo compartido',combat='Combate',
         modes='Modos de juego',controls='Controles',display='Pantalla',others='Otros jugadores',photo='Modo foto',
-        saves='Guardado',help='Ayuda',tools='Pruebas'},
-        sec={menu='Menú co-op',play='Jugar en línea',current='Esta sesión',hosting='Anfitrión',members='Miembros',
+        saves='Guardado',help='Ayuda'},
+        sec={play='Jugar en línea',current='Esta sesión',hosting='Anfitrión',members='Miembros',
         sharing='Qué se comparte',travel='Viaje',difficulty='Dificultad',rules='Reglas',modes='Modos',
         keyboard='Teclado y ratón',controller='Mando',features='Funciones',all='Todas las teclas',interface='Interfaz',
         names='Nombres',sky='Cielo',look='Apariencia',sound='Sonido',motion='Movimiento',chat='Chat',photo='Modo foto',
-        saves='Partidas guardadas',help='Ayuda',tools='Herramientas de prueba'},
-        open_menu='Abrir el menú co-op'},
+        saves='Partidas guardadas',help='Ayuda'}},
     -- The emote wheel (ui/kit/wheel.lua, eve/ui/wheel.lua): its hints, the centre's word while nothing is pointed at
     -- (after StringTable_UI's UI_HUD_Gesture) and why it did not open.
     wheel={title='Acción social',release='Soltar: reproducir',point='Apuntar',next='Siguiente categoría',

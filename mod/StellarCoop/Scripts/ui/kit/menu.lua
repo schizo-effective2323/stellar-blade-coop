@@ -28,8 +28,8 @@
 -- back; a row's select or step runs its module's console words through M.run, its refusal shown under the rows. No
 -- engine call here: the kit makes them. The pause menu's Online page (ui/kit/online_page.lua) runs its rows through
 -- act, away and bind, so both menus change a value and run a row with the same code. Its Host a session and Invite
--- run through act, in place: Host with the Create a session screen's request. Its Test tools rows open this menu on
--- their page (toggle's p).
+-- run through act, in place: Host with the Create a session screen's request. F5 keeps the Test tools pages: the
+-- pause menu's Online page has none.
 local M=require('ui.kit.model')
 local Link=require('core.link')
 local T=require('ui.text')

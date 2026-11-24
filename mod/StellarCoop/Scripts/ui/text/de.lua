@@ -426,17 +426,15 @@ return {
         entry='%d. %s %d',sep=', ',placed='Dein Platz: %d von %d.'},
     -- The pause menu's Online tab (ui/kit/pause_tab.lua): its word and the notice when the game stays paused.
     pause_tab={tab='Online',stuck='Das Spiel blieb pausiert, daher hat sich das Koop-Menü nicht geöffnet.'},
-    -- The pause menu's Online page (ui/kit/online_page.lua): the left list's categories, the section headers and
-    -- the action row that opens the co-op menu.
+    -- The pause menu's Online page (ui/kit/online_page.lua): the left list's categories and the section headers.
     online_page={cat={session='Sitzung',players='Spieler',world='Gemeinsame Welt',combat='Kampf',modes='Spielmodi',
         controls='Steuerung',display='Bildschirm',others='Andere Spieler',photo='Fotomodus',saves='Speicherstände',
-        help='Hilfe',tools='Testwerkzeuge'},
-        sec={menu='Koop-Menü',play='Online spielen',current='Diese Sitzung',hosting='Hosten',members='Mitglieder',
+        help='Hilfe'},
+        sec={play='Online spielen',current='Diese Sitzung',hosting='Hosten',members='Mitglieder',
         sharing='Was geteilt wird',travel='Reisen',difficulty='Schwierigkeitsstufe',rules='Regeln',modes='Modi',
         keyboard='Tastatur und Maus',controller='Controller',features='Funktionen',all='Alle Tasten',
         interface='Oberfläche',names='Namen',sky='Himmel',look='Aussehen',sound='Ton',motion='Bewegung',chat='Chat',
-        photo='Fotomodus',saves='Speicherstände',help='Hilfe',tools='Testwerkzeuge'},
-        open_menu='Koop-Menü öffnen'},
+        photo='Fotomodus',saves='Speicherstände',help='Hilfe'}},
     -- The emote wheel (ui/kit/wheel.lua, eve/ui/wheel.lua): its hints, the centre's word while nothing is pointed at
     -- (after StringTable_UI's UI_HUD_Gesture) and why it did not open.
     wheel={title='Soziale Aktion',release='Loslassen: abspielen',point='Zeigen',next='Nächste Kategorie',

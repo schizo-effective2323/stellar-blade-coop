@@ -108,7 +108,7 @@ function M.bike_press(by)
     if not ok then M.say(tostring(message)) end
 end
 -- menu_key's path with nothing open in a world: B in the lobby world, the co-op menu elsewhere, its refusals said. p: a
--- module page to open it on (a Test tools row of the pause menu's Online page).
+-- module page to open it on (the pause tab's 'open_menu' answer; the Online page has no Test tools row any more).
 local function open_menu(p)
     if M.sbo.in_lobby() then return M.lobby_key() end
     local ok,why,shown,en=M.menu.toggle(not p and M.booth.near(require('core.where').me()) or nil,p)
@@ -188,9 +188,10 @@ local function pt_log(m) print('[StellarCoop][PT] '..tostring(m)..'\n') end
 -- The Online page (ui/kit/online_page.lua), made behind its own guard: a page that does not load or build is off until
 -- the mod reloads, with one line. The Online tab then opens the co-op menu as before; the kit, the co-op menu and the
 -- keys go on. Its words are the co-op menu's. Its ctx (the fields online_model.lua reads) is read at each call: the
--- link's state, the chat box, the module pages and the values of coop-settings.txt. Its mouse is the kit's pointer.
--- Its rows change a value and take a key through the co-op menu's own act and bind (ui/kit/menu.lua); a row that needs
--- the game world runs through the co-op menu's away once the pause tab closed the pause menu.
+-- link's state, the chat box and the values of coop-settings.txt. Its mouse is the kit's pointer.
+-- Its rows change a value, take a key, host, invite and write the bug report through the co-op menu's own act and bind
+-- (ui/kit/menu.lua); a row that still needs the game world runs through the co-op menu's away once the pause tab closed
+-- the pause menu.
 local page_built,page=pcall(function()
     local Model=require('ui.kit.model')
     return require('ui.kit.online_page').new({log=pt_log,words=M.words,
@@ -202,10 +203,8 @@ local page_built,page=pcall(function()
             local link=M.link
             local values=Model.read(link and link.settings_text() or '')
             if not link then return {values=values} end
-            local words,pages=M.words(),{}
-            for _,p in ipairs(M.menu_pages and M.menu_pages() or {}) do if p.title(words) then pages[#pages+1]=p end end
             return {mode=link.mode(),chat=M.box~=nil and M.box.can()==true,code=link.code(),stranger=link.stranger(),
-                values=values,members=link.members(),pages=pages,words=words}
+                values=values,members=link.members(),words=M.words()}
         end,
         theme=require('ui.kit.kit').THEME,pointer=function() if M.kit then return M.kit.pointer() end end,
         act=function(...) return M.menu.act(...) end,bind=function(...) return M.menu.bind(...) end})

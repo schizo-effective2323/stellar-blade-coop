@@ -18,9 +18,9 @@
 -- previous and next (LB, RB, the arrows), a click on one of SB's tabs and SB's close (the pause key) leave tab 9 by
 -- SB's own code: the page hides as soon as the tab is not 9. The native part keeps SB's Back from SB on tab 9, so
 -- main/keys.lua and main/input.lua hand Esc, the pad's B and the navigation words to the page (nav). Back in its left
--- list runs SB's close (coop_pause_close, what SB's Back runs). Open the co-op menu runs SB's close, then the co-op
--- menu. A row of the page that needs the game world (the page's 'away') runs SB's close, then that row (o.away) once
--- the game is unpaused, with the same give-up; a step that raises then is logged with one line, the tab goes on. The
+-- list runs SB's close (coop_pause_close, what SB's Back runs). A row of the page that needs the game world (the
+-- page's 'away') runs SB's close, then that row (o.away) once the game is unpaused, with the same give-up; a step that
+-- raises then is logged with one line, the tab goes on. The
 -- page hides at coop off (with SB's close) and when the master is gone. With no page (it did not load or
 -- build, or an older DLL without the two exports) the tab does what it did before the page: SB's close, then the co-op
 -- menu once the game is unpaused, as menu_key does; still paused after WAIT s, it gives up with one log line and one

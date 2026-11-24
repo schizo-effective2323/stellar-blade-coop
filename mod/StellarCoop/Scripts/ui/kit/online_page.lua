@@ -21,11 +21,11 @@
 -- there is a why. Select on a key row waits for the next key as the co-op menu does: the row reads Press a key, the
 -- pane says which keys; an F-key (main/keys.lua through ui/kit/pause_tab.lua's capture) is checked against the other
 -- keys by the co-op menu's own bind, Enter puts back its default, Esc or B stops the wait, the mouse and the other
--- words do nothing meanwhile. Select or a click on Open the co-op menu or a Test tools row opens the co-op menu. Host
--- a session asks first (a second Select within 3 s, as Leave), then hosts in place with the Create a session screen's
--- request; Invite and Write a bug report run in place too. On a row that still needs the game world (Find a session,
--- Join with a code, Chat, Guide) it answers 'away': ui/kit/pause_tab.lua closes the pause menu, then runs the row as
--- the co-op menu does.
+-- words do nothing meanwhile. Host a session asks first (a second Select within 3 s, as Leave), then hosts in place
+-- with the Create a session screen's request; Invite and Write a bug report run in place too. On a row that still
+-- needs the game world (Find a session, Join with a code, Chat, Guide) it answers 'away': ui/kit/pause_tab.lua closes
+-- the pause menu, then runs the row as the co-op menu does. The Test tools and the developer pages stay in the co-op
+-- menu (F5), the menu for admins and debugging: the page has no row that opens it.
 -- Every engine call runs in pcall on the game thread. An engine error that is not a part's own turns the page off
 -- until the mod reloads with one line; the Online tab then opens the co-op menu as before. A look a part refuses is
 -- logged once a kind. Only UI: no save, no SetInputMode, no Slate focus taken. main/input.lua builds it behind its own
@@ -71,7 +71,7 @@ local WIDGETS='/Script/UMG.Default__WidgetBlueprintLibrary'
 local BOLD='/Game/Art/Font/Bold.Bold' -- The kit's item font (ui/kit/kit.lua's GAME_FONT), for the kit's drawing.
 
 -- A row's part: a range is a slider, a choice, a toggle or a mute row a rolling row, any other an option row (the
--- action rows, the key rows, the module page rows, Copy my code).
+-- action rows, the key rows, Copy my code).
 function Page.kind(row)
     if row.key and row.min then return 'slider' end
     if row.member or row.key and row.values then return 'rolling' end
@@ -79,8 +79,6 @@ function Page.kind(row)
 end
 -- A row's words, as ui/kit/menu.lua's draw makes them (w: ui/text's, gw: ui/text/guide's, ctx: online_model's).
 function Page.label(w,gw,row,ctx)
-    if row.id=='open_menu' then return w.online_page.open_menu end
-    if row.page then return row.page.title(w) or '' end
     if row.member then return w.lobby.set.mute:format(Join.name(row.name) or '') end
     if row.id=='guide' then return gw.row end
     local label=w.row[row.id or row.key] or ''
@@ -161,16 +159,11 @@ function Page.move(cur,cats,word)
     elseif word=='back' then cur.list=true end
     return nil
 end
--- What a press (word: 'select', 'left' or 'right') asks of a row: 'open_menu' and its module page (nil for Open the
--- co-op menu) for select on Open the co-op menu or a Test tools row; 'change' and -1 or 1 for left or right on a
--- setting row with values or a range; 'select' for select on any other row and for left or right on a mute row (drawn
--- as a two-value row: the arrows mute or unmute); else nil (left or right on an action, key or Test tools row).
+-- What a press (word: 'select', 'left' or 'right') asks of a row: 'change' and -1 or 1 for left or right on a setting
+-- row with values or a range; 'select' for select on any other row and for left or right on a mute row (drawn as a
+-- two-value row: the arrows mute or unmute); else nil (left or right on an action or key row).
 function Page.press(row,word)
     if word~='select' and word~='left' and word~='right' then return nil end
-    if row.id=='open_menu' or row.page then
-        if word=='select' then return 'open_menu',row.page end
-        return nil
-    end
     if row.member or word=='select' then return 'select' end
     if row.key and not row.bind then return 'change',word=='left' and -1 or 1 end
 end
@@ -279,7 +272,7 @@ local FILL={
     end},
 }
 -- o: {log=function(line) ([PT] lines), words=function() ui/text's words now, guide_words=function() ui/text/guide's,
--- ctx=function() online_model's ctx (mode, chat, code, stranger, values, members, pages), theme=ui/kit/kit.lua's
+-- ctx=function() online_model's ctx (mode, chat, code, stranger, values, members), theme=ui/kit/kit.lua's
 -- THEME, pointer=function() the mouse in the viewport's layout units (ui/kit/kit.lua's pointer): x, y, or nil,
 -- act=function(action, key, text, ctx) the co-op menu's run of what its model answered (ui/kit/menu.lua's act): ok,
 -- note, bind=function(key, name) the co-op menu's take of a key pressed for a key row (ui/kit/menu.lua's bind):
@@ -518,13 +511,11 @@ function Page.new(o)
     local function refuse(n) sound('refuse'); cur.note=n end
     -- A press (Page.press's words) on row at now, through the co-op menu's model for that row (online_model's owner:
     -- the same change, select, show rules and confirm window as the co-op menu) and its code (o.act). The ctx is read
-    -- again before and after. 'open_menu' and the module page, 'away' and the row's id for a row of AWAY (it still
-    -- needs the game world), 'close' once the Online tab was written off (the pause menu closes as Back closes it),
-    -- else nil.
+    -- again before and after. 'away' and the row's id for a row of AWAY (it still needs the game world), 'close' once
+    -- the Online tab was written off (the pause menu closes as Back closes it), else nil.
     local function act(row,word,now)
         local how,dir=Page.press(row,word)
         if not how then return nil end
-        if how=='open_menu' then sound('confirm'); return 'open_menu',dir end
         ctx=o.ctx()
         local m=model.owner(row)
         if not m then refuse(); return nil end
@@ -578,8 +569,7 @@ function Page.new(o)
     end
     -- A navigation word while shown, at now: in the rows, left, right and select press the cursor's row; other words
     -- move the cursor (Page.move). While a key row waits: back stops the wait, select puts back its default, the other
-    -- words do nothing. The page drawn again; the answer: 'close', 'open_menu' and a module page, 'away' and a row's
-    -- id, or nil.
+    -- words do nothing. The page drawn again; the answer: 'close', 'away' and a row's id, or nil.
     function self.nav(word,now)
         if off or not shown then return nil end
         local ok,a,b=pcall(function()

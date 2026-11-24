@@ -2,8 +2,8 @@
 -- SPDX-License-Identifier: LicenseRef-SBO-1.0-or-later
 -- SBO License 1.0 or later, in LICENSE and at github.com/MotherSphere/stellar-blade-coop; NOTICE adds a permission.
 -- The Online page's arrangement (ui/kit/online_model.lua): its categories in the solo state and in an online session,
--- each with its sections and the rows visible now. Open the co-op menu comes first in Session in both states, alone in
--- its section. Every row of today's main page and Options is placed once or left out with a reason. Hidden rows, empty
+-- each with its sections and the rows visible now. No Test tools category and no row that opens the co-op menu: F5
+-- keeps them. Every row of today's main page and Options is placed once or left out with a reason. Hidden rows, empty
 -- sections and empty categories drop. The order stays the same from call to call. Only ui/kit/online_page.lua
 -- requires it.
 package.path='mod/StellarCoop/Scripts/?.lua;'..package.path
@@ -67,13 +67,15 @@ end
 assert(O.state({mode='none'})=='solo' and O.state({})=='solo')
 assert(O.state({mode='host'})=='session' and O.state({mode='guest'})=='session')
 
--- The two states' category lists, in the approved order.
+-- The two states' category lists, in the approved order. No Test tools, even with module pages in the ctx: they stay
+-- in the co-op menu (F5).
 local page=O.new()
 local got=ids(page.categories(SOLO))
-assert(got=='session world combat modes controls display others photo saves help tools',got)
+assert(got=='session world combat modes controls display others photo saves help',got)
 assert(not got:find('players',1,true),'Solo: no players category, its rows are the online session\'s')
 got=ids(page.categories(hosting()))
-assert(got=='session players world combat modes controls display others photo saves help tools',got)
+assert(got=='session players world combat modes controls display others photo saves help',got)
+assert(O.OPEN_MENU==nil,'No Open the co-op menu row')
 assert(ids(page.categories(hosting({mode='guest'})))==got,'A guest sees the same categories')
 
 -- Each category's sections and rows with every row shown.
@@ -87,7 +89,6 @@ local BOTH={
     'photo(photo:photo_sync photo_freeze_max photo_ghost photo_name_tag photo_pause)',
     'saves(saves:auto_coop_save)',
     'help(help:guide report)',
-    'tools(tools:page:1 page:2)',
 }
 -- Shared world, Combat and Game modes in both states: a host sets her rules before she hosts.
 local RULES={
@@ -97,12 +98,12 @@ local RULES={
         ..'|rules:aggro boss_finish kill_credit hit_reactions stagger_resist revive spectate)',
     'modes(modes:scoreattack fishing race_match photohunt)',
 }
-local want={'session(menu:open_menu|play:host find join_code|hosting:who_can_join friends_ask max_players)'}
+local want={'session(play:host find join_code|hosting:who_can_join friends_ask max_players)'}
 for _,line in ipairs(RULES) do want[#want+1]=line end
 for _,line in ipairs(BOTH) do want[#want+1]=line end
 same(dump(page.categories(SOLO)),want,'solo')
 want={
-    'session(menu:open_menu|current:invite copy chat leave|hosting:who_can_join friends_ask max_players)',
+    'session(current:invite copy chat leave|hosting:who_can_join friends_ask max_players)',
     'players(members:mute:7 mute:8 remove)',
 }
 for _,line in ipairs(RULES) do want[#want+1]=line end
@@ -119,7 +120,7 @@ for _,cat in ipairs(O.CATEGORIES) do
         for _,row in ipairs(sec.rows) do placed[row]=(placed[row] or 0)+1 end
     end
 end
-local today={[O.MUTES]=true,[O.OPEN_MENU]=true}
+local today={[O.MUTES]=true}
 local left={}
 for _,list in ipairs({Model.MAIN,Model.OPTIONS}) do
     for _,row in ipairs(list) do
@@ -136,15 +137,15 @@ for _,list in ipairs({Model.MAIN,Model.OPTIONS}) do
         end
     end
 end
-assert(placed[O.MUTES]==1 and placed[O.OPEN_MENU]==1,'The mute rows and Open the co-op menu have one place each')
+assert(placed[O.MUTES]==1,'The mute rows have one place')
 for row in pairs(placed) do assert(today[row],'A placed row that is no row of today: '..tostring(row.id or row.key)) end
 for row in pairs(O.LEFT_OUT) do assert(today[row],'A left-out row that is no row of today') end
 table.sort(left)
-assert(table.concat(left,' ')=='close options',table.concat(left,' '))
+assert(table.concat(left,' ')=='close options pages',table.concat(left,' '))
 -- The rows are model.lua's own tables: their values, defaults and show functions are written once.
 local friends_ask
 for _,row in ipairs(Model.OPTIONS) do if row.key=='friends_ask' then friends_ask=row end end
-local sec=page.categories(SOLO)[1].sections[3]
+local sec=page.categories(SOLO)[1].sections[2]
 assert(sec.id=='hosting' and rawequal(sec.rows[2],friends_ask))
 
 -- Hidden rows drop: each row shows by its own show function.
@@ -160,22 +161,21 @@ assert(find(page.categories(hosting({stranger=NIL})),'players','members')=='mute
 
 -- Empty sections drop; a category with no section left drops too.
 assert(dump(page.categories(SOLO))[1]
-    =='session(menu:open_menu|play:host find join_code|hosting:who_can_join friends_ask max_players)',
+    =='session(play:host find join_code|hosting:who_can_join friends_ask max_players)',
     'Solo with no chat box: no current section')
 assert(dump(page.categories({mode='none',chat=true,values=VALUES}))[1]
-    =='session(menu:open_menu|play:host find join_code|current:chat|hosting:who_can_join friends_ask max_players)',
+    =='session(play:host find join_code|current:chat|hosting:who_can_join friends_ask max_players)',
     'The loopback or the SBO lobby chats with no session')
 assert(dump(page.categories({values=VALUES}))[1]
-    =='session(menu:open_menu|hosting:who_can_join friends_ask max_players)',
+    =='session(hosting:who_can_join friends_ask max_players)',
     'Before Steam: no play section')
 assert(dump(page.categories({mode='guest',chat=true,values=VALUES,pages=PAGES}))[1]
-    =='session(menu:open_menu|current:chat leave|hosting:who_can_join friends_ask max_players)','A guest')
+    =='session(current:chat leave|hosting:who_can_join friends_ask max_players)','A guest')
 local lone=page.categories({mode='guest',values=VALUES,pages=PAGES,members={}})
-assert(ids(lone)=='session world combat modes controls display others photo saves help tools',
+assert(ids(lone)=='session world combat modes controls display others photo saves help',
     'No other player and no stranger: no players category')
-assert(ids(page.categories({mode='none',values=VALUES}))
-    =='session world combat modes controls display others photo saves help',
-    'No module page: no test tools category')
+assert(ids(page.categories({mode='none',values=VALUES}))==ids(page.categories(SOLO)),
+    'With module pages or none: the same categories')
 
 -- The order is stable: the same rows, the same tables, in the same order from call to call; the mute rows in the
 -- members' order, each the same table for her with her name and mute now; solo's categories in the session's order.
@@ -201,22 +201,21 @@ for id in ids(page.categories(SOLO)):gmatch('%S+') do
 end
 
 -- The co-op menu's model behind each row: the Options page's for its rows and the mute rows, the main page's for its
--- rows, none for Open the co-op menu and a Test tools row. A row's confirm runs through that model's 3 s window (Host
--- a session's too, on the page only); forget() drops a first Select, as the co-op menu's move does.
+-- rows. A row's confirm runs through that model's 3 s window (Host a session's too, on the page only); forget() drops
+-- a first Select, as the co-op menu's move does.
 do
     local p=O.new()
     local function opt_row(id) for _,r in ipairs(Model.OPTIONS) do if (r.key or r.id)==id then return r end end end
     local function main_row(id) for _,r in ipairs(Model.MAIN) do if r.id==id then return r end end end
     local ctx=hosting()
     local cats=p.categories(ctx)
-    local mute,tools=cats[2].sections[1].rows[1],cats[#cats].sections[1].rows[1]
-    assert(mute.member=='7' and tools.page==PAGE,'A mute row and a Test tools row')
+    local mute=cats[2].sections[1].rows[1]
+    assert(mute.member=='7','A mute row')
     local opts,mains=p.owner(opt_row('who_can_join')),p.owner(main_row('host'))
     assert(opts.page()=='options' and mains.page()=='main','The Options page and the main page')
     assert(p.owner(opt_row('reset_keys'))==opts and p.owner(opt_row('menu_key'))==opts and p.owner(mute)==opts)
     assert(p.owner(main_row('leave'))==mains and p.owner(main_row('remove'))==mains
         and p.owner(main_row('copy'))==mains)
-    assert(p.owner(O.OPEN_MENU)==nil and p.owner(tools)==nil,'Not the co-op menu\'s rows')
     local reset=opt_row('reset_keys')
     opts.point(ctx,reset)
     assert(opts.select(ctx,10,VALUES)=='confirm_reset_keys' and opts.select(ctx,11,VALUES)=='reset_keys')

@@ -327,14 +327,12 @@ return {
         entry='第%d名 %s %d分',sep='，',placed='你的名次：第%d名，共%d人。'},
     -- The pause menu's Online tab (ui/kit/pause_tab.lua): its word and the notice when the game stays paused.
     pause_tab={tab='在线',stuck='游戏仍处于暂停状态，因此合作菜单没有打开。'},
-    -- The pause menu's Online page (ui/kit/online_page.lua): the left list's categories, the section headers and
-    -- the action row that opens the co-op menu.
+    -- The pause menu's Online page (ui/kit/online_page.lua): the left list's categories and the section headers.
     online_page={cat={session='房间',players='玩家',world='共享世界',combat='战斗',modes='游戏模式',controls='按键',display='显示',
-        others='其他玩家',photo='拍照模式',saves='存档',help='帮助',tools='测试工具'},
-        sec={menu='合作菜单',play='在线游戏',current='当前房间',hosting='房主设置',members='成员',sharing='共享内容',travel='移动',
+        others='其他玩家',photo='拍照模式',saves='存档',help='帮助'},
+        sec={play='在线游戏',current='当前房间',hosting='房主设置',members='成员',sharing='共享内容',travel='移动',
         difficulty='难度',rules='规则',modes='模式',keyboard='键盘和鼠标',controller='手柄',features='功能',all='全部按键',interface='界面',
-        names='名字',sky='天空',look='外观',sound='声音',motion='动作',chat='聊天',photo='拍照模式',saves='存档',help='帮助',tools='测试工具'},
-        open_menu='打开合作菜单'},
+        names='名字',sky='天空',look='外观',sound='声音',motion='动作',chat='聊天',photo='拍照模式',saves='存档',help='帮助'}},
     -- The emote wheel (ui/kit/wheel.lua, eve/ui/wheel.lua): its hints, the centre's word while nothing is pointed at
     -- (after StringTable_UI's UI_HUD_Gesture) and why it did not open.
     wheel={title='社交动作',release='松开：播放',point='指向',next='下一类别',world='表情轮盘只在游戏世界中且没有打开菜单时打开。',busy='现在不能做表情：EVE正忙。',
