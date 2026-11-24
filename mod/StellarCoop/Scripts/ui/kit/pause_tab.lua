@@ -65,6 +65,8 @@ function Tab.new(o)
     local asked,refused=nil,nil -- The last ask written (true: on); the last refusal logged.
     -- The page shown by us; when to log SB's pages again; a click to report at the next tick; a refused tab look said.
     local showing,look_at,clicked,look_said=false,nil,false,false
+    local sound=o.sound or function() end -- The kit's sounds by name.
+    local over,over_at=false,0 -- Whether the mouse was on our tab at the last look; when to look again.
     Keep.want({MASTER..'_C'})
     local function fail(e)
         failed=true
@@ -183,6 +185,7 @@ function Tab.new(o)
             local left=sb_button(from)
             if left then tab_look(left,false) end
             log('online page shown (from tab '..tostring(from)..', by '..by..')')
+            sound('tab_top')
             log("online page: SB's pages after the deactivate: "..page.visibility())
             look_at=now+Tab.LOOK
         elseif answer=='locked' then log("online page: SB's tab lock is on; nothing changed")
@@ -206,6 +209,16 @@ function Tab.new(o)
             hooked=true
             local ok,e=pcall(install)
             if not ok then fail(e) end
+        end
+        -- The mouse onto our tab: a hover sound once as it arrives, since SB's own tabs sound under the mouse and ours
+        -- plays none. A refused read is only no sound.
+        -- shortcut: the kit's move cue (UI_Common_Hover_Cue); SB's own tab hover cue is native and not read yet.
+        if not showing and now>=over_at and self.armed() and o.paused() then
+            over_at=now+0.1
+            local ok,on=pcall(function() return button.Button_Action:IsHovered()==true end)
+            on=ok and on
+            if on and not over then sound('move') end
+            over=on
         end
         if clicked then
             clicked=false

@@ -1626,6 +1626,8 @@ do
     assert(PATHS.key_f10==nil)
     assert(PATHS.wheel_open==obj('/Game/Sound/UI/UI_BodySuit_Open') and PATHS.wheel_move==obj('/Game/Sound/UI/ui_move'))
     assert(VOLUMES.wheel_open==1 and VOLUMES.wheel_move==1)
+    assert(PATHS.tab==obj('/Game/Sound/UI/MainMenu/UI_Tab_2_Cue') and VOLUMES.tab==1
+        and PATHS.tab_top==obj('/Game/Sound/UI/MainMenu/UI_Tab_1_Cue') and VOLUMES.tab_top==1)
     local sound=false
     for _,a in ipairs(Ui.ASSETS) do assert(a.volume or not sound,a[1]..': a texture after a sound'); sound=a.volume~=nil end
 end

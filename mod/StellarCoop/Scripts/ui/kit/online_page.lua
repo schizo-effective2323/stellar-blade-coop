@@ -132,7 +132,8 @@ function Page.under(cats,cur,x,y)
 end
 -- What to draw: list {kind='tab', label=, look=} per category; rows, one per slot ({kind='header', head=true,
 -- label=}, {kind=, label=, value=, percent= (a slider's), row=, look=} or false); detail {title=, desc=}. look:
--- 'focus' (the cursor), 'select' (the category the rows show while the cursor is in them) or 'normal'.
+-- 'focus' (the cursor, or the list item under the mouse, cur.over), 'select' (the category the rows show while the
+-- cursor is in them or the mouse is on another item) or 'normal'.
 function Page.specs(cats,cur,w,gw,ctx)
     local out={list={},rows={},detail={title='',desc=''}}
     if #cats==0 then
@@ -142,7 +143,8 @@ function Page.specs(cats,cur,w,gw,ctx)
     cur.cat=math.max(1,math.min(cur.cat,#cats))
     for i,cat in ipairs(cats) do
         out.list[i]={kind='tab',label=w.online_page.cat[cat.id] or cat.id,
-            look=i~=cur.cat and 'normal' or cur.list and 'focus' or 'select'}
+            look=i==cur.over and 'focus' or i~=cur.cat and 'normal' or (cur.list and not cur.over) and 'focus'
+                or 'select'}
     end
     local list=lines(cats[cur.cat])
     for i=1,Page.ROWS do
@@ -221,6 +223,9 @@ function Page.new(o)
     local slots={list={},rows={}}
     -- The item under the mouse at the last look ('list1', 'row3'; nil: none; false: no look yet); when to look again.
     local hover,hover_at=false,0
+    -- The kit's sounds by name: 'tab' is the focus sound of SB's Settings page; 'wheel_move' is ui_move, the wave
+    -- SB's Settings list item holds in its Movesound animation, played here when a click shows another category.
+    local sound=o.sound or function() end
     local broken,said,refused={},{},{} -- Kinds drawn by the kit; class lines said; look refusals said.
     local built_at,made=nil,{sb=0,kit=0} -- The clock of a build whose first draw is not logged yet; parts it made.
     local function short(kind) return Parts.CLASS[kind]:match('[^.]+$') end
@@ -420,9 +425,12 @@ function Page.new(o)
     -- A navigation word while shown: the cursor moved, the page drawn again; Page.move's answer.
     function self.nav(word)
         if off or not shown then return nil end
+        local was=table.concat({tostring(cur.list),cur.cat,cur.row},' ')
+        cur.over=nil -- The keys take the cursor back from the mouse's list item.
         local action=Page.move(cur,cats,word)
         local ok,why=pcall(draw)
         if not ok then fail(why); return nil end
+        if was~=table.concat({tostring(cur.list),cur.cat,cur.row},' ') then sound('tab') end
         return action
     end
     -- The cursor on what is under the mouse (Page.under's kind and slot): a category in the list, or a row; true when
@@ -444,14 +452,20 @@ function Page.new(o)
         if off or not shown then return nil end
         local ok,answer=pcall(function()
             local kind,i=under()
-            if not point(kind,i) or kind~='row' then return nil end
+            local shown_cat=cur.cat
+            if not point(kind,i) then return nil end
+            if kind~='row' then
+                if cur.cat~=shown_cat then sound('wheel_move') end
+                return nil
+            end
             return Page.move(cur,cats,'select')
         end)
         if not ok then fail(answer); return nil end
         return answer
     end
-    -- Each frame while shown: every HOVER s, the item the mouse moved onto (another one than at the last look) takes
-    -- the cursor and its focus look. A resting mouse never moves it, even while the keys move the cursor under it.
+    -- Each frame while shown: every HOVER s, the item the mouse moved onto (another one than at the last look). A row
+    -- takes the cursor and its focus look. A list item is lit only, as in SB's Settings: a click shows its rows. Both
+    -- play SB's move sound. A resting mouse never moves anything, even while the keys move the cursor under it.
     function self.tick(now)
         if off or not shown or now<hover_at then return end
         hover_at=now+Page.HOVER
@@ -460,7 +474,16 @@ function Page.new(o)
             local key=kind and kind..i
             local moved=hover~=false and key~=hover
             hover=key
-            if moved and key then point(kind,i) end
+            if not moved then return end
+            local over=kind=='list' and i or nil
+            if kind=='row' then
+                cur.over=nil
+                point(kind,i)
+            elseif over~=cur.over then
+                cur.over=over
+                draw()
+            end
+            if key then sound('tab') end
         end)
         if not ok then fail(why) end
     end

@@ -108,7 +108,9 @@ local function new(page)
     -- entry's and tab read's calls; entry, now: what they answer.
     local s={opens=0,notices=0,asks={},paused=true,enabled=true,ready=true,closes=0,answer={true},enters=0,tabs=0,
         entry='entered',now=8}
+    s.sounds={}
     s.tab=Tab.new({log=function(line) logs[#logs+1]=line end,ready=function() return s.ready end,page=page,
+        sound=function(name) s.sounds[#s.sounds+1]=name end,
         enter=page and function() s.enters=s.enters+1; return s.entry end or nil,
         tab=page and function() s.tabs=s.tabs+1; return s.now end or nil,
         enabled=function() return s.enabled end,word=function() return 'Online' end,
@@ -322,6 +324,12 @@ s.paused=false; s.tab.tick(20.2); assert(s.opens==1,'Then the co-op menu')
 s.paused,p.answer,hovered=true,nil,false
 local m14,b14=menu(); construct(m14)
 s.now=3
+-- The mouse onto our tab: the hover sound once as it arrives, again only after it left.
+hovered=true; s.tab.tick(29); s.tab.tick(29.2)
+assert(count(s.sounds,'move')==1,'Once as the mouse arrives')
+hovered=false; s.tab.tick(29.4); hovered=true; s.tab.tick(29.6)
+assert(count(s.sounds,'move')==2,'Again after it left')
+hovered=false; s.tab.tick(29.8)
 widget_hovered=true
 s.tab.click(30); s.tab.click(30.1)
 assert(count(logs,'click: Online tab hovered: Button_Action no, tab button yes')==2
@@ -332,7 +340,7 @@ assert(logged('click: Online tab hovered: Button_Action no, tab button refused')
 hovered,widget_hovered=true,false
 s.tab.click(30.2)
 assert(logged('click: Online tab hovered: Button_Action yes, tab button no')
-    and logged('online page shown (from tab 3, by a click)')
+    and s.sounds[#s.sounds]=='tab_top' and logged('online page shown (from tab 3, by a click)')
     and b14[3].defocus==1 and b14[9].focus==1)
 s.now=9
 s.tab.tick(30.3)

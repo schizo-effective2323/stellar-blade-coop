@@ -631,12 +631,17 @@ drawn in the co-op menu's style instead. `UE4SS.log` says which for each part.
 | Right arrow or D, Enter or Space; D-pad right or A | From the list into the rows of that category |
 | Enter or Space; A | On Open the co-op menu: close the pause menu, then open the co-op menu |
 | Esc; B | From the rows back to the list. In the list: close the pause menu, as Back does on Settings |
-| Mouse | The list item or row the mouse moves onto takes the focus. A mouse at rest never moves it |
-| Left click | Select the list item or row under the mouse. On Open the co-op menu, run it |
+| Mouse | A row under the mouse takes the focus. A list item under it lights up. A mouse at rest moves nothing |
+| Left click | Show the rows of the list item under the mouse, or select the row under it |
 | LB, RB, a click on one of the game's tabs | Go to that tab of the game's pause menu |
 | The key that opened the pause menu (Start on a controller) | Close the pause menu |
 
 In the rows, up and down skip the headers and wrap around. A long category scrolls. Left does nothing in stage 1.
+
+The focus moving, with the keys or under the mouse, plays the focus sound of the game's Settings page
+(`UI_Tab_2_Cue`). A click that shows another category plays `ui_move`. Entering the page plays `UI_Tab_1_Cue`. The
+mouse arriving on the Online tab plays `UI_Common_Hover_Cue`. The last two are picks by name: the cues the game plays
+for its own tab row are not read yet.
 
 Stage 1 does not change a value, run another row (Host, Leave, a key change) or play sounds. Use the co-op menu for
 those: Open the co-op menu on the page, or F5. The co-op menu keeps every row it has.
@@ -678,9 +683,11 @@ from the least risky to the most.
 3. Pause again, go to Settings, press RB (or E). Expect: Online. Then LB: Settings. RB, RB: Online, then Equipment.
    On Equipment press LB (or Q, A on an AZERTY keyboard). Expect: Online. LB again: Settings. On Online, click the
    Map tab: Map shows and the page goes. Stop if two tabs show at once and the next tab change does not fix it.
-4. On the page, move the mouse over the list items and the rows. Expect: the one under the mouse takes the focus
-   look and the pane on the right follows it. Leave the mouse still and press up and down: the focus moves with the
-   keys and the mouse does not pull it back. Click a list item: its rows show. Click a row: it takes the focus. Then
+4. On the page, move the mouse over the rows. Expect: the one under the mouse takes the focus look, with the
+   Settings focus sound. The pane on the right follows it. Move the mouse over the list items. Expect: the one under
+   it lights up with the same sound and the rows do not change. Click it: its rows show. Leave the mouse still and
+   press up and down: the focus moves with the keys and the mouse does not pull it back. Compare by ear with the
+   game's Settings page and its tabs: the sounds on the Online tab are picks. Then
    with the keys: up and down in the list, right or Enter into the rows, up and down there, Esc or B back to the list.
    Check that the pane shows the name at its top with no black box above it.
 5. In Session, select Open the co-op menu, once with Enter or A, once with a click. Expect: the pause menu closes and

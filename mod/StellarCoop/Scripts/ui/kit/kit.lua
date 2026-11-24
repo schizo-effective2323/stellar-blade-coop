@@ -98,7 +98,12 @@ for _,a in ipairs({{'mark',TEX..'Item/CommonIcon/4DotMark'},{'link',TEX..'Common
         {'popup_close',SOUND..'CommonPopup/UI_Common_Popup_Close_Cue',1},
         {'popup_confirm',SOUND..'CommonPopup/UI_Common_Popup_Confirm_Cue',1},
         -- The item wheel's open and focus sounds (WB_MainHUD_ItemEquip's): the emote wheel's.
-        {'wheel_open',SOUND..'UI_BodySuit_Open',1},{'wheel_move',SOUND..'ui_move',1}}) do
+        {'wheel_open',SOUND..'UI_BodySuit_Open',1},{'wheel_move',SOUND..'ui_move',1},
+        -- The pause menu's Online page (ui/kit/online_page.lua): tab is the focus sound of SB's Settings page
+        -- (FocusChangedSound of WB_Setting_Tab and of WB_Setting_DetailBase).
+        -- shortcut: tab_top is a pick by its name for the Online tab; the cue SB's own tab row plays is native and
+        -- not read yet, change it once it is.
+        {'tab',SOUND..'MainMenu/UI_Tab_2_Cue',1},{'tab_top',SOUND..'MainMenu/UI_Tab_1_Cue',1}}) do
     table.insert(Ui.ASSETS,{a[1],path(a[2]),volume=a[3],alt=a.alt and path(a.alt)})
 end
 -- The F-key icons but F10's (the console's), key_f1 to key_f12, for the emote wheel's key: before the sounds.

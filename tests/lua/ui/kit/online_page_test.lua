@@ -202,11 +202,13 @@ end
 local THEME={text='text',grey='grey',beta='beta',focus='focus',clear='clear'}
 local ctx=SOLO
 local mouse=nil -- The kit's pointer: {x, y} or nil.
+local sounds={} -- The kit's sounds asked, by name.
 local function new()
-    events,logs,made,constructed,raising,no_canvas,mouse={},{},{},{},{},false,nil
+    events,logs,made,constructed,raising,no_canvas,mouse,sounds={},{},{},{},{},false,nil,{}
     return Page.new({log=function(line) logs[#logs+1]=line end,words=function() return w end,
         guide_words=function() return gw end,ctx=function() return ctx end,theme=THEME,
-        pointer=function() if mouse then return mouse[1],mouse[2] end end})
+        pointer=function() if mouse then return mouse[1],mouse[2] end end,
+        sound=function(name) sounds[#sounds+1]=name end})
 end
 local function first_made(kind) for _,m in ipairs(made) do if m.kind==kind then return m.o end end end
 local function made_n(kind)
@@ -307,14 +309,25 @@ page.tick(40.05); assert(pane()=='Session','Not before HOVER s')
 page.tick(40.1)
 host=part('Host a session') -- The latest one: Session's rows were made again after Controls.
 assert(pane()=='Host a session' and host.calls[#host.calls][2]=='StateFocus','Moved onto Host a session')
-page.nav('up'); assert(pane()=='Open the co-op menu')
-page.tick(40.3); assert(pane()=='Open the co-op menu','A resting mouse never moves the cursor')
+assert(sounds[#sounds]=='tab',"A row under the mouse: SB's Settings focus sound")
+local n=#sounds
+page.nav('up'); assert(pane()=='Open the co-op menu' and #sounds==n+1 and sounds[n+1]=='tab','The keys: the same sound')
+page.tick(40.3); assert(pane()=='Open the co-op menu' and #sounds==n+1,'A resting mouse never moves the cursor')
+-- A list item under the mouse is lit and sounds; its rows show at a click only, as in SB's Settings.
+local function tab_part(name)
+    for _,m in ipairs(made) do if m.kind=='tab' and m.o.props.TabName==name then return m.o end end
+end
 mouse={item_at(2)}
-page.tick(40.4); assert(pane()=='Controls','Moved onto Controls in the list')
+page.tick(40.4)
+assert(pane()=='Open the co-op menu' and sounds[#sounds]=='tab' and #sounds==n+2,'Lit, not shown')
+local controls,session=tab_part('Controls'),tab_part('Session')
+assert(controls.calls[#controls.calls][1]=='PlayFocusAnim' and session.calls[#session.calls][1]=='Select')
+assert(page.click()==nil and pane()=='Controls' and sounds[#sounds]=='wheel_move','A click shows its rows')
 mouse={row_at(1)} -- Controls' first header: no item.
 page.tick(40.5); assert(pane()=='Controls')
+n=#sounds
 mouse=nil
-page.tick(40.6); assert(pane()=='Controls' and not page.off())
+page.tick(40.6); assert(pane()=='Controls' and not page.off() and #sounds==n,'Off everything: no sound')
 -- visibility(): SB's eight page widgets by name.
 assert(page.visibility()=='WB_Equip_Set=Hidden WB_QuestJournal=Hidden WB_Map_Set=Hidden WB_Bag_Set=Hidden '
     ..'WB_NewSkill_Master=Hidden WB_Album_Set=Hidden WB_Manual_Set=Hidden WB_GameMenu_Setting=Collapsed',

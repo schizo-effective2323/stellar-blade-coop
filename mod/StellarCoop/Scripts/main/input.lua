@@ -191,6 +191,7 @@ local function pt_log(m) print('[StellarCoop][PT] '..tostring(m)..'\n') end
 local page_built,page=pcall(function()
     local Model=require('ui.kit.model')
     return require('ui.kit.online_page').new({log=pt_log,words=M.words,
+        sound=function(name) if M.kit then M.kit.sound(name) end end,
         guide_words=function()
             return require('ui.text.guide').pick(M.kit and M.kit.language(),M.settings and M.settings.ui_language)
         end,
@@ -210,6 +211,7 @@ if not page_built then
     page=nil
 end
 M.pause_tab=require('ui.kit.pause_tab').new({log=pt_log,page=page,
+    sound=function(name) if M.kit then M.kit.sound(name) end end,
     ready=function() return M.link~=nil and require('core.unreal').controller()~=nil end,
     enabled=function() return M.settings~=nil and M.settings.pause_tab==true end,
     word=function() return M.words().pause_tab.tab end,paused=function() return M.kit~=nil and M.kit.paused(true) end,
