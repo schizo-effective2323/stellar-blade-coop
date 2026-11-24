@@ -3,18 +3,19 @@
 -- SBO License 1.0 or later, in LICENSE and at github.com/MotherSphere/stellar-blade-coop; NOTICE adds a permission.
 -- The pause menu's Online tab (ui/kit/pause_tab.lua) over fakes. Covered: nothing before the game is ready; the class
 -- loaded, the keeper made and the Construct hook registered once; a Construct adds one button after SB's 8 with the
--- word, SB's last button's style, RefreshDesign, Visible with its Button_Action HitTestInvisible; a button without
--- Button_Action stops the tab and leaves no half-made button; a second Construct adds none; a row rebuilt to SB's 8
--- gets it again at the next slow while paused. With no page: a click over the button (IsHovered; the cached geometry
--- is never read) closes the pause menu once through the native part's close (SB's own, never the widget's CloseSelf),
+-- word, SB's last button's style, RefreshDesign, the visibilities of SB's last button and of its Button_Action; a
+-- button without Button_Action stops the tab and leaves no half-made button; a second Construct adds none; a row
+-- rebuilt to SB's 8 gets it again at the next slow while paused. With no page: a click over the Button (its
+-- IsHovered, not the button's; the cached geometry is never read) closes the pause menu once through the native
+-- part's close (SB's own, never the widget's CloseSelf),
 -- one elsewhere or with no pause menu does nothing; RB closes it, the co-op menu opens at the first tick after the
 -- unpause, or after 2 s still paused a give-up line and notice; a close refused for now logs one line and waits for
 -- nothing, one that can never work stops the tab with one STOP line and asks pausetab off; pause_tab off makes nothing
 -- and asks pausetab off; the asks: once a change, a refused one again at the next slow and logged once; a pause menu of
 -- another shape stops the tab with one STOP line and asks pausetab off; coop off stops it. With a page: RB and a
 -- hovered click read the tab, build the page, enter, show it, focus our button and defocus SB's button of the tab
--- left, with the shown line and SB's pages now and 0.5 s later; a click logs its hover (no once a pause menu) and SB's
--- tab one frame later; the page hides when SB shows another tab or the menu closed; it forgets the master when that
+-- left, with the shown line and SB's pages now and 0.5 s later; each click logs both hovers in one line and SB's tab
+-- one frame later; the page hides when SB shows another tab or the menu closed; it forgets the master when that
 -- is gone; Open the co-op menu closes then opens the co-op menu, back in the list closes only; the entry's locked and
 -- none change nothing with one line each, off or a page that does not build take the path before the page; a page
 -- that turns off while shown closes and opens the co-op menu; coop off hides it with SB's close.
@@ -36,10 +37,11 @@ local missing=setmetatable({},{__index=function(_,k)
     if k=='IsValid' then return function() return false end end
 end})
 local logs,hooks,objects,loaded,constructed
-local hovered,ask_refusal
+-- hovered: our Button_Action's IsHovered; widget_hovered: our button's own (the user widget's).
+local hovered,widget_hovered,ask_refusal
 local function reset()
     logs,hooks,objects,loaded,constructed={},{},{},{},{}
-    hovered,ask_refusal=false,nil
+    hovered,widget_hovered,ask_refusal=false,false,nil
 end
 reset()
 StaticFindObject=function(path) return objects[path] or missing end
@@ -64,13 +66,14 @@ local function looks(fields)
     fields.DefocusTabButton=function(self) self.defocus=self.defocus+1 end
     return fields
 end
--- A pause menu whose tab row holds SB's 8 buttons, each with the five style fields; no_action: ours has no
--- Button_Action.
+-- A pause menu whose tab row holds SB's 8 buttons, each with the five style fields, SelfHitTestInvisible with a
+-- Visible Button_Action; no_action: ours has no Button_Action.
 local function menu(no_tap_set,no_action)
     local buttons,class={},object()
     local function button(i)
         return object(looks({TextWidthValue=200+i,MinTextMargin=10+i,TextColor='color'..i,TextFont='font'..i,
-            TextShadowColor='shadow'..i}))
+            TextShadowColor='shadow'..i,GetVisibility=function() return 4 end,
+            Button_Action=object({GetVisibility=function() return 0 end})}))
     end
     for i=1,8 do buttons[i]=button(i) end
     local row=object({
@@ -85,10 +88,11 @@ local function menu(no_tap_set,no_action)
             assert(c==class and panel==row)
             local made=object(looks({refreshed=0,
                 TextBlock=object({SetText=function(self,t) self.text=t end}),
-                Button_Action=not no_action and object({SetVisibility=function(self,v) self.visibility=v end}) or nil,
+                Button_Action=not no_action and object({SetVisibility=function(self,v) self.visibility=v end,
+                    IsHovered=function() return hovered end}) or nil,
                 RefreshDesign=function(self) self.refreshed=self.refreshed+1 end,
                 SetVisibility=function(self,v) self.visibility=v end,
-                IsHovered=function() return hovered end,
+                IsHovered=function() return widget_hovered end,
                 GetCachedGeometry=function() error('the cached geometry was read') end}))
             buttons[#buttons+1]=made
             return made
@@ -134,7 +138,7 @@ assert(#loaded==1 and loaded[1]==MASTER and #constructed==1 and constructed[1].i
 assert(#hooks==1 and hooks[1].path==MASTER..'_C:Construct' and #logs==1 and logs[1]:find('hook on',1,true),
     'One Construct hook')
 
--- A Construct: our button after SB's 8, with the word, SB's last button's style, refreshed and HitTestInvisible.
+-- A Construct: our button after SB's 8, with the word, SB's last button's style and visibilities, refreshed.
 local m,buttons=menu()
 construct(m)
 local ours=buttons[9]
@@ -142,8 +146,8 @@ assert(#buttons==9 and ours.TextValue=='Online' and ours.TextBlock.text=='Online
 for _,k in ipairs({'TextWidthValue','MinTextMargin','TextColor','TextFont','TextShadowColor'}) do
     assert(ours[k]==buttons[8][k],'Style copied from SB\'s last button: '..k)
 end
-assert(ours.refreshed==1 and ours.visibility==0 and ours.Button_Action.visibility==3,
-    'RefreshDesign once; ours Visible, its Button_Action HitTestInvisible')
+assert(ours.refreshed==1 and ours.visibility==4 and ours.Button_Action.visibility==0,
+    'RefreshDesign once; ours and its Button_Action take the mouse as SB\'s last button and its Button_Action')
 construct(m)
 assert(#buttons==9,'A second Construct of that pause menu adds none')
 -- The asks: pausetab on at the first slow, none while nothing changes.
@@ -156,7 +160,8 @@ assert(#buttons==8,'Not paused: the row is left alone')
 s.paused=true; s.tab.slow()
 assert(#buttons==9 and buttons[9]~=ours and buttons[9].TextValue=='Online','Added again')
 
--- A click: over the button (IsHovered) closes the pause menu once; elsewhere nothing.
+-- A click: over the Button (its IsHovered; the button's own answers no, as in the game) closes the pause menu once;
+-- elsewhere nothing.
 assert(s.tab.armed(),'Armed while a pause menu has our button')
 s.tab.click(1); assert(s.closes==0,'A click elsewhere: nothing')
 hovered=true
@@ -311,15 +316,18 @@ p.answer='open_menu'; s.tab.nav('select',20.05)
 assert(s.closes==2 and not s.tab.page_shown(),'Open the co-op menu: SB\'s close')
 s.tab.tick(20.1); assert(s.opens==0,'Still paused: not yet')
 s.paused=false; s.tab.tick(20.2); assert(s.opens==1,'Then the co-op menu')
--- A hovered click: the same entry by a click; SB's tab one frame later. Not hovered: one line a pause menu.
+-- A hovered click: the same entry by a click; SB's tab one frame later. Each click: both answers in one line.
 s.paused,p.answer,hovered=true,nil,false
 local m14,b14=menu(); construct(m14)
 s.now=3
+widget_hovered=true
 s.tab.click(30); s.tab.click(30.1)
-assert(count(logs,'click: Online tab hovered no')==1 and p.calls[#p.calls]=='show false','Not hovered: one line')
-hovered=true
+assert(count(logs,'click: Online tab hovered: Button_Action no, tab button yes')==2
+    and p.calls[#p.calls]=='show false','Not over the Button: one line each click, no entry')
+hovered,widget_hovered=true,false
 s.tab.click(30.2)
-assert(logged('click: Online tab hovered yes') and logged('online page shown (from tab 3, by a click)')
+assert(logged('click: Online tab hovered: Button_Action yes, tab button no')
+    and logged('online page shown (from tab 3, by a click)')
     and b14[3].defocus==1 and b14[9].focus==1)
 s.now=9
 s.tab.tick(30.3)

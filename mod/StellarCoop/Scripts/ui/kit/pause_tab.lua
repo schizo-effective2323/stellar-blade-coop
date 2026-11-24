@@ -3,8 +3,13 @@
 -- SBO License 1.0 or later, in LICENSE and at github.com/MotherSphere/stellar-blade-coop; NOTICE adds a permission.
 -- The pause menu's Online tab and its page. SB's pause menu (WB_GameMenu_Master) has 8 tabs; this adds a 9th button
 -- after them. SB's GameMenu logic maps tabs 1 to 8 to its own pages in code, so the Online page is SBO's own widget in
--- the master (ui/kit/online_page.lua). The button is Visible with its Button_Action HitTestInvisible: SB's Button never
--- takes the click. A left click (main/keys.lua's mouse bind) asks the button's IsHovered. RB on Settings reaches the
+-- the master (ui/kit/online_page.lua). The button and its Button_Action take the mouse as SB's last button's do (their
+-- visibilities copied): the class binds that Button's OnHovered and OnUnhovered to its Hover and UnHover animations
+-- (WB_Common_Tab_Btn's ComponentDelegateBinding), so the hover look plays as on SB's tabs. SB binds each tab's click
+-- once, at its GameMenu logic's init (FUN_141d929b0 -> FUN_141d7f2f0 -> FUN_141d49700, OnClicked on Button_Action at
+-- the path WB_Tap_Set/WB_Common_Tabs/<the tab's ESBUILogicType name>, resolved by name in FUN_142535310): ours is made
+-- later under another name, so SB's click binding never reaches it. A left click (main/keys.lua's mouse bind) asks the
+-- Button's IsHovered. RB on Settings reaches the
 -- tab through the native part (ui/pause_tab.h: RB on the highest enabled tab and LB on the lowest become coop_pad's
 -- event 12; the keyboard's keys too, as SB maps them to the same actions). Either one enters the page: the native
 -- part's coop_pause_enter runs the shown SB page's deactivate (as SB's own tab change does), then writes 9 as the open
@@ -24,8 +29,9 @@
 -- engine call runs in pcall on the game thread; the first error stops the tab until the next Lua load with one STOP
 -- line. The native part is then asked pausetab off, so RB on Settings wraps to Equipment as in the game. Only UI: no
 -- save, trophy or inventory call of its own (SB's close saves only as it does on Back). Its [PT] lines answer what only
--- the game can tell: whether the button is hovered on a click, SB's tab one frame after that click, what SB's
--- deactivate left shown (at the entry and LOOK s later).
+-- the game can tell: whether the Button and the button are hovered on a click (both answers each click, until a game
+-- test shows the Button's holds), SB's tab one frame after that click, what SB's deactivate left shown (at the entry
+-- and LOOK s later).
 -- tests/lua/ui/kit/pause_tab_test.lua covers it over fakes.
 local U=require('core.unreal')
 local Keep=require('core.keep')
@@ -33,7 +39,6 @@ local Tab={WAIT=2,LOOK=0.5}
 local MASTER='/Game/Art/UI/Widget/GameMenu/WB_GameMenu_Master.WB_GameMenu_Master'
 local KEEPER=MASTER..'.StellarCoop_PauseTabKeeper'
 local PUBLIC,ROOT_SET=0x1,0x40000000 -- As online/group/region_tabs.lua: RF_Public; EInternalObjectFlags::RootSet.
-local VISIBLE,HIT_TEST_INVISIBLE=0,3 -- ESlateVisibility.
 local STYLE={'TextWidthValue','MinTextMargin','TextColor','TextFont','TextShadowColor'}
 
 -- A class by its asset's path: the keep's (core/keep.lua) when it serves it, else loaded when it is not in memory.
@@ -57,9 +62,8 @@ function Tab.new(o)
     local hooked,failed,stopped=false,false,false
     local master,button,closed_at=nil,nil,nil
     local asked,refused=nil,nil -- The last ask written (true: on); the last refusal logged.
-    -- The page shown by us; when to log SB's pages again; a click to report at the next tick; the not-hovered line
-    -- said for this pause menu; a refused tab look said.
-    local showing,look_at,clicked,said_no,look_said=false,nil,false,false,false
+    -- The page shown by us; when to log SB's pages again; a click to report at the next tick; a refused tab look said.
+    local showing,look_at,clicked,look_said=false,nil,false,false
     Keep.want({MASTER..'_C'})
     local function fail(e)
         failed=true
@@ -81,9 +85,10 @@ function Tab.new(o)
             made.TextValue=FText(word)
             assert(U.valid(made.TextBlock),'the tab button has no TextBlock'):SetText(FText(word))
             made:RefreshDesign()
-            -- Ours takes the mouse for IsHovered; SB's Button inside it never does.
-            made:SetVisibility(VISIBLE)
-            assert(U.valid(made.Button_Action),'the tab button has no Button_Action'):SetVisibility(HIT_TEST_INVISIBLE)
+            -- Ours takes the mouse as SB's buttons do: the button and its Button_Action as SB's last one has them.
+            made:SetVisibility(last:GetVisibility())
+            local sb=assert(U.valid(last.Button_Action),"SB's last tab button has no Button_Action")
+            assert(U.valid(made.Button_Action),'the tab button has no Button_Action'):SetVisibility(sb:GetVisibility())
         end)
         if not ok then
             pcall(row.RemoveChild,row,made)
@@ -100,7 +105,7 @@ function Tab.new(o)
                 page.forget()
                 log('online page hidden: the pause menu was made again')
             end
-            master,said_no=m,false
+            master=m
             add()
         end)
         if not ok then fail(e) end
@@ -149,7 +154,7 @@ function Tab.new(o)
     local function close(now,then_menu)
         if showing then hide() end
         local shown=U.valid(master)
-        master,said_no=nil,false
+        master=nil
         if not shown then return log('pause tab: the pause menu was gone; nothing closed') end
         local ok,why,lasting=o.close()
         if lasting then return fail(why) end
@@ -265,7 +270,7 @@ function Tab.new(o)
         end
     end
     -- A left click while armed and paused: the page's while it shows (Open the co-op menu runs), else the page entered
-    -- when the mouse is over our button. Whether it is, logged each time it is and once a pause menu when it is not.
+    -- when the mouse is over our Button_Action. Its IsHovered and the button's, logged each click.
     function self.click(now)
         if not self.armed() or not o.paused() then return end
         if showing then
@@ -274,12 +279,14 @@ function Tab.new(o)
             if action=='open_menu' then close(now,true) end
             return
         end
-        local ok,over=pcall(function() return button:IsHovered()==true end)
+        local ok,over,widget=pcall(function()
+            return assert(U.valid(button.Button_Action),'the tab button lost its Button_Action'):IsHovered()==true,
+                button:IsHovered()==true
+        end)
         if not ok then return fail(over) end
-        if over or not said_no then
-            said_no=said_no or not over
-            log('click: Online tab hovered '..(over and 'yes' or 'no'))
-        end
+        -- shortcut: both answers each click while unproven; the Button's alone once a game test shows it holds.
+        local function yes(b) return b and 'yes' or 'no' end
+        log('click: Online tab hovered: Button_Action '..yes(over)..', tab button '..yes(widget))
         if not over then return end
         clicked=o.tab~=nil
         enter(now,'a click')
