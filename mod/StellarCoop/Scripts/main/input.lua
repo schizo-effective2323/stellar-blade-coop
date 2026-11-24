@@ -94,6 +94,8 @@ end
 -- wheel (D-pad Left held 0.3 s, the native part's event 13) opens the emote wheel (eve/ui/wheel.lua) with
 -- emote_pad=dpad_left, in a world with our HUD shown and none of our screens open; otherwise it logs why and does
 -- nothing. While the wheel is open it takes LB and RB (its pages), A (play) and B (cancel); every other word is dropped.
+-- While the pause menu's Online page shows (ui/kit/pause_tab.lua), every word but pause_tab goes to it first: up, down,
+-- left, right, select and back act there, the others do nothing.
 M.PAD={'up','down','left','right','select','back','menu','tab_left','tab_right','bike','refresh','pause_tab','wheel'}
 -- bike_key and the pad's bike: EVE on the bike or off it, logged as a command is. A refusal also goes on screen, in
 -- English as the bike gives it, since the press shows nothing else.
@@ -113,6 +115,7 @@ local function open_menu()
 end
 function M.pad_event(what)
     if what=='pause_tab' then return M.pause_tab.event(os.clock()) end
+    if M.pause_tab.page_shown() then return M.pause_tab.nav(what,os.clock()) end
     if M.wheel and M.wheel.is_open() then
         if what=='tab_left' or what=='tab_right' or what=='select' or what=='back' then M.wheel.nav(what) end
         return
@@ -177,10 +180,36 @@ function M.pad_event(what)
         M.spectate.switch(what)
     end
 end
--- The pause menu's Online tab (ui/kit/pause_tab.lua), made after pad_event: it opens the menu. Logging [PT] lines.
--- Its button and its open run on the game thread; RB comes as pad_event's pause_tab, a click through
--- main/keys.lua's LEFT_MOUSE_BUTTON bind.
-M.pause_tab=require('ui.kit.pause_tab').new({log=function(m) print('[StellarCoop][PT] '..tostring(m)..'\n') end,
+-- The pause menu's Online tab (ui/kit/pause_tab.lua), made after pad_event: it enters the Online page. Logging [PT]
+-- lines. Its button, its page and its entry run on the game thread; RB comes as pad_event's pause_tab, a click through
+-- main/keys.lua's LEFT_MOUSE_BUTTON bind, the page's keys through main/keys.lua's binds and pad_event.
+local function pt_log(m) print('[StellarCoop][PT] '..tostring(m)..'\n') end
+-- The Online page (ui/kit/online_page.lua), made behind its own guard: a page that does not load or build is off until
+-- the mod reloads, with one line. The Online tab then opens the co-op menu as before; the kit, the co-op menu and the
+-- keys go on. Its words are the co-op menu's. Its ctx (the fields online_model.lua reads) is read once a show: the
+-- link's state, the chat box, the module pages and the values of coop-settings.txt.
+local page_built,page=pcall(function()
+    local Model=require('ui.kit.model')
+    return require('ui.kit.online_page').new({log=pt_log,words=M.words,
+        guide_words=function()
+            return require('ui.text.guide').pick(M.kit and M.kit.language(),M.settings and M.settings.ui_language)
+        end,
+        ctx=function()
+            local link=M.link
+            local values=Model.read(link and link.settings_text() or '')
+            if not link then return {values=values} end
+            local words,pages=M.words(),{}
+            for _,p in ipairs(M.menu_pages and M.menu_pages() or {}) do if p.title(words) then pages[#pages+1]=p end end
+            return {mode=link.mode(),chat=M.box~=nil and M.box.can()==true,code=link.code(),stranger=link.stranger(),
+                values=values,members=link.members(),pages=pages,words=words}
+        end,
+        theme=require('ui.kit.kit').THEME})
+end)
+if not page_built then
+    pt_log('online page: off until the mod reloads: '..tostring(page))
+    page=nil
+end
+M.pause_tab=require('ui.kit.pause_tab').new({log=pt_log,page=page,
     ready=function() return M.link~=nil and require('core.unreal').controller()~=nil end,
     enabled=function() return M.settings~=nil and M.settings.pause_tab==true end,
     word=function() return M.words().pause_tab.tab end,paused=function() return M.kit~=nil and M.kit.paused(true) end,

@@ -60,7 +60,7 @@ end
 -- The pause menu's Online page (ui/kit/online_page.lua), run by the native part on the game thread (ui/pause_tab.h).
 -- coop_pause_enter runs the shown SB page's deactivate and makes SBO's page the open tab: how many of five arguments it
 -- hands back is its answer. coop_pause_page reads the open menu's tab the same way out of twelve. An older DLL without
--- one: nil and why, and the Online tab opens the co-op menu as before.
+-- one: nil and why. The Online tab then opens the co-op menu as before.
 local ENTER,TAB={'entered','shown','none','locked','off'},{[10]='other',[11]='none',[12]='off'}
 local native_enter,enter_why,native_page,page_why=nil,why,nil,why
 if loaded then

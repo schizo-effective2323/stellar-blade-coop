@@ -1304,7 +1304,7 @@ assert(logged('ghost: K2_DestroyActor: no world') and notice_stops==stops+1 and 
     and last()=='[StellarCoop] OK: asked the native part: off\n',last())
 toggle_raise,active=nil,false
 status_text='mod=v proto=3 steam=ready\nlink=none lobby=0\nlast=#1 ready\n'
--- An older DLL without the Online page's exports: each read gives nil and the loadlib reason, and calls nothing.
+-- An older DLL without the Online page's exports: each read gives nil and the loadlib reason. Nothing is called.
 pe.missing,pp.missing=true,true
 load_main(true)
 do

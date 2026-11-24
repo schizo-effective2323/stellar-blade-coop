@@ -478,6 +478,53 @@ in_world=false
     assert(last()=='[StellarCoop] STOP: '..'coop off is active until the game restarts\n' and not kit_shown.wheel)
 end)()
 
+-- The pause menu's Online page: while it shows (ui/kit/pause_tab.lua's page_shown), the pad's words, the navigation
+-- keys, Enter and Esc go to the tab's nav and to no screen of ours (E and F do nothing); pause_tab still goes to its
+-- event. While it does not show, nothing changes. main/input.lua builds the page behind its own guard: the tab gets it
+-- with the native entry and tab read, its ctx gives online_model.lua's fields; a page that does not build logs one
+-- line, the tab gets none and the keys work on.
+;(function()
+    local function pad(...) for _,e in ipairs({...}) do pd.q[#pd.q+1]=e end; loops[1].f() end
+    settings_text,status_text,link_mode,in_world,photo_mode='',plain,'none',true,false
+    load_main(true)
+    kit_ready=true; quarter()
+    assert(type(pt.o.page)=='table' and pt.o.page.shown()==false and pt.o.enter and pt.o.tab,'The page, built')
+    key('F5'); assert(kit_shown.menu)
+    pt.page=true
+    pad(1,5,6,3,4,2)
+    assert(table.concat(pt.navs,' ')=='up select back left right down' and kit_shown.menu and focus()=='Host a session',
+        table.concat(pt.navs,' '))
+    pad(12); assert(#pt.events==1 and #pt.navs==6,'RB on Settings: the tab\'s event, never nav')
+    pt.navs={}
+    key('ESCAPE'); key('RETURN'); key('DOWN_ARROW'); key('S'); key('SPACE'); key('E'); key('F')
+    assert(table.concat(pt.navs,' ')=='back select down down select' and kit_shown.menu
+        and focus()=='Host a session',table.concat(pt.navs,' '))
+    pt.page,pt.navs=false,{}
+    key('DOWN_ARROW'); assert(focus()=='Find a session' and #pt.navs==0,'Not shown: the menu has its keys')
+    key('ESCAPE'); assert(not kit_shown.menu and #pt.navs==0)
+    -- Its ctx: the link's state, the module pages, the settings' values, read at each call.
+    local captured
+    local real=package.loaded['ui.kit.online_page']
+    package.loaded['ui.kit.online_page']={new=function(o) captured=o; return real.new(o) end}
+    link_mode,link_code,link_stranger='host','0CS-CBMH',{id='9',name='S'}
+    settings_text='who_can_join=friends\n'
+    load_main(true)
+    local ctx=captured.ctx()
+    assert(ctx.mode=='host' and ctx.code=='0CS-CBMH' and ctx.stranger.name=='S' and ctx.values.who_can_join=='friends'
+        and type(ctx.pages)=='table' and type(ctx.members)=='table' and ctx.words==captured.words(),'The page\'s ctx')
+    assert(captured.theme==require('ui.kit.kit').THEME and captured.guide_words().row=='Guide')
+    -- A page that does not build: one line, no page for the tab, the keys work on.
+    package.loaded['ui.kit.online_page']={new=function() error('no page today') end}
+    link_mode,link_code,link_stranger,settings_text='none',nil,nil,''
+    load_main(true)
+    package.loaded['ui.kit.online_page']=real
+    assert(table.concat(printed,'|'):find('[StellarCoop][PT] online page: off until the mod reloads: ',1,true)
+        and table.concat(printed,'|'):find('no page today',1,true) and pt.o.page==nil and pt.o.enter)
+    kit_ready=true; quarter()
+    key('F5'); assert(kit_shown.menu,'The co-op menu opens without the page')
+    key('ESCAPE'); in_world,kit_ready=false,false
+end)()
+
 -- The controllers the mod reads, said the same way in INSTALL.md and docs/players/interface.md (any controller the game
 -- reads, XInput only as the fallback); no comment still says only an XInput pad can answer the saves' question or the
 -- guide.

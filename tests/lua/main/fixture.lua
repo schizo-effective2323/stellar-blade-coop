@@ -364,17 +364,19 @@ package.loaded['online.group.region_tabs']={new=function(o)
 end}
 -- The pause menu's Online tab: what pause_tab.new got, its ticks, the clocks of its events and clicks, its stops,
 -- armed() (pt.armed) and the ask its slow writes when the setting changes, as ui/kit/pause_tab.lua's does (pt.asked:
--- the last one written; tests/lua/ui/kit/pause_tab_test.lua tests the module itself).
-pt={o=nil,ticks=0,events={},clicks={},stops=0,armed=false,asked=nil}
+-- the last one written; tests/lua/ui/kit/pause_tab_test.lua tests the module itself); page_shown() (pt.page) and the
+-- words its nav got (pt.navs).
+pt={o=nil,ticks=0,events={},clicks={},stops=0,armed=false,asked=nil,page=false,navs={}}
 package.loaded['ui.kit.pause_tab']={new=function(o)
-    pt.o,pt.ticks,pt.events,pt.clicks,pt.stops,pt.armed,pt.asked=o,0,{},{},0,false,nil
+    pt.o,pt.ticks,pt.events,pt.clicks,pt.stops,pt.armed,pt.asked,pt.page,pt.navs=o,0,{},{},0,false,nil,false,{}
     return {tick=function() pt.ticks=pt.ticks+1 end,
         slow=function()
             if pt.stops>0 or o.enabled()==pt.asked then return end
             if o.ask(o.enabled() and 'pausetab on' or 'pausetab off') then pt.asked=o.enabled() end
         end,
         event=function(now) pt.events[#pt.events+1]=now end,click=function(now) pt.clicks[#pt.clicks+1]=now end,
-        armed=function() return pt.armed end,stop=function() pt.stops=pt.stops+1 end}
+        armed=function() return pt.armed end,stop=function() pt.stops=pt.stops+1 end,
+        page_shown=function() return pt.page end,nav=function(word) pt.navs[#pt.navs+1]=word end}
 end}
 package.loaded['online.modes.nightop.probe']={new=function(log,ask,status)
     probe={log=log,ask=ask,status=status}

@@ -36,18 +36,20 @@ if M.settings then
                 or M.saves_ui.is_open() or M.open_screen()~=nil
         end})
     require('main.loader').build(M,'online.session','sessions',Ui)
+    -- The modules' TEST TOOLS pages, read at each draw: an off module's stub gives no title, so no row. The co-op menu
+    -- and the pause menu's Online page (main/input.lua) list the same.
+    function M.menu_pages()
+        local list={}
+        for _,name in ipairs({'eve_page','devmenu_page','viewer_page'}) do
+            if type(M[name])=='table' then list[#list+1]=M[name] end
+        end
+        return list
+    end
     -- While the online sessions are off, Find a session's open refuses: the menu logs why.
     M.menu=require('ui.kit.menu').new({kit=M.kit,link=M.link,settings=M.settings,look=M.look,
         puppet=require('main.loader').view(M,'puppet'),run=M.run,log=log,version=M.VERSION,
         chat=require('main.loader').view(M,'box'),code=require('main.loader').view(M,'code_box'),guide=M.guide,
-        -- The modules' TEST TOOLS pages, read at each draw: an off module's stub gives no title, so no row.
-        pages=function()
-            local list={}
-            for _,name in ipairs({'eve_page','devmenu_page','viewer_page'}) do
-                if type(M[name])=='table' then list[#list+1]=M[name] end
-            end
-            return list
-        end,
+        pages=M.menu_pages,
         sessions=setmetatable({open=function(...)
             if M.off_modules['online.session'] then return false,'online sessions are off until the mod reloads' end
             return M.sessions.open(...)
