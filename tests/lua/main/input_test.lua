@@ -514,6 +514,10 @@ end)()
     assert(ctx.mode=='host' and ctx.code=='0CS-CBMH' and ctx.stranger.name=='S' and ctx.values.who_can_join=='friends'
         and ctx.pages==nil and type(ctx.members)=='table' and ctx.words==captured.words(),'The page\'s ctx')
     assert(captured.theme==require('ui.kit.kit').THEME and captured.guide_words().row=='Guide')
+    -- Find a session: the Sessions screen itself (online/session/wiring.lua's), read at each call.
+    local n=#ss.calls
+    assert(captured.sessions().enter()==true and ss.calls[n+1]=='enter' and captured.sessions().texts().tab=='Public',
+        'The page\'s Sessions screen')
     wh.mouse={700,450}
     local x,y=captured.pointer()
     assert(x==700 and y==450,'The page\'s mouse: the kit\'s pointer')

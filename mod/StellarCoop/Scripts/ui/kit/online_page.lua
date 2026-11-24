@@ -24,9 +24,9 @@
 -- is checked against the other keys by the co-op menu's own bind, Enter puts back its default, Esc or B stops the wait,
 -- the mouse and the other words do nothing meanwhile. Host a session asks first (a second Select within 3 s, as Leave),
 -- then hosts in place with the Create a session screen's request; Invite and Write a bug report run in place too.
--- Guide opens a sub-page: its rows show in place of the category's (the left list stays), back returns to its row, a
--- click on a list item shows that category. On a row that still needs the game world (Find a session, Join with a
--- code, Chat) it answers 'away':
+-- Guide and Find a session open a sub-page: its rows show in place of the category's (the left list stays), back
+-- returns to its row, a click on a list item shows that category. On a row that still needs the game world (Join with
+-- a code, Chat) it answers 'away':
 -- ui/kit/pause_tab.lua closes the pause menu, then runs the row as the co-op menu does. The Test tools and the
 -- developer pages stay in the co-op menu (F5), the menu for admins and debugging: the page has no row that opens it.
 -- Every engine call runs in pcall on the game thread. An engine error that is not a part's own turns the page off until
@@ -65,9 +65,9 @@ Page.KINDS={'tab','header','option','rolling','slider','detail'}
 -- init 0x141d90210), for the log line that says what SB's deactivate left shown.
 Page.SB_PAGES={'WB_Equip_Set','WB_QuestJournal','WB_Map_Set','WB_Bag_Set','WB_NewSkill_Master','WB_Album_Set',
     'WB_Manual_Set','WB_GameMenu_Setting'}
--- The rows that still close the pause menu first: Chat needs the game's text box; S2 and S3 of stage 3 take Find a
--- session and Join with a code out.
-local AWAY={chat=true,find=true,join_code=true}
+-- The rows that still close the pause menu first: Chat needs the game's text box; S3 of stage 3 takes Join with a
+-- code out.
+local AWAY={chat=true,join_code=true}
 local COLLAPSED,HIT_TEST_INVISIBLE,SELF_HIT_TEST_INVISIBLE=1,3,4 -- ESlateVisibility.
 local SHOWN={[0]='Visible','Collapsed','Hidden','HitTestInvisible','SelfHitTestInvisible'}
 local WIDGETS='/Script/UMG.Default__WidgetBlueprintLibrary'
@@ -291,7 +291,8 @@ local FILL={
 -- THEME, pointer=function() the mouse in the viewport's layout units (ui/kit/kit.lua's pointer): x, y, or nil,
 -- act=function(action, key, text, ctx) the co-op menu's run of what its model answered (ui/kit/menu.lua's act): ok,
 -- note, bind=function(key, name) the co-op menu's take of a key pressed for a key row (ui/kit/menu.lua's bind):
--- taken, written, note}.
+-- taken, written, note, sessions=function() the Sessions screen (online/session/ui/sessions.lua: its enter, texts and
+-- ask) or nil while the online sessions are off}.
 function Page.new(o)
     local log,theme=o.log,o.theme
     local wanted={}
@@ -455,6 +456,42 @@ function Page.new(o)
         for i,p in ipairs(gw.pages) do rows[i]=sub_row(sub,'p'..i,{kind='option',text=p.title,shown='',desc=p.body}) end
         return {{id='guide',label=Page.label(w,gw,opener,ctx),rows=rows}}
     end,press=function() return nil end}
+    -- Find a session through the Sessions screen's own tab, searches and joins (o.sessions): Search (left or right:
+    -- the other tab and its search), Refresh (the screen's word: SB's Cancel while our search runs), then a header
+    -- naming the tab (or the status while no row shows) over one row a session with its value, its details in the pane.
+    -- The status and our version in the pane on Search and Refresh. A join asked answers 'close': the pause menu closes
+    -- and the join goes on over the game, as the screen closes after its join. The rows follow the list each REFRESH s.
+    local function sessions() return o.sessions and o.sessions() end
+    subs.find={open=function()
+        local s=sessions()
+        return s~=nil and s.enter()==true
+    end,sections=function(sub,w,gw,opener)
+        local s=sessions()
+        if not s then return nil end
+        local t=s.texts()
+        local about=(t.status~='' and t.status..'\n' or '')..t.footer
+        local rows={}
+        for i,r in ipairs(t.rows) do
+            rows[i]=sub_row(sub,'lobby '..r.lobby,{kind='option',text=r.name,shown=r.value,desc=r.details,i=i})
+        end
+        return {{id='find',label=Page.label(w,gw,opener,ctx),rows={
+                sub_row(sub,'tab',{kind='rolling',text=w.lobby.row.search,shown=t.tab,desc=about}),
+                sub_row(sub,'refresh',{kind='option',text=t.refresh,desc=about})}},
+            {id='list',label=(#rows>0 or t.status=='') and t.tab or t.status,rows=rows}}
+    end,press=function(_,row)
+        local s=sessions()
+        if not s then refuse(); return nil end
+        if row.id=='tab' then
+            s.ask('tab')
+            sound('change')
+        elseif row.id=='refresh' then
+            if s.ask('refresh') then sound('confirm') else refuse() end -- The pane keeps the status: the seconds left.
+        elseif s.ask('join',row.i) then
+            sound('confirm')
+            return 'close'
+        else refuse() end
+        return nil
+    end}
     -- online_model's categories for the ctx now, the sub-page in its opener's category (the cursor's). No sub-page any
     -- more when no category lists its opener (an online session began) or it cannot show: keep then puts the cursor on
     -- the category's first row.

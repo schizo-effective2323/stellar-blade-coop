@@ -332,6 +332,50 @@ for _,p in ipairs(parts) do
 end
 for _,l in ipairs(logs) do assert(not l:find('refused') and not l:find('left out'),l) end
 
+-- The pause menu's Online page: enter asks for the tab's search with one line, no input taken and nothing shown;
+-- texts gives the tab, Refresh's word, the status, the footer and the rows with their details in the player's words;
+-- ask changes the tab with its search, refreshes as Refresh does (nothing inside the 5 s gap) and joins a row of the
+-- last texts with its line.
+do
+    local acts6,logs6={},{}
+    local view6={rows={},role='none',proto='23',build='26123051'}
+    local p=Sessions.new({kit=kit,words=function() return T.en end,view=function() return view6 end,
+        act=function(a) acts6[#acts6+1]=a.request end,log=function(l) logs6[#logs6+1]=l end,
+        game_text=function(key) return SB[key] end})
+    inputs,shown.sessions=({}),nil
+    local made,heard=#parts,#sounds
+    clock=clock+10
+    assert(p.enter()==true and acts6[1]=='list public' and logs6[1]=='sessions: on the Online page, public',logs6[1])
+    assert(#inputs==0 and shown.sessions==nil and not p.is_open() and #parts==made,'No input, nothing shown')
+    local t=p.texts()
+    assert(t.tab=='Public' and t.refresh=='Refresh' and t.status=='You can search again in 5 s.' and #t.rows==0,
+        t.status)
+    assert(t.footer=='Your version: protocol 23, game build 26123051. Sessions of other versions are not listed.')
+    view6.search={tab='public',state='searching'}
+    t=p.texts(); assert(t.status=='Searching for team members' and t.refresh=='Cancel search')
+    view6.search,view6.rows={tab='public',state='done',rows=2},{ROWS[1],ROWS[2]}
+    t=p.texts()
+    assert(t.status=='' and #t.rows==2 and t.rows[1].lobby==ROWS[1].lobby and t.rows[1].name=='Host1'
+        and t.rows[1].value=='Xion · 1/2 · 41 ms' and t.rows[2].value=='f01 · 1/2 · 42 ms')
+    assert(t.rows[1].details=='Xion\nCamp of the Xion gate\n1/2 · 41 ms\nShared enemies (experimental) · Shared bosses '
+        ..'(experimental) · Shared world (experimental) · Shared quests (experimental) · You can revive the host · '
+        ..'Boss HP (host\'s) 200 %\nProtocol 23, game build 26123051',t.rows[1].details)
+    assert(t.rows[2].details=='f01\n1/2 · 42 ms\nSteam friend\nProtocol 23, game build 26123051',t.rows[2].details)
+    -- The other tab past the 5 s: its search. Refresh inside the gap: false, nothing asked; past it, the search.
+    clock=clock+6
+    assert(p.ask('tab')==true and acts6[2]=='list friends' and p.texts().tab=='Comrades' and #p.texts().rows==0)
+    clock=clock+1
+    assert(p.ask('refresh')==false and #acts6==2,'Inside the 5 s: nothing asked')
+    clock=clock+5
+    assert(p.ask('refresh')==true and acts6[3]=='list friends')
+    view6.search,view6.rows={tab='friends',state='done',rows=1},{ROWS[2]}
+    t=p.texts()
+    assert(#t.rows==1 and p.ask('join',2)==false and #acts6==3,'No such row: nothing asked')
+    assert(p.ask('join',1)==true and acts6[4]=='join '..ROWS[2].lobby
+        and logs6[#logs6]=='sessions: ask to join lobby '..ROWS[2].lobby,logs6[#logs6])
+    assert(#inputs==0 and #parts==made and #sounds==heard,'Still no input taken, no part made, no sound')
+end
+
 -- A refused call logs once a kind; a class left out logs once and its kit fallback draws: rows on the kit rows, the
 -- headers and hints as kit texts with the keys' names, the tab keys' names.
 local logs2={}

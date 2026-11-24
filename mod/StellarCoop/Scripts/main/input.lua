@@ -191,7 +191,8 @@ local function pt_log(m) print('[StellarCoop][PT] '..tostring(m)..'\n') end
 -- link's state, the chat box and the values of coop-settings.txt. Its mouse is the kit's pointer.
 -- Its rows change a value, take a key, host, invite and write the bug report through the co-op menu's own act and bind
 -- (ui/kit/menu.lua); a row that still needs the game world runs through the co-op menu's away once the pause tab closed
--- the pause menu.
+-- the pause menu. Find a session shows in its rows through the Sessions screen's own tab, searches and joins
+-- (online/session/ui/sessions.lua; nil while the online sessions are off).
 local page_built,page=pcall(function()
     local Model=require('ui.kit.model')
     return require('ui.kit.online_page').new({log=pt_log,words=M.words,
@@ -207,7 +208,8 @@ local page_built,page=pcall(function()
                 values=values,members=link.members(),words=M.words()}
         end,
         theme=require('ui.kit.kit').THEME,pointer=function() if M.kit then return M.kit.pointer() end end,
-        act=function(...) return M.menu.act(...) end,bind=function(...) return M.menu.bind(...) end})
+        act=function(...) return M.menu.act(...) end,bind=function(...) return M.menu.bind(...) end,
+        sessions=require('main.loader').get(M,'online.session','sessions')})
 end)
 if not page_built then
     pt_log('online page: off until the mod reloads: '..tostring(page))

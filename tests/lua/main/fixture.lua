@@ -823,7 +823,11 @@ package.loaded['online.session.ui.sessions']={new=function(o)
         close=function() said('close'); ss.open=false end,
         nav=function(what) said('nav',what) end,
         slow=function(shown) ss.slows[#ss.slows+1]=shown end,
-        tick=function() end}
+        tick=function() end,
+        -- The pause menu's Online page's three: ss.texts (or an empty Public list) and ss.ask_ok their answers.
+        enter=function() said('enter'); return true end,
+        texts=function() return ss.texts or {tab='Public',refresh='Refresh',status='',footer='',rows={}} end,
+        ask=function(what,i) said('ask',what,i); return ss.ask_ok~=false end}
 end}
 -- The Create a session screen (online/session/ui/create.lua; online/session/ui/create_test tests it), the same way:
 -- cr.o, cr.calls, cr.slows, cr.open and cr.refuse. As the real one, it opens only once its last slow said a world shows
@@ -1106,7 +1110,7 @@ function load_main(with_native,no_folder,source)
     gm.o,gm.ticks,gm.controllers,gm.toggles,gm.restores,gm.stops,gm.out,gm.hud=nil,0,{},0,0,{},nil,nil
     sb.seat,sb.seat_error,sb.sitting,sb.sat,sb.stands,sb.busy=nil,nil,nil,nil,0,false
     lb.o,lb.calls,lb.screen,lb.ask,lb.refuse,lb.slows,lb.ticks=nil,{},nil,nil,nil,0,{}
-    ss.o,ss.calls,ss.open,ss.refuse,ss.slows=nil,{},false,nil,{}
+    ss.o,ss.calls,ss.open,ss.refuse,ss.slows,ss.texts,ss.ask_ok=nil,{},false,nil,{},nil,nil
     cr.o,cr.calls,cr.open,cr.refuse,cr.slows=nil,{},false,nil,{}
     link_match,link_round,link_me,link_owner,link_uidev=nil,nil,nil,nil,nil
     rx.o,rx.ticks,rx.stops,rx.booked,rx.raise,rx.tick_raise,rx.stopped=nil,0,0,nil,nil,nil,nil

@@ -17,8 +17,8 @@
 -- SelfHitTestInvisible with the focused item's PlayFocusAnim and the category's word in the pane, no description, the
 -- pane's Thumbnail collapsed (one line when the pane has none); right gives Select, StateFocus on Host a session
 -- and its words in the pane; a click (the kit's pointer) selects the row under the mouse, on Find a session it
--- answers 'away', on Host a session it asks first, on a header or with no pointer it does nothing, on a list item it
--- shows that category; the mouse
+-- opens its sub-page, on Host a session it asks first, on a header or with no pointer it does nothing, on a list item
+-- it shows that category; the mouse
 -- look (tick, every HOVER s) only notes what is under the mouse at its first look, then the item the mouse moved onto
 -- takes the cursor, while a resting mouse never does, even after the keys moved the cursor; a refused look is logged
 -- once; a canvas that cannot be made turns the page off with one line; visibility() names SB's eight pages with their
@@ -34,7 +34,10 @@
 -- nothing meanwhile), an act that raises turning the page off. The state read again every Page.REFRESH s while the
 -- page shows (an online session that begins or ends, the cursor kept or put on its category's first row). A sub-page's
 -- rows (their kind, words, value and press); the Guide sub-page in Help's rows (a header, one row a guide page, its
--- body in the pane, the list kept, back to Guide, a click opening it, a click on a list item leaving it).
+-- body in the pane, the list kept, back to Guide, a click opening it, a click on a list item leaving it). Find a
+-- session in Session's rows through a fake of the Sessions screen's enter, texts and ask (Search, Refresh, the
+-- sessions with their details, a join answering 'close', the refusals, the list read again, the sub-page gone when an
+-- online session begins or the sessions go off, Select refused with one line while they are off).
 package.path='mod/StellarCoop/Scripts/?.lua;'..package.path
 local U=require('core.unreal')
 local T=require('ui.text')
@@ -306,10 +309,20 @@ local binds,bound={},{true,true,nil}
 -- A confirm's first step: the co-op menu's act answers with its question (ui/kit/menu.lua's here).
 local ASKS={confirm_leave=w.confirm_leave,confirm_remove=w.confirm_remove:format('S'),
     confirm_reset_keys=w.confirm_reset_keys,confirm_host=w.confirm_host}
+-- The Sessions screen's three for the page (online/session/ui/sessions.lua's enter, texts and ask): each call in
+-- fs.calls ('enter', 'ask <what> <i>'), fs.texts what texts gives, fs.ok what ask answers; fs.gone: the online
+-- sessions off (the page's sessions() gives nil).
+local fs={}
+local function sessions()
+    if fs.gone then return nil end
+    return {enter=function() fs.calls[#fs.calls+1]='enter'; return true end,texts=function() return fs.texts end,
+        ask=function(what,i) fs.calls[#fs.calls+1]='ask '..what..(i and ' '..i or ''); return fs.ok end}
+end
 local function new()
     events,logs,made,constructed,raising,no_canvas,mouse,sounds={},{},{},{},{},false,nil,{}
     acts,act_ok,act_note,act_raise={},true,nil,nil
     binds,bound={},{true,true,nil}
+    fs.calls,fs.ok,fs.gone,fs.texts={},true,false,{tab='Public',refresh='Refresh',status='',footer='',rows={}}
     return Page.new({log=function(line) logs[#logs+1]=line end,words=function() return w end,
         guide_words=function() return gw end,ctx=function() return ctx end,theme=THEME,
         pointer=function() if mouse then return mouse[1],mouse[2] end end,
@@ -325,7 +338,7 @@ local function new()
             binds[#binds+1]=k..' '..name
             if bound[1] and bound[2] then ctx.values[k]=name end
             return bound[1],bound[2],bound[3]
-        end})
+        end,sessions=sessions})
 end
 local function first_made(kind) for _,m in ipairs(made) do if m.kind==kind then return m.o end end end
 local function made_n(kind)
@@ -417,12 +430,15 @@ assert(called(tab,'PlayFocusAnim')==2,'Back in the list: focused again')
 local parts=#made
 page.nav('right'); page.nav('down'); page.nav('up')
 assert(#made==parts,'Moving in the rows makes no part again')
--- A click: the row under the kit's pointer selected. On Find a session, a row that still needs the game world: 'away'
--- and its id, run after SB's close.
+-- A click: the row under the kit's pointer selected. On Find a session, its sub-page in the rows (the Sessions
+-- screen's search asked, SB's focus sound, the cursor on Search); back: on Find a session again.
 mouse={row_at(3)}
-assert(table.concat({page.click(1)},' ')=='away find' and #acts==1 and sounds[#sounds]=='confirm')
+assert(page.click(1)==nil and #acts==1 and fs.calls[1]=='enter' and sounds[#sounds]=='tab'
+    and detail.props.Text_ItemName.props.text=='Search',detail.props.Text_ItemName.props.text)
+assert(page.nav('back')==nil and sounds[#sounds]=='tab')
 local find=part('Find a session')
-assert(find.calls[#find.calls][2]=='StateFocus' and host.calls[#host.calls][2]=='StateNormal')
+host=part('Host a session')
+assert(find.calls[#find.calls][2]=='StateFocus' and called(host,'EventNotification')==0)
 assert(detail.props.Text_ItemName.props.text=='Find a session')
 mouse={row_at(2)} -- Slot 2: Host a session, which asks first: its question in the pane, nothing hosted yet.
 assert(table.concat({page.click(2)},' ')=='' and #acts==2 and acts[2]=='confirm_host nil nil'
@@ -496,6 +512,25 @@ page.forget()
 local m2,root2=master()
 assert(page.build(m2) and #root2.props.children==1)
 
+local function rows_shown() -- The headers' and rows' words shown, top down.
+    local shown={}
+    for _,x in ipairs(made) do
+        local p=x.o.props
+        if (x.kind=='header' or x.kind=='option' or x.kind=='rolling') and called(x.o,'RemoveFromParent')==0 then
+            shown[#shown+1]={y=select(2,placed(x.o)),word=x.kind=='header' and 'H:'..p.Category_Name
+                or p.Text_TitleValue..'='..tostring(p.Text_ItemValue)}
+        end
+    end
+    table.sort(shown,function(a,b) return a.y<b.y end)
+    local out={}
+    for i,s in ipairs(shown) do out[i]=s.word end
+    return table.concat(out,'|')
+end
+local function tabs_shown()
+    local k=0
+    for _,x in ipairs(made) do if x.kind=='tab' and called(x.o,'RemoveFromParent')==0 then k=k+1 end end
+    return k
+end
 -- The rows act as SB's Settings rows: each press through the co-op menu's model for that row, then its act (the fake
 -- above). Solo, Session.
 do
@@ -577,29 +612,10 @@ do
     assert(table.concat(acts,'|',#acts-1)=='confirm_host nil nil|confirm_host nil nil' and desc()==w.confirm_host,
         'Past 3 s: asked again')
     n=#acts
-    away('Find a session','find'); away('Join with a code','join_code')
+    away('Join with a code','join_code')
     page.nav('back',15); to('Help'); page.nav('right',15)
     -- Guide opens in the rows: a header Guide, then a row a guide page with its title, SB's value word off; the list
     -- stays with Help in SB's select look; the pane the page's title and its body. Nothing is run or asked.
-    local function rows_shown() -- The headers' and rows' words shown, top down.
-        local shown={}
-        for _,x in ipairs(made) do
-            local p=x.o.props
-            if (x.kind=='header' or x.kind=='option') and called(x.o,'RemoveFromParent')==0 then
-                shown[#shown+1]={y=select(2,placed(x.o)),word=x.kind=='header' and 'H:'..p.Category_Name
-                    or p.Text_TitleValue..'='..tostring(p.Text_ItemValue)}
-            end
-        end
-        table.sort(shown,function(a,b) return a.y<b.y end)
-        local out={}
-        for i,s in ipairs(shown) do out[i]=s.word end
-        return table.concat(out,'|')
-    end
-    local function tabs_shown()
-        local k=0
-        for _,x in ipairs(made) do if x.kind=='tab' and called(x.o,'RemoveFromParent')==0 then k=k+1 end end
-        return k
-    end
     to('Guide')
     assert(page.nav('select',15)==nil and #acts==n and heard()=='tab','Guide: a sub-page, nothing run')
     local want={'H:Guide'}
@@ -789,6 +805,87 @@ do
     page.tick(120)
     assert(page.off() and not page.shown() and lines_with('online page: off until the mod reloads: ')==1,
         table.concat(logs,'|'))
+    ctx=SOLO
+end
+
+-- Find a session in the rows through the Sessions screen's own functions (fs): Search with the tab, Refresh, a header
+-- naming the tab over the sessions with their values; the pane on Search the status and our version, on a session its
+-- name and details. Right on Search: the other tab. Refresh asked, then refused inside the gap with the status in the
+-- pane. Select on a session: its join, 'close'. Read again each REFRESH s: a status in the header, the cursor on
+-- Search when its row went; an online session begun or the sessions off: no sub-page, the cursor on Session's first
+-- row. Back: on Find a session. The sessions off: Select refused with one line, no sub-page.
+do
+    ctx={mode='none',values=Model.read(''),pages={PAGE}}
+    page=new()
+    page.build(master())
+    page.show(true)
+    local d=first_made('detail')
+    local function pane() return d.props.Text_ItemName.props.text end
+    local function desc() return d.props.Text_Desc.props.text end
+    local function heard() return sounds[#sounds] end
+    local function to(label)
+        for _=1,40 do if pane()==label then return end page.nav('down',11) end
+        error('no row '..label)
+    end
+    fs.texts={tab='Public',refresh='Refresh',status='',footer='Our version',rows={
+        {lobby='11',name='Host1',value='Xion · 1/2 · 41 ms',details='Xion\n1/2 · 41 ms'},
+        {lobby='12',name='Host2',value='f01 · 1/2 · 42 ms',details='f01\nSteam friend'}}}
+    page.nav('right',0); page.nav('down',0)
+    assert(pane()=='Find a session')
+    assert(page.nav('select',1)==nil and table.concat(fs.calls,'|')=='enter' and #acts==0 and heard()=='tab')
+    assert(rows_shown()=='H:Find a session|Search=Public|Refresh=nil|H:Public|Host1=Xion · 1/2 · 41 ms'
+        ..'|Host2=f01 · 1/2 · 42 ms',rows_shown())
+    assert(pane()=='Search' and desc()=='Our version' and tabs_shown()==10,pane()..' / '..desc())
+    page.nav('down',1); page.nav('down',1)
+    assert(pane()=='Host1' and desc()=='Xion\n1/2 · 41 ms','A session: its details in the pane')
+    -- Right on Search: the other tab (the screen's), SB's change cue.
+    page.nav('up',2); page.nav('up',2)
+    assert(pane()=='Search' and page.nav('right',2)==nil and fs.calls[2]=='ask tab' and heard()=='change')
+    assert(page.nav('left',2)==nil and fs.calls[3]=='ask tab','Left too: two tabs')
+    -- Refresh: asked with SB's confirm cue; refused inside the gap, the status in the pane.
+    page.nav('down',3)
+    assert(pane()=='Refresh' and page.nav('select',3)==nil and fs.calls[4]=='ask refresh' and heard()=='confirm')
+    assert(page.nav('left',3)==nil and #fs.calls==4,'Left on Refresh: nothing')
+    fs.ok,fs.texts.status=false,'You can search again in 4 s.'
+    assert(page.nav('select',3)==nil and fs.calls[5]=='ask refresh' and heard()=='refuse'
+        and desc()=='You can search again in 4 s.\nOur version' and pane()=='Refresh',desc())
+    -- Select on the second session: its join through the screen, 'close' (the join goes on over the game).
+    fs.ok=true
+    page.nav('down',4); page.nav('down',4)
+    assert(pane()=='Host2' and page.nav('select',4)=='close' and fs.calls[6]=='ask join 2' and heard()=='confirm'
+        and #acts==0,tostring(fs.calls[6]))
+    fs.ok=false
+    page.nav('up',4)
+    assert(page.nav('select',4)==nil and fs.calls[7]=='ask join 1' and heard()=='refuse','A join refused')
+    fs.ok=true
+    -- The list read again: no row left, the status in the header, the cursor on Search; no sound, no ask.
+    local s,c=#sounds,#fs.calls
+    fs.texts.rows,fs.texts.status={},'No open session.'
+    page.tick(10)
+    assert(rows_shown()=='H:Find a session|Search=Public|Refresh=nil|H:No open session.' and pane()=='Search'
+        and #sounds==s and #fs.calls==c,rows_shown()..' / '..pane())
+    -- An online session begun: Find a session shows no more, the cursor on Session's first row.
+    ctx.mode='guest'
+    page.tick(10.5)
+    assert(pane()=='Leave the session' and not rows_shown():find('Search',1,true),rows_shown())
+    ctx.mode='none'
+    page.tick(11)
+    to('Find a session'); page.nav('select',11); assert(pane()=='Search' and fs.calls[#fs.calls]=='enter')
+    -- The sessions off while it shows: no sub-page at the next read.
+    fs.gone=true
+    page.tick(12)
+    assert(pane()=='Host a session' and not rows_shown():find('Search',1,true),pane())
+    fs.gone=false
+    -- Back: on Find a session with SB's focus sound.
+    to('Find a session'); page.nav('select',13); assert(pane()=='Search')
+    assert(page.nav('back',13)==nil and pane()=='Find a session' and heard()=='tab'
+        and rows_shown():find('^H:Play online|Host a session=nil|Find a session=nil'),rows_shown())
+    -- The sessions off: Select refused with one line, no sub-page, nothing asked.
+    fs.gone=true
+    c=#fs.calls
+    assert(page.nav('select',14)==nil and heard()=='refuse' and pane()=='Find a session' and #fs.calls==c
+        and lines_with('online page: find not shown: the online session module is off')==1,table.concat(logs,'|'))
+    assert(not page.off() and page.shown())
     ctx=SOLO
 end
 
