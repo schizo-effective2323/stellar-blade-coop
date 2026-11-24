@@ -3,8 +3,8 @@
 -- SBO License 1.0 or later, in LICENSE and at github.com/MotherSphere/stellar-blade-coop; NOTICE adds a permission.
 -- The Online page's arrangement (the pause menu's Online tab in the layout of SB's Settings page: a left list of
 -- categories, section headers, rows), no engine call. It places ui/kit/model.lua's own rows: their ids, values,
--- defaults and show functions stay there. Ids only: ui_text gives the words. Nothing requires it yet: the co-op menu
--- still draws model.lua's pages (tests/lua/ui/kit/online_model_test.lua checks it).
+-- defaults and show functions stay there. Ids only: ui_text gives the words. ui/kit/online_page.lua draws it in the
+-- pause menu; the co-op menu still draws model.lua's pages (tests/lua/ui/kit/online_model_test.lua checks it).
 local Model=require('ui.kit.model')
 local M={}
 -- The state a category names in states: 'session' while we host or join an online session, else 'solo' (no session,

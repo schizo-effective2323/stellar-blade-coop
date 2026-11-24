@@ -4,7 +4,8 @@
 -- The Online page's arrangement (ui/kit/online_model.lua): its categories in the solo state and in an online session,
 -- each with its sections and the rows visible now. Open the co-op menu comes first in Session in both states, alone in
 -- its section. Every row of today's main page and Options is placed once or left out with a reason. Hidden rows, empty
--- sections and empty categories drop. The order stays the same from call to call. No file of the mod requires it yet.
+-- sections and empty categories drop. The order stays the same from call to call. Only ui/kit/online_page.lua
+-- requires it.
 package.path='mod/StellarCoop/Scripts/?.lua;'..package.path
 local O=require('ui.kit.online_model')
 local Model=require('ui.kit.model')
@@ -192,10 +193,10 @@ for id in ids(page.categories(SOLO)):gmatch('%S+') do
     assert(session_ids[at]==id,'Solo\'s '..id..' out of the session\'s order')
 end
 
--- Nothing in the mod requires it yet: the running mod is unchanged.
+-- Only the pause menu's Online page (ui/kit/online_page.lua) requires it: the co-op menu still draws model.lua's pages.
 local scripts=0
 for path in io.popen("find mod/StellarCoop/Scripts -name '*.lua'"):lines() do
-    if not path:find('ui/kit/online_model.lua',1,true) then
+    if not path:find('ui/kit/online_model.lua',1,true) and not path:find('ui/kit/online_page.lua',1,true) then
         local file=assert(io.open(path))
         local text=file:read('a')
         file:close()
