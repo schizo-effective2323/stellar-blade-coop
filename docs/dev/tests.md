@@ -46,7 +46,8 @@ The Lua tests (`vehicles/bike/`: `drive`, `drive_model`, `fetch`, `model`, `off`
 `online/saves/`: `off`, `saves`; `online/session/`: `booth`, `chat`, `commands`, `join`, `off`,
 `wiring_cycle`, `wiring_dlc`; `online/session/ui/`: `create`, `create_model`, `sessions`, `sessions_model`;
 `world/daynight/`: `daynight`, `off`, `rule`, `wiring`; `story/together/`: `off`, `snapshot`, `wiring`, `wiring_dump`;
-`ui/`: `text`; `ui/kit/`: `guide`, `hud_parts`, `kit`, `model`, `notice`, `pause_tab`; `ui/text/`: `culture`;
+`ui/`: `text`; `ui/kit/`: `guide`, `hud_parts`, `kit`, `model`, `notice`, `online_model`, `pause_tab`;
+`ui/text/`: `culture`;
 `world/objects/`: `off`, `wiring`;
 `fight/gunmode/`: `aim`, `aimrot`, `cost`, `dpad`, `engine`, `g1_gates`, `grip_ease`, `helpers`, `ik_pin`,
 `input_memo`, `laser`, `morph`, `nikke`, `off`, `online`, `release`, `rifle_frame`, `state`, `stock`, `stop`, `texts`,
@@ -572,6 +573,11 @@ fails the test. The `main/` tests load `main/fixture.lua` first, with UE4SS stub
   making nothing and asking `pausetab off`, a refused ask asked again and logged once, a pause menu of another shape
   stopping the tab with one STOP line and `pausetab off`, then `coop off` stopping it; with the keep, the hook waiting
   until it settled, then installed from its class with no lookup and no `LoadAsset`;
+- `ui/kit/online_model_test` covers the Online page's arrangement (`ui/kit/online_model.lua`, which nothing requires
+  yet): the categories in the solo state and in an online session with each section's rows, every row of today's main
+  page and Options placed once or left out with a reason (Options and Close), rows hidden by their own show function,
+  empty sections and categories dropped, the same order and the same row tables from call to call (the mute rows in
+  the members' order) and no file of the mod that requires it;
 - `world/daynight/rule_test` covers `world/daynight/rule.lua`: every row of the map table (keys in lower case, each open
   row complete for its kind of sky, the fixed maps, an unknown map), the rules in their order (SB's screens and
   cutscenes ignored, Xion's story night before photo mode, photo mode's hold whatever the hour, a test pin before Night

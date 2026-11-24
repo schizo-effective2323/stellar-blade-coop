@@ -259,7 +259,7 @@ with tempfile.TemporaryDirectory() as tmp:
                               'online/session/ui/create_model', 'ui/kit/kit',
                               'online/lobby/ui/lobby',
                               'online/lobby/ui/lobby_model', 'ui/kit/menu', 'ui/kit/model', 'ui/kit/notice',
-                              'ui/kit/parts',
+                              'ui/kit/parts', 'ui/kit/online_model',
                               'ui/kit/pause_tab', 'ui/kit/wheel',
                               'online/group/region_tabs', 'online/session/ui/sessions',
                               'online/session/ui/sessions_model', 'ui/text',
