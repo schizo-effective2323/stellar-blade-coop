@@ -24,9 +24,9 @@
 -- is checked against the other keys by the co-op menu's own bind, Enter puts back its default, Esc or B stops the wait,
 -- the mouse and the other words do nothing meanwhile. Host a session asks first (a second Select within 3 s, as Leave),
 -- then hosts in place with the Create a session screen's request; Invite and Write a bug report run in place too.
--- Guide and Find a session open a sub-page: its rows show in place of the category's (the left list stays), back
--- returns to its row, a click on a list item shows that category. On a row that still needs the game world (Join with
--- a code, Chat) it answers 'away':
+-- Guide, Find a session and Join with a code open a sub-page: its rows show in place of the category's (the left list
+-- stays), back returns to its row, a click on a list item shows that category. On Chat, which still needs the game's
+-- text box, it answers 'away':
 -- ui/kit/pause_tab.lua closes the pause menu, then runs the row as the co-op menu does. The Test tools and the
 -- developer pages stay in the co-op menu (F5), the menu for admins and debugging: the page has no row that opens it.
 -- Every engine call runs in pcall on the game thread. An engine error that is not a part's own turns the page off until
@@ -65,9 +65,9 @@ Page.KINDS={'tab','header','option','rolling','slider','detail'}
 -- init 0x141d90210), for the log line that says what SB's deactivate left shown.
 Page.SB_PAGES={'WB_Equip_Set','WB_QuestJournal','WB_Map_Set','WB_Bag_Set','WB_NewSkill_Master','WB_Album_Set',
     'WB_Manual_Set','WB_GameMenu_Setting'}
--- The rows that still close the pause menu first: Chat needs the game's text box; S3 of stage 3 takes Join with a
--- code out.
-local AWAY={chat=true,join_code=true}
+-- The rows that still close the pause menu first: Chat needs the game's text box (typing and pasting a join code stay
+-- in the co-op menu's code box for the same reason).
+local AWAY={chat=true}
 local COLLAPSED,HIT_TEST_INVISIBLE,SELF_HIT_TEST_INVISIBLE=1,3,4 -- ESlateVisibility.
 local SHOWN={[0]='Visible','Collapsed','Hidden','HitTestInvisible','SelfHitTestInvisible'}
 local WIDGETS='/Script/UMG.Default__WidgetBlueprintLibrary'
@@ -292,7 +292,8 @@ local FILL={
 -- act=function(action, key, text, ctx) the co-op menu's run of what its model answered (ui/kit/menu.lua's act): ok,
 -- note, bind=function(key, name) the co-op menu's take of a key pressed for a key row (ui/kit/menu.lua's bind):
 -- taken, written, note, sessions=function() the Sessions screen (online/session/ui/sessions.lua: its enter, texts and
--- ask) or nil while the online sessions are off}.
+-- ask) or nil while the online sessions are off, code=function() the code box (online/session/join.lua's Join.box:
+-- its chars and join) or nil while they are off}.
 function Page.new(o)
     local log,theme=o.log,o.theme
     local wanted={}
@@ -490,6 +491,46 @@ function Page.new(o)
             sound('confirm')
             return 'close'
         else refuse() end
+        return nil
+    end}
+    -- Join with a code through the code box's own check and join (o.code): seven places, left and right through the
+    -- characters a code is made of (from no character: right gives the first one, left the last), then Join with the
+    -- code they make (Link.join_code's shape, _ for a place not picked). The box's check refuses with its words in the
+    -- pane. A join asked answers 'close': the pause menu closes and the join goes on over the game, as the box closes
+    -- after its join. The places start empty at each open.
+    local function code_box() return o.code and o.code() end
+    subs.join_code={open=function()
+        local c=code_box()
+        return c~=nil and type(c.chars())=='string'
+    end,sections=function(sub,w,gw,opener)
+        local c=code_box()
+        if not c then return nil end
+        local chars=c.chars()
+        sub.code=sub.code or {}
+        local shown,rows={},{}
+        for n=1,7 do
+            local k=sub.code[n]
+            shown[n]=k and chars:sub(k,k) or '_'
+            rows[n]=sub_row(sub,'c'..n,{kind='rolling',text=tostring(n),shown=shown[n],desc=w.join.bad,n=n})
+        end
+        local text=table.concat(shown,'',1,3)..'-'..table.concat(shown,'',4,7)
+        rows[8]=sub_row(sub,'join',{kind='option',text=w.join.join,shown=text,code=text})
+        return {{id='join_code',label=Page.label(w,gw,opener,ctx),rows=rows}}
+    end,press=function(sub,row,dir)
+        local c=code_box()
+        if not c then refuse(); return nil end
+        if row.n then
+            local k,count=sub.code[row.n],#c.chars()
+            sub.code[row.n]=k and (k-1+dir)%count+1 or (dir>0 and 1 or count)
+            sound('change')
+            return nil
+        end
+        local ok,why=c.join(row.code)
+        if ok then
+            sound('confirm')
+            return 'close'
+        end
+        refuse(why)
         return nil
     end}
     -- online_model's categories for the ctx now, the sub-page in its opener's category (the cursor's). No sub-page any

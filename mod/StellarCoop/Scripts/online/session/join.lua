@@ -7,7 +7,8 @@
 -- (focused again 50 ms later) and comes back 150 ms after a close. Enter joins with the text when it is a join code
 -- (link.join_code: either case, with or without the dash) and closes; other text gets a line saying what a code looks
 -- like and stays. Enter on an empty box closes it, Esc cancels. The box closes by itself outside a world, when the game
--- pauses or shows the mouse cursor, when a session starts and when the kit turns off.
+-- pauses or shows the mouse cursor, when a session starts and when the kit turns off. The pause menu's Online page
+-- picks a code's characters (Join.CHARS) and joins through the box's join: the same check and refusals.
 -- The host's question: a player asks to join (link.pending: not her Steam friend, or any player with friends_ask=on).
 -- SB's popup says "<name> wants to join" with SB's Accept and Decline (UI_Request_Accept,
 -- UI_CollectPersonalInfo_Refuse) and the seconds left, Decline focused. Several players asking wait in a queue: the
@@ -37,6 +38,9 @@ local Join={}
 local BACK,REFOCUS,ARM,HELD=0.15,0.05,1,0.5
 local WAIT,NAME=240,16 -- 250 ms ticks of the native part's 60 s for an answer, from our first read; characters.
 Join.name,Join.feed=Line.name,Line.feed
+-- The characters a join code is made of: native/src/link/protocol.h's kCodeDigits
+-- (tests/lua/online/session/join_test.lua compares them).
+Join.CHARS='0123456789ABCDEFGHJKMNPQRSTVWXYZ'
 -- o: {kit=ui.kit.kit's, link=, settings= (main.lua's: ui_language), theme=ui.THEME, run=function(name, arg) -> ok,
 -- message (main.lua's: the console's checks and log line)}.
 function Join.box(o)
@@ -75,6 +79,15 @@ function Join.box(o)
         kit.show('code',false,os.clock())
     end
     self.cancel=self.close
+    -- The characters of a join code (Join.CHARS).
+    function self.chars() return Join.CHARS end
+    -- A join code as typed, checked as Enter checks it here: true, or false and why (the player's words, or the
+    -- console's). The pause menu's Online page (through main/input.lua) joins with it too.
+    function self.join(text)
+        local code=link.join_code(text)
+        if not code then return false,T.pick(kit.language(),settings.ui_language).join.bad end
+        return o.run('join',code)
+    end
     -- Enter: a join code joins and closes; an empty box closes; else why, in the box.
     function self.send()
         if not open then return end
@@ -82,9 +95,7 @@ function Join.box(o)
         if not v then return self.close() end
         local text=v.box.text()
         if not text:find('[^ \t]') then return self.close() end
-        local code=link.join_code(text)
-        local ok,why=false,words.join.bad
-        if code then ok,why=o.run('join',code) end
+        local ok,why=self.join(text)
         if ok then return self.close() end
         v.note.set(why)
         refocus_at=os.clock()+REFOCUS

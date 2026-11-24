@@ -518,6 +518,11 @@ end)()
     local n=#ss.calls
     assert(captured.sessions().enter()==true and ss.calls[n+1]=='enter' and captured.sessions().texts().tab=='Public',
         'The page\'s Sessions screen')
+    -- Join with a code: the code box itself (online/session/wiring.lua's), its characters and its join.
+    assert(captured.code().chars()==require('online.session.join').CHARS,'The code box\'s characters')
+    link_mode='none'
+    assert(captured.code().join('0cs-cbmh')==true and asked[#asked]=='join 0CS-CBMH',tostring(asked[#asked]))
+    link_mode='host'
     wh.mouse={700,450}
     local x,y=captured.pointer()
     assert(x==700 and y==450,'The page\'s mouse: the kit\'s pointer')

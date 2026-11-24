@@ -6,7 +6,8 @@
 -- input on the box and its keyboard focus again 50 ms later; Enter joins with a join code in either case, with or
 -- without the dash, closes on an empty box, and keeps any other text with a line saying what a code looks like; Esc
 -- cancels; the game's input comes back 150 ms after a close, not under a box opened again; it closes when the world
--- goes, the game pauses, a session starts or the kit turns off.
+-- goes, the game pauses, a session starts or the kit turns off. The pause menu's Online page joins through it:
+-- Join.CHARS is native/src/link/protocol.h's kCodeDigits, box.join checks and refuses as Enter does.
 -- The host's question on the kit's panel (SB's popup missing from this build, logged once): a player asks to join;
 -- "<name> wants to join" with Deny focused, the menu closed and the alert played as it opens; every key does nothing
 -- for 1 s after it shows; then up and down move, Enter answers, Esc denies, each with SB's popup cue; each player asked
@@ -205,6 +206,36 @@ settings.ui_language,state.language='game',nil
 n=#calls
 box.stop(); assert(not box.is_open() and #calls==n)
 clock=10; box.tick(clock); assert(#calls==n)
+-- The pause menu's Online page joins through the box: Join.CHARS is kCodeDigits as native/src/link/protocol.h holds
+-- it; each of its characters in each place of 000-0000 is a join code as written (no I, L, O or U); box.join checks a
+-- code as Enter does with the box closed: a code runs join, a code with places not picked answers the box's words
+-- (French when the game is French) with nothing run, the run's refusal comes back as its why.
+do
+    local f=assert(io.open('native/src/link/protocol.h'))
+    local digits=f:read('a'):match('constexpr char kCodeDigits%[%] = "([^"]+)";')
+    f:close()
+    assert(digits and Join.CHARS==digits and box.chars()==Join.CHARS and #Join.CHARS==32,tostring(digits))
+    for k=1,#Join.CHARS do
+        for place=1,7 do
+            local d={'0','0','0','0','0','0','0'}
+            d[place]=Join.CHARS:sub(k,k)
+            local text=table.concat(d,'',1,3)..'-'..table.concat(d,'',4,7)
+            assert(link.join_code(text)==text,text)
+        end
+    end
+    assert(not Join.CHARS:find('[ILOU]'),'No I, L, O or U')
+    local runs=#ran
+    assert(not box.is_open() and box.join(' 0cs cbmh ')==true and ran[runs+1]=='join 0CS-CBMH' and not box.is_open())
+    local ok,why=box.join('0__-____')
+    assert(ok==false and why=='A join code is 7 letters and digits, like XXX-XXXX.' and #ran==runs+1,tostring(why))
+    state.language='fr-FR'
+    ok,why=box.join('0__-____')
+    assert(ok==false and why=='Un code compte 7 lettres et chiffres, comme XXX-XXXX.' and #ran==runs+1,tostring(why))
+    state.language=nil
+    refusal='cannot write coop-request.txt'
+    ok,why=box.join('0CS-CBMH')
+    assert(ok==false and why=='cannot write coop-request.txt' and ran[runs+2]=='join 0CS-CBMH','The run\'s refusal')
+end
 
 
 -- The host's question on the kit's panel: SB's popup is missing from this build (the kit says so), so the first open

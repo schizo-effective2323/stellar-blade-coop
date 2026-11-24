@@ -37,7 +37,9 @@
 -- body in the pane, the list kept, back to Guide, a click opening it, a click on a list item leaving it). Find a
 -- session in Session's rows through a fake of the Sessions screen's enter, texts and ask (Search, Refresh, the
 -- sessions with their details, a join answering 'close', the refusals, the list read again, the sub-page gone when an
--- online session begins or the sessions go off, Select refused with one line while they are off).
+-- online session begins or the sessions go off, Select refused with one line while they are off). Join with a code
+-- through a fake of the code box's chars and join (seven places, Join with the code they make, the box's refusal in the
+-- pane, a join answering 'close', the places empty at each open).
 package.path='mod/StellarCoop/Scripts/?.lua;'..package.path
 local U=require('core.unreal')
 local T=require('ui.text')
@@ -318,11 +320,20 @@ local function sessions()
     return {enter=function() fs.calls[#fs.calls+1]='enter'; return true end,texts=function() return fs.texts end,
         ask=function(what,i) fs.calls[#fs.calls+1]='ask '..what..(i and ' '..i or ''); return fs.ok end}
 end
+-- The code box's two for the page (online/session/join.lua's chars and join): fc.joins the texts it got, fc.ok and
+-- fc.why its answer; fc.gone: the online sessions off (the page's code() gives nil).
+local fc={}
+local function code()
+    if fc.gone then return nil end
+    return {chars=function() return '0123456789ABCDEFGHJKMNPQRSTVWXYZ' end,
+        join=function(text) fc.joins[#fc.joins+1]=text; return fc.ok,fc.why end}
+end
 local function new()
     events,logs,made,constructed,raising,no_canvas,mouse,sounds={},{},{},{},{},false,nil,{}
     acts,act_ok,act_note,act_raise={},true,nil,nil
     binds,bound={},{true,true,nil}
     fs.calls,fs.ok,fs.gone,fs.texts={},true,false,{tab='Public',refresh='Refresh',status='',footer='',rows={}}
+    fc.joins,fc.ok,fc.why,fc.gone={},true,nil,false
     return Page.new({log=function(line) logs[#logs+1]=line end,words=function() return w end,
         guide_words=function() return gw end,ctx=function() return ctx end,theme=THEME,
         pointer=function() if mouse then return mouse[1],mouse[2] end end,
@@ -338,7 +349,7 @@ local function new()
             binds[#binds+1]=k..' '..name
             if bound[1] and bound[2] then ctx.values[k]=name end
             return bound[1],bound[2],bound[3]
-        end,sessions=sessions})
+        end,sessions=sessions,code=code})
 end
 local function first_made(kind) for _,m in ipairs(made) do if m.kind==kind then return m.o end end end
 local function made_n(kind)
@@ -612,7 +623,6 @@ do
     assert(table.concat(acts,'|',#acts-1)=='confirm_host nil nil|confirm_host nil nil' and desc()==w.confirm_host,
         'Past 3 s: asked again')
     n=#acts
-    away('Join with a code','join_code')
     page.nav('back',15); to('Help'); page.nav('right',15)
     -- Guide opens in the rows: a header Guide, then a row a guide page with its title, SB's value word off; the list
     -- stays with Help in SB's select look; the pane the page's title and its body. Nothing is run or asked.
@@ -886,6 +896,71 @@ do
     assert(page.nav('select',14)==nil and heard()=='refuse' and pane()=='Find a session' and #fs.calls==c
         and lines_with('online page: find not shown: the online session module is off')==1,table.concat(logs,'|'))
     assert(not page.off() and page.shown())
+    ctx=SOLO
+end
+
+-- Join with a code in the rows through the code box's own check and join (fc): seven places shown _, then Join with
+-- the code they make; left and right through the code's 32 characters (from none: right the first, left the last),
+-- select as right; the box's refusal with its words in the pane and the beep; a code joined: 'close' with SB's confirm
+-- cue. The places kept at a read of the state, empty at each open. Back: on Join with a code. The box off: refused.
+do
+    ctx={mode='none',values=Model.read(''),pages={PAGE}}
+    page=new()
+    page.build(master())
+    page.show(true)
+    local d=first_made('detail')
+    local function pane() return d.props.Text_ItemName.props.text end
+    local function desc() return d.props.Text_Desc.props.text end
+    local function heard() return sounds[#sounds] end
+    local function to(label)
+        for _=1,40 do if pane()==label then return end page.nav('down',1) end
+        error('no row '..label)
+    end
+    local function places() -- The rows after the header: each place's value, then Join's.
+        return (rows_shown():gsub('^H:Join with a code|',''))
+    end
+    page.nav('right',0); to('Join with a code')
+    assert(page.nav('select',1)==nil and heard()=='tab' and #acts==0 and #fc.joins==0,'Opened: nothing run')
+    assert(places()=='1=_|2=_|3=_|4=_|5=_|6=_|7=_|Join=___-____' and rows_shown():find('^H:Join with a code|'),
+        rows_shown())
+    assert(pane()=='1' and desc()==w.join.bad and tabs_shown()==10,pane()..' / '..desc())
+    assert(page.nav('right',1)==nil and heard()=='change' and places():find('^1=0|2=_'),places())
+    page.nav('down',1)
+    assert(page.nav('left',1)==nil and heard()=='change' and places():find('^1=0|2=Z|3=_'),places())
+    page.nav('down',1)
+    assert(page.nav('select',1)==nil and places()=='1=0|2=Z|3=0|4=_|5=_|6=_|7=_|Join=0Z0-____',places())
+    page.nav('up',1); page.nav('right',1); assert(places():find('^1=0|2=0|3=0'),'Z wraps to 0')
+    page.nav('left',1); assert(places():find('^1=0|2=Z|3=0'),'And back')
+    -- Join with places not picked: the box's check refuses with its words, SB's refusal sound, nothing closes.
+    fc.ok,fc.why=false,w.join.bad
+    to('Join')
+    assert(page.nav('select',2)==nil and fc.joins[1]=='0Z0-____' and heard()=='refuse' and desc()==w.join.bad
+        and pane()=='Join',desc())
+    assert(page.nav('left',2)==nil and #fc.joins==1,'Left on Join: nothing')
+    -- Every place picked to 0CS-CBMH: joined, 'close' with SB's confirm cue. A read of the state keeps the places.
+    local function pick(n,ch)
+        to(tostring(n))
+        for _=1,40 do
+            if places():match('^'..('[^|]*|'):rep(n-1)..n..'=(.)')==ch then return end
+            page.nav('right',3)
+        end
+        error('no '..ch..' in place '..n)
+    end
+    for n,ch in ipairs({'0','C','S','C','B','M','H'}) do pick(n,ch) end
+    page.tick(5)
+    assert(places()=='1=0|2=C|3=S|4=C|5=B|6=M|7=H|Join=0CS-CBMH',places())
+    fc.ok,fc.why=true,nil
+    to('Join')
+    assert(page.nav('select',6)=='close' and fc.joins[2]=='0CS-CBMH' and heard()=='confirm' and #acts==0)
+    -- Back: on Join with a code; opened again, every place empty.
+    assert(page.nav('back',6)==nil and pane()=='Join with a code' and heard()=='tab')
+    page.nav('select',6)
+    assert(places()=='1=_|2=_|3=_|4=_|5=_|6=_|7=_|Join=___-____',places())
+    page.nav('back',6)
+    -- The code box off: Select refused with one line, no sub-page.
+    fc.gone=true
+    assert(page.nav('select',7)==nil and heard()=='refuse' and pane()=='Join with a code'
+        and lines_with('online page: join_code not shown: the online session module is off')==1,table.concat(logs,'|'))
     ctx=SOLO
 end
 
