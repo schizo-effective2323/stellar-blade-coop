@@ -566,9 +566,10 @@ fails the test. The `main/` tests load `main/fixture.lua` first, with UE4SS stub
   `popups on`, a change saved at once with the next pass asking `popups off` or `popups on` once;
 - `ui/kit/pause_tab_test` covers the pause menu's Online tab over fakes: nothing before the game is ready, the class
   loaded with its keeper and the Construct hook once, one button after the game's 8 with the word and the last button's
-  style, Visible with its `Button_Action` HitTestInvisible (a button without `Button_Action` stopping the tab with no
-  half-made button left), none on a second Construct, the button again after a rebuild while paused. With no page: a
-  click over the button (`IsHovered`; the cached geometry never read) or RB closing the pause menu once through the
+  style, the visibilities of the last button and of its `Button_Action` (a button without `Button_Action` stopping the
+  tab with no half-made button left), none on a second Construct, the button again after a rebuild while paused. With
+  no page: a click over the `Button_Action` (its `IsHovered`, while the button's own answers no; the cached geometry
+  never read) or RB closing the pause menu once through the
   native part's close (the widget's CloseSelf never called), the co-op menu at the first tick after the unpause or the
   give-up line and notice after 2 s, a close refused for now logged once with nothing opened, a close that can never
   work stopping the tab with one STOP line and `pausetab off`, `pause_tab=off` making nothing and asking `pausetab
@@ -578,11 +579,12 @@ fails the test. The `main/` tests load `main/fixture.lua` first, with UE4SS stub
   and showing it, our button focused and the game's Settings button defocused, the shown line and the game's pages
   now and 0.5 s later; Back in the list closing the pause menu with no co-op menu; Open the co-op menu closing it, then
   the co-op menu once unpaused; a hovered click entering the same way (by a click, the button of the tab left
-  defocused), a click not over the tab logged once a pause menu, the game's tab one frame after the click; a click on
-  the shown page's Open the co-op menu; the page hidden when the game shows another tab or closes its menu, forgotten
-  when the master is gone; the entry's `locked` and `none` changing nothing with one line each, `off` and a page that
-  does not build taking the path before the page; a page that turns off while shown closing the pause menu and opening
-  the co-op menu; `coop off` hiding the page with one close of the game's;
+  defocused), each click logging both hover answers in one line, the game's tab one frame after the click; a click on
+  the shown page's Open the co-op menu; the page's mouse look each frame on tab 9; the page hidden when the game shows
+  another tab or closes its menu, forgotten when the master is gone; the entry's `locked` and `none` changing nothing
+  with one line each, `off` and a page that does not build taking the path before the page; a page that turns off
+  while shown (in its keys or in its mouse look) closing the pause menu and opening the co-op menu; `coop off` hiding
+  the page with one close of the game's;
 - `ui/kit/online_model_test` covers the Online page's arrangement (`ui/kit/online_model.lua`): the categories in the
   solo state and in an online session with each section's rows, Open the co-op menu alone first in Session in both
   states, every row of today's main page and Options placed once or left out with a reason (Options and Close), rows
@@ -593,15 +595,19 @@ fails the test. The `main/` tests load `main/fixture.lua` first, with UE4SS stub
   part kind (option, rolling, slider), its words and value as the co-op menu draws them, the cursor over the model's
   categories solo and while hosting (the list wrapping, right and select landing on Open the co-op menu, the rows
   skipping headers and wrapping, select there answering `open_menu`, select elsewhere and left doing nothing, back to
-  the list, back in the list answering `close`, 20 downs in Controls staying inside the 12 slots). Engine: one
-  collapsed canvas added last to the master's root, made in its WidgetTree, with its hit boxes; the six SB classes
-  each said once as built; each part's Blueprint texts before it enters the canvas, its TextBlocks and calls after;
-  show SelfHitTestInvisible with the first item's PlayFocusAnim and the category's word in the pane; right giving
-  Select, StateFocus on Open the co-op menu and its words in the pane; no part made again while the rows stay; a
-  click moving the cursor to the hovered row, answering `open_menu` on Open the co-op menu, no hit box over a header,
-  a click on another category; the game's eight pages by name with their state; a look refused logged once; a class
-  whose Create raises drawn with TextBlocks and Borders, one line for it, the others the game's; a canvas that cannot
-  be made turning the page off with one line;
+  the list, back in the list answering `close`, 20 downs in Controls staying inside the 12 slots), what is under the
+  mouse in the boxes the page places its parts in (`Page.under`: a list item, a row, never a header, a slot past the
+  rows or the gap between list and rows, edges exclusive). Engine: one collapsed canvas added last to the master's
+  root, made in its WidgetTree, empty until the show; the six SB classes each said once as built; each part's
+  Blueprint texts before it enters the canvas, its TextBlocks and calls after; show SelfHitTestInvisible with the first
+  item's PlayFocusAnim, the category's word in the pane with no description and the pane's `Thumbnail` collapsed once
+  (a pane without one logged once); right giving Select, StateFocus on Open the co-op menu and its words in the pane;
+  no part made again while the rows stay; a click at the kit's pointer selecting the row under it, answering
+  `open_menu` on Open the co-op menu, nothing on a header or with no pointer, a click on another category; the mouse
+  look every 0.1 s (the first look moving nothing, the item the mouse moved onto taking the cursor, a resting mouse
+  never moving it after the keys did, a header or no pointer moving nothing); the game's eight pages by name with
+  their state; a look refused logged once; a class whose Create raises drawn with TextBlocks and Borders, one line for
+  it, the others the game's; a canvas that cannot be made turning the page off with one line;
 - `world/daynight/rule_test` covers `world/daynight/rule.lua`: every row of the map table (keys in lower case, each open
   row complete for its kind of sky, the fixed maps, an unknown map), the rules in their order (SB's screens and
   cutscenes ignored, Xion's story night before photo mode, photo mode's hold whatever the hour, a test pin before Night
@@ -663,12 +669,12 @@ fails the test. The `main/` tests load `main/fixture.lua` first, with UE4SS stub
   game reads. While the pause menu's Online page shows, the pad's words, the navigation keys, Enter and Esc go to the
   tab's `nav` and to no screen (E and F do nothing, RB on Settings still goes to the tab's event); while it does not,
   nothing changes. The page is built behind its guard and handed to the tab with the native entry and tab read, its
-  ctx giving the model's fields; a page that does not build logs one line and the keys work on. `main/boot_test`
-  covers the two native reads: each of `coop_pause_enter`'s 5 counts and `coop_pause_page`'s 12 as its word or tab,
-  any other count nil and why, an older DLL without them nil and the loadlib reason. For spectate it covers the pad's
-  left and right that nothing else took switching the member watched (the co-op menu open takes them first), the Left
-  and Right arrows the same way (never A, Q or D, nothing while it does not watch) and the camera's frame call right
-  after the ghost's place;
+  ctx giving the model's fields, its pointer the kit's; a page that does not build logs one line. The keys work on.
+  `main/boot_test` covers the two native reads: each of `coop_pause_enter`'s 5 counts and `coop_pause_page`'s 12 as its
+  word or tab, any other count nil and why, an older DLL without them nil and the loadlib reason. For spectate it covers
+  the pad's left and right that nothing else took switching the member watched (the co-op menu open takes them first),
+  the Left and Right arrows the same way (never A, Q or D, nothing while it does not watch) and the camera's frame call
+  right after the ghost's place;
 - `main/match_test` covers `coop match` (search, create, cancel, end, join with a code, leave), search and create with
   the SBO lobby's room and hall words, `coop mute` and `coop unmute` with their usage line, `coop block`,
   `coop unblock` (a SteamID or `all`) with their usage lines and `coop blocked` (the count from the status for one
@@ -1720,15 +1726,15 @@ and `tools/install.py` names its program after that path (`tests/native/game/cod
   stick's sector (0 inside half its range, 1 to 72 clockwise from up), D-pad Left held 300 ms making event 13 once a
   hold (not at 299 ms, again after a release, forgotten with no pad), the right stick from XInput's slots and from
   `PadKeys` (the controller pushed furthest, `clear()`);
-- `ui_pause_tab_test`: the Online tab's decision on the GameMenu logic's input (RB on the highest enabled tab while the
-  game's tab lock is off opens it; any other tab, action or lock passes the action on to the game; a tab list the game
-  never builds passes too; a press and its release within 500 ms open once, on any tab, so the release after Lua
-  entered tab 9 is dropped; on tab 9 the game's Back is held with or without the lock while LB, RB and the pause key
-  pass) and its pinned slot, function, three FName globals and offsets, the game's own close of the pause menu with the
-  logic's vtable, type and entry offset, the answers Lua reads from `coop_pause_close`, `coop_pause_enter` and
-  `coop_pause_page`; `page_of` over a fake of the game's tab to page map (a two-entry chain, an empty bucket, a map
-  with no entry, the inline bucket, a chain that loops ending after 16 hops) and the tab answer (1 to 9 kept, any
-  other number 10);
+- `ui_pause_tab_test`: the Online tab's decision on the GameMenu logic's input (RB on the highest enabled tab and LB on
+  the lowest, while the game's tab lock is off, open it; any other tab, action or lock passes the action on to the game;
+  a tab list the game never builds passes too; a press and its release within 500 ms open once, on any tab, so the
+  release after Lua entered tab 9 is dropped; that latch drops only the shoulder that opened; on tab 9 the game's Back
+  is held with or without the lock while LB, RB and the pause key pass) and its pinned slot, function, three FName
+  globals and offsets, the game's own close of the pause menu with the logic's vtable, type and entry offset, the
+  answers Lua reads from `coop_pause_close`, `coop_pause_enter` and `coop_pause_page`; `page_of` over a fake of the
+  game's tab to page map (a two-entry chain, an empty bucket, a map with no entry, the inline bucket, a chain that loops
+  ending after 16 hops) and the tab answer (1 to 9 kept, any other number 10);
 - `online_session_options_test`: the game's Tutorial and RecordPopup options during online play (an option On at link
   forced Off with On kept, the save slot handed the kept value while it is forced, the value back at unlink; an option
   already Off left alone; the player's On during online play kept with no new force until unlink; a value the game never

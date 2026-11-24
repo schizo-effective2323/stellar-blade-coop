@@ -602,11 +602,14 @@ did before the page: it closes the pause menu and opens the co-op menu.
 
 ### Opening the page
 
-- Click the Online tab.
+- Click the Online tab. Under the mouse it lights up as the game's own tabs do.
 - On Settings, press RB on a controller or E on the keyboard (the game's next-tab key).
+- On the first tab (Equipment, or the first one the game has unlocked), press LB on a controller or the game's
+  previous-tab key on the keyboard (Q, or A on an AZERTY keyboard).
 
-The game's own 8 tabs stay as they are. LB on Equipment still goes to Settings. The arrow at the right end of the tab
-row still goes from Settings to Equipment.
+The tab row reads as one ring of nine tabs. From the Online page, LB goes to Settings and RB to the first tab. The
+game's own 8 tabs stay as they are. The arrows at the ends of the tab row still skip Online: the game runs them
+without the key path the mod watches.
 
 ### What the page shows
 
@@ -615,7 +618,7 @@ Saves, Help and Test tools while a module's test tools are on. In an online sess
 Shared world, Combat and Game modes. Each category has sections with a header, as in the game's Settings page. Session
 starts with Open the co-op menu. Each row shows its value as the co-op menu shows it: On or Off, a choice, a number,
 a key name. The pane on the right shows the name of the focused row, or of the category while you are in the list. No
-row has a description yet.
+row has a description or a picture yet: the pane shows the name alone, at its top.
 
 The page is made of the game's own Settings parts: the list item, the section header, the action row, the row with
 a choice, the slider row and the description pane. A part that cannot be made outside the game's Settings page is
@@ -628,7 +631,8 @@ drawn in the co-op menu's style instead. `UE4SS.log` says which for each part.
 | Right arrow or D, Enter or Space; D-pad right or A | From the list into the rows of that category |
 | Enter or Space; A | On Open the co-op menu: close the pause menu, then open the co-op menu |
 | Esc; B | From the rows back to the list. In the list: close the pause menu, as Back does on Settings |
-| Left click | Move to the list item or row under the mouse. On Open the co-op menu, run it |
+| Mouse | The list item or row the mouse moves onto takes the focus. A mouse at rest never moves it |
+| Left click | Select the list item or row under the mouse. On Open the co-op menu, run it |
 | LB, RB, a click on one of the game's tabs | Go to that tab of the game's pause menu |
 | The key that opened the pause menu (Start on a controller) | Close the pause menu |
 
@@ -638,40 +642,47 @@ Stage 1 does not change a value, run another row (Host, Leave, a key change) or 
 those: Open the co-op menu on the page, or F5. The co-op menu keeps every row it has.
 
 `pause_tab=off` in [coop-settings.txt](settings.md#coop-settingstxt) or Online tab in the pause menu (Options,
-Controls) removes the tab from the next pause menu. RB on Settings then goes to Equipment as in the game.
+Controls) removes the tab from the next pause menu. RB on Settings then goes to Equipment as in the game. LB on
+Equipment goes to Settings.
 
 ### When the page cannot open
 
-Then the Online tab does what it did before the page. A click on it, or RB on Settings, closes the pause menu through
-the game's own close (the one Back uses). The co-op menu opens once the game is no longer paused. If the game stays
-paused for 2 s after the pause menu closed, the co-op menu does not open: a notice says so. This happens when:
+Then the Online tab does what it did before the page. A click on it, RB on Settings or LB on the first tab closes the
+pause menu through the game's own close (the one Back uses). The co-op menu opens once the game is no longer paused. If
+the game stays paused for 2 s after the pause menu closed, the co-op menu does not open: a notice says so. This happens
+when:
 
 - the page could not load or be made (`UE4SS.log` says why once);
 - `StellarCoop.dll` is older than the page (no `coop_pause_enter` or `coop_pause_page`).
 
 When the native part answers off (not the game build it knows, after `coop off`, or after its fault), nothing opens.
-A click on the tab stops the tab with the `[PT] STOP` line, as before the page. RB on Settings goes to Equipment.
+A click on the tab stops the tab with the `[PT] STOP` line, as before the page. RB on Settings goes to Equipment. LB
+on Equipment goes to Settings.
 
 If the page fails while it shows, it hides. The pause menu closes and the co-op menu opens. At `coop off` the page
 hides and the pause menu closes as Back closes it.
 
 ### Testing the page in the game
 
-The page has not been tested in game yet. Before the test, install the build when the game is closed. After each
-step keep `UE4SS.log` (the `[PT]` lines) and `coop-link.log` (the `pause tab` lines). The steps go from the least
-risky to the most.
+The first game test (build 3581c9ab) showed the page in the pause menu, its keys and RB on Settings working. The
+mouse did nothing on the tab or on the page. LB on Equipment skipped Online. The pane showed an empty black box above
+the name. The steps below check those fixes with the rest. Before the test, install the build when the game is
+closed. After each step keep `UE4SS.log` (the `[PT]` lines) and `coop-link.log` (the `pause tab` lines). The steps go
+from the least risky to the most.
 
-1. Pause, go to Settings, click Online. Expect: Settings goes away and the Online page shows with its left list.
-   Stop on a crash or a freeze, if the pause menu closes, or if the game stays paused with no menu. If Settings is
-   still drawn under the page, do steps 2 and 3 only, then stop: keys and clicks could reach Settings' own rows. Note
-   without stopping: the page drawn over the key hints, a part drawn in the co-op menu's style.
+1. Pause, go to Settings, move the mouse over Online. Expect: it lights up as the game's tabs do under the mouse.
+   Note whether the game's hover sound plays. Click it. Expect: Settings goes away and the Online page shows with its
+   left list. Stop on a crash or a freeze, if the pause menu closes, or if the game stays paused with no menu.
 2. On the page's left list, press Esc (keyboard) or B (controller). Expect: the pause menu closes as Back does on
    Settings. Stop if nothing closes or the menu cannot be left.
-3. Pause again, go to Settings, press RB (or E). Expect: Online. Then LB: Settings. RB, RB: Online, then Equipment. On
-   Online, click the Map tab: Map shows and the page goes. Stop if two tabs show at once and the next tab change does
-   not fix it.
-4. On the page: up and down in the list, right or Enter into the rows, up and down there, Esc or B back to the list,
-   a click on a list item and on a row. Watch the focus look and the pane on the right.
+3. Pause again, go to Settings, press RB (or E). Expect: Online. Then LB: Settings. RB, RB: Online, then Equipment.
+   On Equipment press LB (or Q, A on an AZERTY keyboard). Expect: Online. LB again: Settings. On Online, click the
+   Map tab: Map shows and the page goes. Stop if two tabs show at once and the next tab change does not fix it.
+4. On the page, move the mouse over the list items and the rows. Expect: the one under the mouse takes the focus
+   look and the pane on the right follows it. Leave the mouse still and press up and down: the focus moves with the
+   keys and the mouse does not pull it back. Click a list item: its rows show. Click a row: it takes the focus. Then
+   with the keys: up and down in the list, right or Enter into the rows, up and down there, Esc or B back to the list.
+   Check that the pane shows the name at its top with no black box above it.
 5. In Session, select Open the co-op menu, once with Enter or A, once with a click. Expect: the pause menu closes and
    the co-op menu opens. Then pause, open Settings and check that none of its values changed.
 6. On the page, press the key that opened the pause menu (Start on a controller). Expect: the menu closes.
@@ -681,55 +692,63 @@ risky to the most.
 
 ### What is not known before the test
 
-Each point has its own log line.
+Most points have their own log line.
 
 1. Whether the game's Settings page hides itself when the page opens. The mod runs the game's own step for leaving a
    page; whether that step hides its widget was not readable. The line `SB's pages after the deactivate` lists the
    game's 8 pages with their state, once at the opening and once 0.5 s later.
 2. Whether the game's Settings parts can be made outside the game's Settings page (one line per part). Whether a
    choice row or a slider row shows SBO's value or the one of the game's setting it was made for.
-3. What the game does with a click on a tab button it did not make (`one frame later SB's pause menu shows tab`).
-4. Whether the mouse over the Online tab counts as over it (`hovered yes`).
-5. What the game does with up, down, select, the arrows and the mouse wheel while none of its pages is open.
-6. Which key the game uses for Back on the keyboard. Whether Esc is also the pause key: if it is, Esc in the rows
+3. What the game does with a click on a tab button it did not make. The game binds each tab's click by the tab's name
+   when the pause menu's logic starts, so no binding of the game's should reach the Online tab (`one frame later SB's
+   pause menu shows tab 9`).
+4. Whether the mouse over the Online tab counts as over its button (`Button_Action yes`; the line also gives the
+   tab's own answer, `tab button`). Whether the game's hover sound plays on it: the sound is not in the tab button's
+   own asset, so where the game plays it from was not found.
+5. Whether the item under the mouse on the page is the one that takes the focus at your screen size (no line: watch
+   the page).
+6. What the game does with up, down, select, the arrows and the mouse wheel while none of its pages is open.
+7. Which key the game uses for Back on the keyboard. Whether Esc is also the pause key: if it is, Esc in the rows
    closes the pause menu instead of going back to the list. Whether your controller's confirm and back buttons are
    swapped.
-7. Whether the game's tab lock is already off when you click (`SB's tab lock is on`).
-8. How the game's focus look on the tab buttons shows together with the mod's.
-9. Where the page draws against the key hints, the covers and the fade; which key hints show on the page.
-10. Whether the game reads the open tab elsewhere, for example to reopen the pause menu on the tab it showed last.
+8. Whether the game's tab lock is already off when you click (`SB's tab lock is on`).
+9. How the game's focus look on the tab buttons shows together with the mod's.
+10. Where the page draws against the key hints, the covers and the fade; which key hints show on the page.
+11. Whether the game reads the open tab elsewhere, for example to reopen the pause menu on the tab it showed last.
 
 ### Log lines
 
 - `coop-link.log`: `pause tab on: 0x145c26768 swapped from the GameMenu logic's input to our hook` at start, then
-  `pause tab: RB on Settings opened the Online tab (<n> this run)` at each RB on Settings. `pause tab: an action kept
-  from SB on the Online page, Back or one SB ignores there (<n> this run)` counts the presses the native part keeps
-  from the game while the page shows. `pause tab refused: ...` means another mod holds that pointer or its page would
-  not change: RB on Settings goes to Equipment as in the game. A click on the tab still opens the page. `pause tab
-  fault ...: off for this run` means a fault in the mod's hook or in its reads of the open pause menu: RB on Settings
-  goes to Equipment. A click on the tab stops the tab with the `[PT] STOP` line. `pause tab: asked off, ...` and
-  `pause tab: asked on, ...` follow the setting.
+  `pause tab: RB on Settings or LB on the first tab opened the Online tab (<n> this run)` at each of those presses.
+  `pause tab: an action kept from SB on the Online page, Back or one SB ignores there (<n> this run)` counts the presses
+  the native part keeps from the game while the page shows. `pause tab refused: ...` means another mod holds that
+  pointer or its page would not change: RB on Settings goes to Equipment as in the game. A click on the tab still opens
+  the page. `pause tab fault ...: off for this run` means a fault in the mod's hook or in its reads of the open pause
+  menu: RB on Settings goes to Equipment. A click on the tab stops the tab with the `[PT] STOP` line. `pause tab: asked
+  off, ...` and `pause tab: asked on, ...` follow the setting.
 - `UE4SS.log`: `[PT] hook on: WB_GameMenu_Master_C:Construct` once a Lua load, or `[PT] STOP: <why>; the pause menu
   keeps its 8 tabs until the mod reloads`, after which the mod asks the native part `pausetab off`.
   - `[PT] online page: <part> built from SB's class` or `[PT] online page: <part> not built (<why>); the kit's drawing
     in its place`, once per part, then `[PT] online page: built in <ms> ms: <n> SB parts, <m> drawn by the kit`.
-  - `[PT] online page shown (from tab <t>, by <RB|a click>)` and `[PT] online page: SB's pages after the deactivate:
-    WB_Equip_Set=<state> ...`, then the same 0.5 s later.
+  - `[PT] online page shown (from tab <t>, by <LB or RB|a click>)` and `[PT] online page: SB's pages after the
+    deactivate: WB_Equip_Set=<state> ...`, then the same 0.5 s later.
   - `[PT] online page hidden: SB shows tab <t>`, `... the pause menu closed`, `... the pause menu is gone` or
     `... coop off`.
-  - `[PT] click: Online tab hovered yes` at each click over the tab, `[PT] click: Online tab hovered no` once a pause
-    menu, then `[PT] click: one frame later SB's pause menu shows tab <t>` (or `is closed`).
+  - `[PT] click: Online tab hovered: Button_Action <yes|no>, tab button <yes|no>` at each click while a pause menu
+    holds the tab. The page opens on `Button_Action yes`. Then `[PT] click: one frame later SB's pause menu shows tab
+    <t>` (or `is closed`).
   - `[PT] online page: SB's tab lock is on; nothing changed` and `[PT] online page: the game has no pause menu open`:
     the page did not open, nothing else changed.
-  - `[PT] online page: <part> look refused: <why>` once per part, when the game refuses a focus look.
+  - `[PT] online page: <part> look refused: <why>` once per part, when the game refuses a focus look. `[PT] online
+    page: detail media refused: <why>` once, when the pane's picture part cannot be hidden.
   - `[PT] online page: off until the mod reloads: <why>; the Online tab opens the co-op menu as before`, or `[PT]
     online page: off while shown; the pause menu closes and the co-op menu opens as before`.
   - `[PT] pause tab: the game stayed paused for 2 s; the pause menu is the player's` comes with the notice.
-    `[PT] pause tab: RB on Settings with no Online tab shown; nothing opened` means the native part took RB on a pause
-    menu the mod had not seen built. `[PT] pause tab: nothing closed: the game has no pause menu open` means the game
-    closed its pause menu first. When the native part cannot close the pause menu at all (an older `StellarCoop.dll`,
-    a game build it does not know, or after its fault), the STOP line gives that reason. `[PT] pause tab: pausetab on
-    not asked: <why>` means the request could not be written; the mod asks again every 250 ms.
+    `[PT] pause tab: LB or RB at an end of the tab row with no Online tab shown; nothing opened` means the native part
+    took LB or RB on a pause menu the mod had not seen built. `[PT] pause tab: nothing closed: the game has no pause
+    menu open` means the game closed its pause menu first. When the native part cannot close the pause menu at all (an
+    older `StellarCoop.dll`, a game build it does not know, or after its fault), the STOP line gives that reason. `[PT]
+    pause tab: pausetab on not asked: <why>` means the request could not be written; the mod asks again every 250 ms.
 
 ## Teleport screen
 
