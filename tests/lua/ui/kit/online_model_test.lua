@@ -200,6 +200,37 @@ for id in ids(page.categories(SOLO)):gmatch('%S+') do
     assert(session_ids[at]==id,'Solo\'s '..id..' out of the session\'s order')
 end
 
+-- The co-op menu's model behind each row: the Options page's for its rows and the mute rows, the main page's for its
+-- rows, none for Open the co-op menu and a Test tools row. A row's confirm runs through that model's 3 s window;
+-- forget() drops a first Select, as the co-op menu's move does.
+do
+    local p=O.new()
+    local function opt_row(id) for _,r in ipairs(Model.OPTIONS) do if (r.key or r.id)==id then return r end end end
+    local function main_row(id) for _,r in ipairs(Model.MAIN) do if r.id==id then return r end end end
+    local ctx=hosting()
+    local cats=p.categories(ctx)
+    local mute,tools=cats[2].sections[1].rows[1],cats[#cats].sections[1].rows[1]
+    assert(mute.member=='7' and tools.page==PAGE,'A mute row and a Test tools row')
+    local opts,mains=p.owner(opt_row('who_can_join')),p.owner(main_row('host'))
+    assert(opts.page()=='options' and mains.page()=='main','The Options page and the main page')
+    assert(p.owner(opt_row('reset_keys'))==opts and p.owner(opt_row('menu_key'))==opts and p.owner(mute)==opts)
+    assert(p.owner(main_row('leave'))==mains and p.owner(main_row('remove'))==mains
+        and p.owner(main_row('copy'))==mains)
+    assert(p.owner(O.OPEN_MENU)==nil and p.owner(tools)==nil,'Not the co-op menu\'s rows')
+    local reset=opt_row('reset_keys')
+    opts.point(ctx,reset)
+    assert(opts.select(ctx,10,VALUES)=='confirm_reset_keys' and opts.select(ctx,11,VALUES)=='reset_keys')
+    assert(opts.select(ctx,20,VALUES)=='confirm_reset_keys')
+    p.forget()
+    assert(opts.select(ctx,21,VALUES)=='confirm_reset_keys','Forgotten: asked again')
+    local leave=main_row('leave')
+    mains.point(ctx,leave)
+    assert(mains.select(ctx,30,VALUES)=='confirm_leave' and mains.select(ctx,31,VALUES)=='leave')
+    assert(mains.select(ctx,40,VALUES)=='confirm_leave')
+    p.forget()
+    assert(mains.select(ctx,41,VALUES)=='confirm_leave','Leave forgotten too')
+end
+
 -- Only the pause menu's Online page (ui/kit/online_page.lua) requires it: the co-op menu still draws model.lua's pages.
 local scripts=0
 for path in io.popen("find mod/StellarCoop/Scripts -name '*.lua'"):lines() do

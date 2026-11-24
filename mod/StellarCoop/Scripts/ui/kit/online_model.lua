@@ -109,6 +109,16 @@ function M.new()
         end
         return out
     end
+    -- The model.lua page whose change, select and confirm window a row runs through (the co-op menu's own logic): the
+    -- Options page for its rows and the mute rows, the main page for its rows; nil for Open the co-op menu and a Test
+    -- tools row.
+    function self.owner(row)
+        if row.member or OPT[row.key or row.id]==row then return options_page end
+        if row.id and MAIN[row.id]==row then return main_page end
+    end
+    -- The cursor left its row: a first Select of Leave, Remove or Reset all keys is forgotten, as the co-op menu's move
+    -- forgets it.
+    function self.forget() main_page.close(); options_page.close() end
     return self
 end
 return M
