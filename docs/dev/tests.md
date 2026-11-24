@@ -586,7 +586,10 @@ fails the test. The `main/` tests load `main/fixture.lua` first, with UE4SS stub
   while shown (in its keys or in its mouse look) closing the pause menu and opening the co-op menu; `coop off` hiding
   the page with one close of the game's. The page's nav and click get the clock; their `close` (the Online tab written
   off on the page) closes the pause menu with no co-op menu after it. An F-key goes to the page's capture only while
-  the page shows; a page that turns off in it takes the fault path;
+  the page shows; a page that turns off in it takes the fault path. Their `away` and a row's id close the pause menu,
+  then run that row once unpaused (never while paused, the give-up after 2 s with nothing run, a run that raises
+  logged with one line and the tab going on); their `open_menu` and a Test tools page open the co-op menu on that
+  page;
 - `ui/kit/online_model_test` covers the Online page's arrangement (`ui/kit/online_model.lua`): the categories in the
   solo state and in an online session with each section's rows, Open the co-op menu alone first in Session in both
   states, every row of today's main page and Options placed once or left out with a reason (Options and Close), rows
@@ -602,27 +605,32 @@ fails the test. The `main/` tests load `main/fixture.lua` first, with UE4SS stub
   skipping headers and wrapping, select there answering `open_menu`, select elsewhere and left doing nothing, back to
   the list, back in the list answering `close`, 20 downs in Controls staying inside the 12 slots), what is under the
   mouse in the boxes the page places its parts in (`Page.under`: a list item, a row, never a header, a slot past the
-  rows or the gap between list and rows, edges exclusive). Engine: one collapsed canvas added last to the master's
-  root, made in its WidgetTree, empty until the show; the six SB classes each said once as built; each part's
-  Blueprint texts before it enters the canvas, its TextBlocks and calls after; show SelfHitTestInvisible with the first
-  item's PlayFocusAnim, the category's word in the pane with no description and the pane's `Thumbnail` collapsed once
-  (a pane without one logged once); right giving Select, StateFocus on Open the co-op menu and its words in the pane;
-  no part made again while the rows stay; a click at the kit's pointer selecting the row under it, answering
-  `open_menu` on Open the co-op menu, nothing on a header or with no pointer, a click on another category; the mouse
-  look every 0.1 s (the first look moving nothing, the item the mouse moved onto taking the cursor, a resting mouse
-  never moving it after the keys did, a header or no pointer moving nothing); the game's eight pages by name with
-  their state; a look refused logged once; a class whose Create raises drawn with TextBlocks and Borders, one line for
-  it, the others the game's; a canvas that cannot be made turning the page off with one line. Pure: what a press
-  asks of each kind of row (`Page.press`: the next or previous value, select, `open_menu` with a Test tools row's
+  rows or the gap between list and rows, edges exclusive). Engine: one collapsed canvas added last to the master's root,
+  made in its WidgetTree, empty until the show; the six SB classes each said once as built; each part's Blueprint texts
+  before it enters the canvas, its TextBlocks and calls after; show SelfHitTestInvisible with the first item's
+  PlayFocusAnim, the category's word in the pane with no description and the pane's `Thumbnail` collapsed once (a pane
+  without one logged once); right giving Select, StateFocus on Open the co-op menu and its words in the pane; no part
+  made again while the rows stay; a click at the kit's pointer selecting the row under it, answering `open_menu` on Open
+  the co-op menu and `away` with `host` on Host a session, nothing on a header or with no pointer, a click on another
+  category; the mouse look every 0.1 s (the first look moving nothing, the item the mouse moved onto taking the cursor,
+  a resting mouse never moving it after the keys did, a header or no pointer moving nothing); the game's eight pages by
+  name with their state; a look refused logged once; a class whose Create raises drawn with TextBlocks and Borders, one
+  line for it, the others the game's; a canvas that cannot be made turning the page off with one line. Pure: what a
+  press asks of each kind of row (`Page.press`: the next or previous value, select, `open_menu` with a Test tools row's
   page, nothing on left or right of an action or key row) and which press a click at x makes on a row (`Page.word_at`:
-  the halves of the value part from 1286 to 2246, select elsewhere). Engine, through the co-op menu's model and a
-  fake act and bind: right, left and select on Who can join (the value written, the select sound, the part made again,
-  Friends join without asking hidden and skipped, the wrap), Players held at 4 with the refusal sound and no note,
-  the slider made again at 3, a click on each half and on the title, a refused write with its note in the pane until
-  a move, nothing on left or right of Open the co-op menu and Host a session, the Online tab written off answering
-  `close`, Copy my code refused and gone once the code went, Leave asked again after a move, a mute row kept under the
-  cursor when the row above it goes, a key row waiting (Press a key, the capture words, a key refused or taken, Enter
-  for the default, back to stop, the keys and the mouse moving nothing) and an act that raises turning the page off;
+  the halves of the value part from 1286 to 2246, select elsewhere). Engine, through the co-op menu's model and a fake
+  act and bind: right, left and select on Who can join (the value written, the select sound, the part made again,
+  Friends join without asking hidden and skipped, the wrap), Players held at 4 with the refusal sound and no note, the
+  slider made again at 3, a click on each half and on the title, a refused write with its note in the pane until a move,
+  nothing on left or right of Open the co-op menu and Host a session, the Online tab written off answering `close`, Copy
+  my code refused and gone once the code went, Leave asked again after a move of the keys, of the mouse look or of a
+  click and after its 3 s window, its question in the pane, Copy my code run in place, a run refused with its why, a
+  mute row kept under the cursor when the row above it goes and muted by select too, Remove and Reset all keys asking
+  first then running, a key row waiting (Press a key, the capture words, a key refused or taken, Enter for the default,
+  back to stop, the keys and the mouse moving nothing), each row that needs the game world (Host a session, Find a
+  session, Join with a code, Guide and Write a bug report solo, Invite and Chat while hosting) answering `away` and its
+  id with the confirm cue and nothing run, a Test tools row answering `open_menu` and its page. An act that raises turns
+  the page off;
 - `world/daynight/rule_test` covers `world/daynight/rule.lua`: every row of the map table (keys in lower case, each open
   row complete for its kind of sky, the fixed maps, an unknown map), the rules in their order (SB's screens and
   cutscenes ignored, Xion's story night before photo mode, photo mode's hold whatever the hour, a test pin before Night
@@ -685,7 +693,11 @@ fails the test. The `main/` tests load `main/fixture.lua` first, with UE4SS stub
   each call: a value written and logged as the menu writes it, a confirm in French with the co-op menu never opened, a
   key refused on a clash as the file holds it now, a key taken with `host_key=none` written, `pause_tab=off` in effect
   at once. An F-key goes to the pause tab's capture while a key row of the page waits. Otherwise it runs as before.
-  `main/menu_test` did not change when the co-op menu's rows moved into those functions. While the pause menu's
+  The tab's `away` is the co-op menu's own run of a row that needs the game world: Find a session opens the Sessions
+  screen, Host a session the Create a session screen, Write a bug report asks `report` and puts its words on the
+  notice line. The tab's `open` with a Test tools page opens the co-op menu on that page, with none on its main page.
+  `main/menu_test` did not change when the co-op menu's rows moved into those functions, nor when its toggle took a
+  module page. While the pause menu's
   Online page shows, the pad's words, the navigation keys, Enter and Esc go to the
   tab's `nav` and to no screen (E and F do nothing, RB on Settings still goes to the tab's event); while it does not,
   nothing changes. The page is built behind its guard and handed to the tab with the native entry and tab read, its

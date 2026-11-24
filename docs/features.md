@@ -55,9 +55,11 @@ achievements, which cannot be taken back.
   included), View held for 1 s opens the menu. The mouse works in it too.
 - The game's pause menu gets an Online tab after Settings. RB on Settings (E on the keyboard) or a click on the tab
   opens the Online page, laid out like the game's Settings page: SBO's settings and session rows with their values.
-  Its rows change a value or take a key as the game's Settings rows do, through the same code as the co-op menu's
-  Options page. Its Open the co-op menu row closes the pause menu and opens the co-op menu. The page and its mouse were
-  tested in game; changing values was not tested in game yet.
+  Its rows change a value, take a key or run as the game's Settings rows do, through the same code as the co-op menu.
+  A row that needs the game world (Host a session, Find a session, Join with a code, Invite, Chat, Guide, Write a bug
+  report) closes the pause menu, then runs. A Test tools row opens the co-op menu on its page. Its Open the co-op menu
+  row closes the pause menu and opens the co-op menu. The page and its mouse were tested in game; its rows were not
+  tested in game yet.
 - While at least one other player is linked with you, the game's tutorial popups and record popups are off in your
   game (Hide popups online, on by default). Your own values come back when you leave. The game's settings file keeps
   them the whole time. Not tested in game yet.
