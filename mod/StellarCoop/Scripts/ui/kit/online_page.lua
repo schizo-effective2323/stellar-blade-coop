@@ -1,8 +1,8 @@
 -- Copyright (C) 2026 MotherSphere and the Stellar Blade Online contributors
 -- SPDX-License-Identifier: LicenseRef-SBO-1.0-or-later
 -- SBO License 1.0 or later, in LICENSE and at github.com/MotherSphere/stellar-blade-coop; NOTICE adds a permission.
--- The pause menu's Online page. SB's pause menu (WB_GameMenu_Master) maps its tabs 1 to 8 to its own pages in
--- code, so this page is SBO's own widget: a CanvasPanel added last to the master's root (its WidgetTree's RootWidget,
+-- The pause menu's Online page. SB's pause menu (WB_GameMenu_Master) maps its tabs 1 to 8 to its own pages in code, so
+-- this page is SBO's own widget: a CanvasPanel added last to the master's root (its WidgetTree's RootWidget,
 -- CanvasPanel_0), full screen as SB's pages are, collapsed until ui/kit/pause_tab.lua shows it on tab 9. It lays out
 -- ui/kit/online_model.lua's categories for the state now where SB's Settings page has its parts (WB_Setting_Set's
 -- layout): the left list, the section headers, the rows with their values and the description pane. Each kind is made
@@ -11,25 +11,25 @@
 -- class at its first build saying which way it went. The mouse: the kit's pointer (ui/kit/kit.lua's, in the viewport's
 -- layout units, the page's own) over the boxes the page placed its list items and rows in (Page.under). Every HOVER s
 -- the item the mouse moved onto takes the focus look, as on the Sessions screen; a resting mouse never moves the
--- cursor. A left click selects the item under the mouse. Inside the page: up and down in the list, right or select into
--- the rows, up and down there over the headers, back to the list; back in the list closes the pause menu. In the rows,
--- as on SB's Settings page: left and right change the focused row's value, select gives a list row its next value or
--- runs an action row, a click on a row's value part goes down on its left half and up on its right half, a click
--- elsewhere on a row is select. Each press runs through the co-op menu's own model and code (o.act: ui/kit/menu.lua's
--- act), so both menus change a value and run a row the same way. A press the co-op menu's rules refuse (a row not
--- shown now, a range at its end, a write refused) plays SB's refusal sound and changes nothing; the pane says why when
--- there is a why. Select on a key row waits for the next key as the co-op menu does: the row reads Press a key, the
--- pane says which keys; an F-key (main/keys.lua through ui/kit/pause_tab.lua's capture) is checked against the other
--- keys by the co-op menu's own bind, Enter puts back its default, Esc or B stops the wait, the mouse and the other
--- words do nothing meanwhile. Host a session asks first (a second Select within 3 s, as Leave), then hosts in place
--- with the Create a session screen's request; Invite and Write a bug report run in place too. On a row that still
--- needs the game world (Find a session, Join with a code, Chat, Guide) it answers 'away': ui/kit/pause_tab.lua closes
--- the pause menu, then runs the row as the co-op menu does. The Test tools and the developer pages stay in the co-op
--- menu (F5), the menu for admins and debugging: the page has no row that opens it.
--- Every engine call runs in pcall on the game thread. An engine error that is not a part's own turns the page off
--- until the mod reloads with one line; the Online tab then opens the co-op menu as before. A look a part refuses is
--- logged once a kind. Only UI: no save, no SetInputMode, no Slate focus taken. main/input.lua builds it behind its own
--- guard.
+-- cursor. A left click selects the item under the mouse. Every REFRESH s it reads the state again: an online session
+-- that began or ended changes the list and the rows at once, the cursor kept on its row. Inside the page: up and down
+-- in the list, right or select into the rows, up and down there over the headers, back to the list; back in the list
+-- closes the pause menu. In the rows, as on SB's Settings page: left and right change the focused row's value, select
+-- gives a list row its next value or runs an action row, a click on a row's value part goes down on its left half and
+-- up on its right half, a click elsewhere on a row is select. Each press runs through the co-op menu's own model and
+-- code (o.act: ui/kit/menu.lua's act), so both menus change a value and run a row the same way. A press the co-op
+-- menu's rules refuse (a row not shown now, a range at its end, a write refused) plays SB's refusal sound and changes
+-- nothing; the pane says why when there is a why. Select on a key row waits for the next key as the co-op menu does:
+-- the row reads Press a key, the pane says which keys; an F-key (main/keys.lua through ui/kit/pause_tab.lua's capture)
+-- is checked against the other keys by the co-op menu's own bind, Enter puts back its default, Esc or B stops the wait,
+-- the mouse and the other words do nothing meanwhile. Host a session asks first (a second Select within 3 s, as Leave),
+-- then hosts in place with the Create a session screen's request; Invite and Write a bug report run in place too. On a
+-- row that still needs the game world (Find a session, Join with a code, Chat, Guide) it answers 'away':
+-- ui/kit/pause_tab.lua closes the pause menu, then runs the row as the co-op menu does. The Test tools and the
+-- developer pages stay in the co-op menu (F5), the menu for admins and debugging: the page has no row that opens it.
+-- Every engine call runs in pcall on the game thread. An engine error that is not a part's own turns the page off until
+-- the mod reloads with one line; the Online tab then opens the co-op menu as before. A look a part refuses is logged
+-- once a kind. Only UI: no save, no SetInputMode, no Slate focus taken. main/input.lua builds it behind its own guard.
 -- tests/lua/ui/kit/online_page_test.lua covers it over fakes.
 local U=require('core.unreal')
 local Keep=require('core.keep')
@@ -38,8 +38,9 @@ local Model=require('ui.kit.model')
 local Online=require('ui.kit.online_model')
 local Join=require('core.line')
 -- Slots in the rows window, the most lines it holds (11 rows of 130 in 1448; a longer category scrolls); seconds
--- between mouse looks: none, SB's own menus answer the mouse at once and a look each 0.1 s read as lag in the game.
-local Page={ROWS=11,HOVER=0}
+-- between mouse looks: none, SB's own menus answer the mouse at once and a look each 0.1 s read as lag in the game;
+-- seconds between two reads of the state while the page shows (an online session that began or ended).
+local Page={ROWS=11,HOVER=0,REFRESH=0.25}
 -- SB's Settings page in 3840 by 2160 units, read in the class exports of 26123051. WB_Setting_Set: HB_SettingRoot from
 -- y 384 down to 2160 holds a 200 spacer, the left list (WB_Setting_Tab), a 120 spacer, the rows column, a 120 spacer,
 -- the description pane (its slot's top padding 68). WB_Setting_Tab: the deco image (54 high), a 14 spacer, then the
@@ -291,6 +292,7 @@ function Page.new(o)
     local slots={list={},rows={}}
     -- The item under the mouse at the last look ('list1', 'row3'; nil: none; false: no look yet); when to look again.
     local hover,hover_at=false,0
+    local refresh_at=0 -- When the state is read again (tick); 0 at each show.
     -- The kit's sounds by name. 'wheel_move' is ui_move, the wave SB's Settings list item holds in its Movesound
     -- animation: a list item reached by the mouse or the keys. 'tab' is the FocusChangedSound of SB's Settings list
     -- and rows: a row reached, and a click that shows another category.
@@ -482,7 +484,7 @@ function Page.new(o)
         if off or not canvas then shown=false; return end
         local ok,why=pcall(function()
             if on then
-                ctx,cur,hover=o.ctx(),Page.cursor(),false
+                ctx,cur,hover,refresh_at=o.ctx(),Page.cursor(),false,0
                 model.forget()
                 draw()
                 canvas:SetVisibility(SELF_HIT_TEST_INVISIBLE)
@@ -540,7 +542,7 @@ function Page.new(o)
         if ok and action=='set' and key=='pause_tab' and text=='off' then return 'close' end
     end
     -- The cursor on row again in category id after a press: the categories may have changed (a row shown or hidden,
-    -- the session's categories gone); a row gone puts it on its category's first row.
+    -- the session's categories gone); a row gone (or none) puts it on its category's first row.
     local function keep(id,row)
         cats=model.categories(ctx)
         if #cats==0 then return end
@@ -548,8 +550,21 @@ function Page.new(o)
         cur.cat=math.min(cur.cat,#cats)
         local list=lines(cats[cur.cat])
         cur.row=first(list)
-        for i,line in ipairs(list) do if line.row==row then cur.row=i end end
+        for i,line in ipairs(list) do if row~=nil and line.row==row then cur.row=i end end
         scroll(cur,list)
+    end
+    -- The state read again (tick, every Page.REFRESH s): an online session that began or ended (Host a session from
+    -- the page), a player who came or went. The list and the rows drawn for it, the cursor kept on its row (in the list
+    -- too: the row the rows show from). A row gone takes the cursor to its category's first row, which forgets a first
+    -- Select and the note; a row that stays keeps both. No sound, no log line.
+    local function refresh()
+        local cat=cats[cur.cat]
+        local line=cat and lines(cat)[cur.row]
+        local was=where()
+        ctx=o.ctx()
+        if cat then keep(cat.id,line and line.row) end
+        moved(was)
+        draw()
     end
     -- The row under the cursor pressed with word at now; act's answer.
     local function press(word,now)
@@ -645,11 +660,18 @@ function Page.new(o)
         if not ok then fail(a); return nil end
         return a,b
     end
-    -- Each frame while shown: every HOVER s, the item the mouse moved onto (another one than at the last look). A row
-    -- takes the cursor and its focus look. A list item is lit only, as in SB's Settings: a click shows its rows. Both
-    -- play SB's move sound. A resting mouse never moves anything, even while the keys move the cursor under it.
+    -- Each frame while shown: every REFRESH s, the state read again (refresh). Every HOVER s, the item the mouse moved
+    -- onto (another one than at the last look). A row takes the cursor and its focus look. A list item is lit only, as
+    -- in SB's Settings: a click shows its rows. Both play SB's move sound. A resting mouse never moves anything, even
+    -- while the keys move the cursor under it.
     function self.tick(now)
-        if off or not shown or now<hover_at or cur.capturing then return end
+        if off or not shown then return end
+        if now>=refresh_at then
+            refresh_at=now+Page.REFRESH
+            local ok,why=pcall(refresh)
+            if not ok then return fail(why) end
+        end
+        if now<hover_at or cur.capturing then return end
         hover_at=now+Page.HOVER
         local ok,why=pcall(function()
             local kind,i=under()

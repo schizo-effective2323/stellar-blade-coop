@@ -31,7 +31,8 @@
 -- why, a mute row kept under the cursor and muted by select too, Remove and Reset
 -- all keys asking first then running, a key row waiting for a key (Press a key, the capture words, a key
 -- refused or taken through a fake bind, select for the default, back to stop, the mouse and the other words doing
--- nothing meanwhile), an act that raises turning the page off.
+-- nothing meanwhile), an act that raises turning the page off. The state read again every Page.REFRESH s while the
+-- page shows (an online session that begins or ends, the cursor kept or put on its category's first row).
 package.path='mod/StellarCoop/Scripts/?.lua;'..package.path
 local U=require('core.unreal')
 local T=require('ui.text')
@@ -680,6 +681,64 @@ do
     page.nav('right',25)
     assert(page.off() and not page.shown() and lines_with('online page: off until the mod reloads: ')==1
         and logged('no act today'),table.concat(logs,'|'))
+    ctx=SOLO
+end
+
+-- The page follows the online session's state: every Page.REFRESH s while it shows (tick) it reads the ctx again, the
+-- list and the rows drawn for it, the cursor kept on its row or put on its category's first row when the row went,
+-- with no sound and no act; a first Select stays while its row stays; a read that raises turns the page off.
+do
+    ctx={mode='none',values=Model.read(''),pages={PAGE}}
+    page=new()
+    page.build(master())
+    page.show(true)
+    local d=first_made('detail')
+    local function pane() return d.props.Text_ItemName.props.text end
+    local function desc() return d.props.Text_Desc.props.text end
+    local function to(label)
+        for _=1,40 do if pane()==label then return end page.nav('down',0) end
+        error('no row '..label)
+    end
+    local function list() -- The list items shown, top down.
+        local shown={}
+        for _,x in ipairs(made) do
+            if x.kind=='tab' and called(x.o,'RemoveFromParent')==0 then
+                shown[#shown+1]={y=select(2,placed(x.o)),name=x.o.props.TabName}
+            end
+        end
+        table.sort(shown,function(a,b) return a.y<b.y end)
+        local names={}
+        for i,t in ipairs(shown) do names[i]=t.name end
+        return names
+    end
+    page.nav('right',0); to('Who can join')
+    local s,a=#sounds,#acts
+    -- An online session begins: Players shows second, the cursor stays on Who can join.
+    ctx.mode,ctx.code,ctx.chat,ctx.members='host','0CS-CBMH',true,{{id='7',name='A',linked=true,muted=false}}
+    page.tick(100)
+    assert(#list()==11 and list()[2]=='Players' and pane()=='Who can join' and #sounds==s and #acts==a,
+        table.concat(list(),' ')..' / '..pane())
+    -- The next change shows at the next read only.
+    ctx.members={}
+    page.tick(100.1); assert(#list()==11 and Page.REFRESH==0.25,'Read again before REFRESH s')
+    page.tick(100.25); assert(#list()==10 and pane()=='Who can join','Read again: no other player, no Players')
+    -- The cursor's row goes (Host a session once the online session began): the category's first row, no note.
+    ctx.mode,ctx.code,ctx.members='none',nil,nil
+    page.tick(101); to('Host a session')
+    page.nav('select',101); assert(desc()==w.confirm_host)
+    s=#sounds
+    ctx.mode,ctx.code='host','0CS-CBMH'
+    page.tick(102)
+    assert(pane()=='Invite a friend (Steam)' and desc()=='' and #sounds==s,pane()..' / '..desc())
+    -- A first Select of Leave survives a read that changes nothing: the second Select within 3 s leaves.
+    to('Leave the session')
+    page.nav('select',110); page.tick(110.5); page.nav('select',111)
+    assert(table.concat(acts,'|',#acts-1)=='confirm_leave nil nil|leave nil nil',table.concat(acts,'|',#acts-1))
+    -- A read that raises: the page off with one line.
+    ctx.members=5
+    page.tick(120)
+    assert(page.off() and not page.shown() and lines_with('online page: off until the mod reloads: ')==1,
+        table.concat(logs,'|'))
     ctx=SOLO
 end
 
