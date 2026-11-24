@@ -4,11 +4,13 @@
 -- The pause menu's Online page (ui/kit/online_page.lua) over fakes. Pure: each row's part kind; its words and value as
 -- the co-op menu draws them; the cursor over ui/kit/online_model.lua's categories in solo and while hosting (the list
 -- wraps, right and select land on Open the co-op menu, the rows skip headers and wrap, select and left in the rows
--- move nothing, back goes to the list, back in the list closes, a long category keeps the cursor inside the 12 slots);
--- what a press asks of each kind of row (Page.press) and which press a click makes on a row's value part
--- (Page.word_at); what is under the mouse in the boxes the page places its parts in (a list item, a row, never a header
--- or a slot past the rows, edges exclusive). Engine: the build adds one collapsed canvas last to the
--- master's root, nothing in it before the show; each of the six SB classes says once that it was built; each part's
+-- move nothing, back goes to the list, back in the list closes, a long category scrolls by height inside SB's rows
+-- window with the cursor's line shown); what a press asks of each kind of row (Page.press) and which press a click
+-- makes on a row's value part (Page.word_at); what is under the mouse in the boxes where SB draws the page's parts (a
+-- list item, a row, never a header, a band or a line past the window, edges exclusive). Engine: the build adds one
+-- collapsed canvas last to the master's root, nothing in it before the show; each of the six SB classes says once that
+-- it was built; the parts sit where SB's Settings page puts its own (the list items, the headers and rows by their
+-- heights, the pane), a long category's lines end above the key hints; each part's
 -- Blueprint texts are set before it enters the canvas and its TextBlocks and calls after; a class whose Create raises
 -- is drawn with a TextBlock and a Border in its place, one line for it, the others SB's; show makes the canvas
 -- SelfHitTestInvisible with the focused item's PlayFocusAnim and the category's word in the pane, no description, the
@@ -117,40 +119,70 @@ do
     assert(Page.press(tools,'select')=='open_menu' and select(2,Page.press(tools,'select'))==PAGE
         and said(tools,'right')=='nil nil','A Test tools row opens the co-op menu on its page')
     assert(said(opt('who_can_join'),'up')=='nil nil' and said(opt('who_can_join'),'back')=='nil nil')
-    -- A click: the value part of a rolling or slider row runs from x 1286 to 2246 in the page's units (the rows at
-    -- 676, the value 610 in, 960 wide), its left half down, its right half up; elsewhere on a row, select.
+    -- A click: the value part of a rolling or slider row runs from x 1406 to 2366 in the page's units (the rows at
+    -- 736, drawn 60 right of it, the value 610 in, 960 wide), its left half down, its right half up; elsewhere on a
+    -- row, select.
     local who=opt('who_can_join')
-    assert(Page.word_at(who,1286)=='left' and Page.word_at(who,1300)=='left' and Page.word_at(who,1765)=='left')
-    assert(Page.word_at(who,1766)=='right' and Page.word_at(who,2240)=='right' and Page.word_at(who,2246)=='select')
-    assert(Page.word_at(who,1285)=='select' and Page.word_at(who,700)=='select')
-    assert(Page.word_at(opt('max_players'),1300)=='left' and Page.word_at(mute,2000)=='right')
-    assert(Page.word_at(main('host'),1300)=='select' and Page.word_at(opt('menu_key'),2000)=='select','Option rows')
+    assert(Page.word_at(who,1406)=='left' and Page.word_at(who,1420)=='left' and Page.word_at(who,1885)=='left')
+    assert(Page.word_at(who,1886)=='right' and Page.word_at(who,2360)=='right' and Page.word_at(who,2366)=='select')
+    assert(Page.word_at(who,1405)=='select' and Page.word_at(who,820)=='select')
+    assert(Page.word_at(opt('max_players'),1420)=='left' and Page.word_at(mute,2120)=='right')
+    assert(Page.word_at(main('host'),1420)=='select' and Page.word_at(opt('menu_key'),2120)=='select','Option rows')
 end
--- Pure: what is under the mouse. List items 356 by 100 from 200, 384; rows 1640 by 130 from 676, 384 (WB_Setting_Set's
--- layout, Page.AT).
-local function row_at(i) return 1000,384+(i-1)*130+65 end
-local function item_at(i) return 300,384+(i-1)*100+50 end
+-- SB's Settings page in the page's units, read in WB_Setting_Set, WB_Setting_Tab, WB_Setting_TabButton,
+-- WB_Setting_Category, the WB_Setting_*_Slot classes and WB_Display_Detail: list items 416 by 100 from 200, 452, one
+-- every 120; the rows from y 452, a header 100 high with a band of 100 above it but the first, a row 130, each row
+-- drawn 1640 wide from x 796 (placed at 736, SB's render translation of 60). The middle of line i of a category shown
+-- from its first line, heads its header lines (solo's Session by default).
+local SESSION_HEADS,HOSTING_HEADS,CONTROLS_HEADS={1,3,7},{1,3,8},{1,10,12,16}
+local function row_at(i,heads)
+    local head,y={},452
+    for _,n in ipairs(heads or SESSION_HEADS) do head[n]=true end
+    for n=1,i-1 do y=y+(head[n] and 100 or 130)+(head[n+1] and 100 or 0) end
+    return 1000,y+(head[i] and 50 or 65)
+end
+local function item_at(i) return 300,452+(i-1)*120+50 end
+-- Pure: what is under the mouse.
 do
     local function under(cur,x,y) return table.concat({Page.under(solo,cur,x,y)},' ') end
     local cur=Page.cursor()
     assert(under(cur,item_at(1))=='list 1' and under(cur,item_at(#solo))=='list '..#solo,'The list items')
     assert(under(cur,item_at(#solo+1))=='','No item past the last category')
-    assert(under(cur,200,384)=='list 1' and under(cur,556,384)=='' and under(cur,199,384)=='','Edges')
+    assert(under(cur,200,452)=='list 1' and under(cur,615,452)=='list 1' and under(cur,616,452)==''
+        and under(cur,199,452)=='' and under(cur,300,451)=='','Edges')
+    assert(under(cur,300,551)=='list 1' and under(cur,300,552)=='' and under(cur,300,571)==''
+        and under(cur,300,572)=='list 2','The 20 between two items is no item')
     assert(under(cur,row_at(1))=='' and under(cur,row_at(2))=='row 2' and under(cur,row_at(4))=='row 4',
         'A header is no row: '..under(cur,row_at(1)))
-    assert(under(cur,676+1640,500)=='' and under(cur,row_at(Page.ROWS+1))=='','Past the rows')
-    assert(under(cur,600,500)=='','Between the list and the rows')
+    local y=select(2,row_at(2))
+    assert(under(cur,796,y)=='row 2' and under(cur,795,y)=='' and under(cur,2435,y)=='row 2' and under(cur,2436,y)=='',
+        'Where SB draws the row')
+    assert(under(cur,1000,552)=='row 2' and under(cur,1000,681)=='row 2' and under(cur,1000,682)==''
+        and under(cur,1000,781)=='' and under(cur,1000,882)=='row 4','A row 130 high, the band and the header no row')
+    assert(under(cur,row_at(10))=='row 10' and under(cur,row_at(11))=='','Past the last line')
+    assert(under(cur,700,500)=='','Between the list and the rows')
 end
--- A long category (Controls: 4 headers, 13 rows) keeps the cursor inside the 12 slots, the first header shown at top.
+-- A long category (Controls: 4 headers, 13 rows) scrolls by height: the lines shown end inside SB's rows window (y
+-- 1900, above the key hints), the line after the cursor's shows, the first header shown at top.
 do
     local cur,at=Page.cursor(),nil
     for i,cat in ipairs(solo) do if cat.id=='controls' then at=i end end
     for _=1,at-1 do Page.move(cur,solo,'down') end
     Page.move(cur,solo,'right')
+    local list={} -- Controls' lines as the page makes them: {head=id} or {row=row}.
+    for _,sec in ipairs(solo[at].sections) do
+        list[#list+1]={head=sec.id}
+        for _,row in ipairs(sec.rows) do list[#list+1]={row=row} end
+    end
+    assert(#list==17 and list[10].head and list[12].head and list[16].head,'Controls: '..#list..' lines')
     local moved=false
     for _=1,20 do
         Page.move(cur,solo,'down')
-        assert(cur.row>cur.top and cur.row<=cur.top+Page.ROWS,cur.row..' '..cur.top)
+        local shown,seen=Page.place(list,cur.top),{}
+        for _,p in ipairs(shown) do seen[p.i]=true end
+        local last=shown[#shown]
+        assert(shown[1].i==cur.top+1 and seen[cur.row] and (seen[cur.row+1] or cur.row==#list)
+            and last.y+last.h<=1900,cur.row..' '..cur.top)
         moved=moved or cur.top>0
     end
     assert(moved,'The rows scrolled')
@@ -186,7 +218,9 @@ local function fake(name,props)
                 props.children=props.children or {}
                 table.insert(props.children,args[1])
                 events[#events]=name..':add '..args[1].name
-                return fake(name..' slot')
+                local slot=fake(name..' slot')
+                args[1].props.canvas_slot=slot -- Where it went: its SetPosition.
+                return slot
             end
         end
     end,__newindex=function(_,k,v) props[k]=v; events[#events+1]=name..'.'..k end})
@@ -295,6 +329,25 @@ for _,kind in ipairs(Page.KINDS) do
     assert(lines_with(Parts.CLASS[kind]:match('[^.]+$')..' built from SB\'s class')==1,kind)
 end
 assert(logged('online page: built in ') and logged(': 22 SB parts, 0 drawn by the kit'),table.concat(logs,'|'))
+-- Where the parts sit, as SB's Settings page puts its own: the list items from 200, 452 every 120; Session's lines from
+-- 736, 452, each header 100 high with a band of 100 above it but the first, each row 130; the pane at 2556, 452.
+local function placed(x)
+    for _,c in ipairs(x.props.canvas_slot.calls) do if c[1]=='SetPosition' then return c[2].X,c[2].Y end end
+end
+do
+    local rows,n={},0
+    for _,m in ipairs(made) do
+        local x,y=placed(m.o)
+        if m.kind=='tab' then
+            assert(x==200 and y==452+n*120,'Item '..(n+1)..' at '..x..', '..y)
+            n=n+1
+        elseif m.kind~='detail' then rows[#rows+1]=x..','..y end
+    end
+    assert(n==11 and table.concat(rows,' ')=='736,452 736,552 736,782 736,882 736,1012 736,1142 736,1372 736,1472 '
+        ..'736,1602 736,1732',table.concat(rows,' '))
+    local x,y=placed(first_made('detail'))
+    assert(x==2556 and y==452,'The pane at '..x..', '..y)
+end
 -- Each Blueprint text before AddChildToCanvas, each TextBlock and call after it.
 local function order(x,before,after)
     local added=assert(at(canvas.name..':add '..x.name),x.name..' not added')
@@ -357,8 +410,18 @@ mouse=nil
 assert(page.click()==nil and detail.props.Text_ItemName.props.text=='Open the co-op menu','No pointer: nothing')
 -- Another category: its rows made, the tab parts kept.
 mouse={item_at(5)} -- The fifth list item: Controls.
-local tabs=made_n('tab')
+local tabs,was=made_n('tab'),#made
 assert(page.click()==nil and made_n('tab')==tabs and detail.props.Text_ItemName.props.text=='Controls')
+-- Controls (4 headers, 13 rows): the lines that end inside SB's rows window (y 1900, above the key hints), its
+-- keyboard rows then the controller header.
+do
+    local ends={}
+    for i=was+1,#made do
+        local y=select(2,placed(made[i].o))
+        ends[#ends+1]=y+(made[i].kind=='header' and 100 or 130)
+    end
+    assert(#ends==10 and ends[1]==552 and ends[9]==1592 and ends[10]==1792,table.concat(ends,' '))
+end
 -- The mouse look: the first look notes only; the item the mouse moved onto takes the cursor; a resting mouse never.
 page.show(true)
 local function pane() return detail.props.Text_ItemName.props.text end
@@ -457,9 +520,9 @@ do
         and latest('slider','Players').props.CurrentPercent==0.5,'Made again at 3 of 2 to 4')
     -- A click on Who can join's value part: its left half down, its right half up; elsewhere on the row, select.
     local y=select(2,row_at(8)) -- Slot 8: Who can join (Friends join without asking under it while Public).
-    mouse={1300,y}; page.click(5); assert(acts[#acts]=='set who_can_join closed' and pane()=='Who can join')
-    mouse={2240,y}; page.click(5); assert(acts[#acts]=='set who_can_join public')
-    mouse={700,y}; page.click(5); assert(acts[#acts]=='set who_can_join friends')
+    mouse={1420,y}; page.click(5); assert(acts[#acts]=='set who_can_join closed' and pane()=='Who can join')
+    mouse={2360,y}; page.click(5); assert(acts[#acts]=='set who_can_join public')
+    mouse={820,y}; page.click(5); assert(acts[#acts]=='set who_can_join friends')
     mouse=nil
     -- A write the co-op menu refuses: SB's refusal sound, its note in the pane; a move clears the note.
     act_ok,act_note=false,'Not saved: x'
@@ -517,11 +580,12 @@ do
     assert(table.concat(acts,'|',#acts-1)=='confirm_leave nil nil|confirm_leave nil nil' and desc()==w.confirm_leave
         and heard()=='confirm','Past 3 s: asked again')
     -- The mouse look leaving the row and coming back forgets the first Select (slot 7 Leave, slot 9 Who can join).
-    mouse={row_at(7)}; page.tick(39.5)
-    page.nav('select',40); mouse={row_at(9)}; page.tick(40.5); mouse={row_at(7)}; page.tick(41); page.nav('select',41)
+    local leave,who={row_at(7,HOSTING_HEADS)},{row_at(9,HOSTING_HEADS)}
+    mouse=leave; page.tick(39.5)
+    page.nav('select',40); mouse=who; page.tick(40.5); mouse=leave; page.tick(41); page.nav('select',41)
     assert(table.concat(acts,'|',#acts-1)=='confirm_leave nil nil|confirm_leave nil nil','Asked again after the mouse')
     -- So does a click on another row: Leave, Who can join's name (its next value), Leave again within 3 s.
-    page.click(45); mouse={row_at(9)}; page.click(45); mouse={row_at(7)}; page.click(46)
+    page.click(45); mouse=who; page.click(45); mouse=leave; page.click(46)
     assert(table.concat(acts,'|',#acts-2)=='confirm_leave nil nil|set who_can_join friends|confirm_leave nil nil',
         table.concat(acts,'|',#acts-2))
     mouse=nil
@@ -560,7 +624,7 @@ do
         and heard()=='confirm',tostring(latest('option','Open this menu').props.Text_ItemValue))
     page.nav('down',30); page.nav('left',30); page.nav('right',30)
     assert(pane()=='Open this menu' and desc()==w.capture and #binds==0,'Waiting: the other words do nothing')
-    mouse={row_at(3)}; page.tick(30); mouse={row_at(4)}; page.tick(31)
+    mouse={row_at(3,CONTROLS_HEADS)}; page.tick(30); mouse={row_at(4,CONTROLS_HEADS)}; page.tick(31)
     assert(page.click(31)==nil and pane()=='Open this menu','Waiting: the mouse moves nothing')
     mouse=nil
     bound={false,nil,'Show the status already uses this key.'}

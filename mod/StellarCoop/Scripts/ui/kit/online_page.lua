@@ -35,14 +35,22 @@ local Parts=require('ui.kit.parts')
 local Model=require('ui.kit.model')
 local Online=require('ui.kit.online_model')
 local Join=require('core.line')
--- Slots in the rows area (a longer category scrolls); seconds between mouse looks: none, SB's own menus answer the
--- mouse at once and a look each 0.1 s read as lag in the game.
-local Page={ROWS=12,HOVER=0}
--- WB_Setting_Set's layout in 3840 by 2160 units, read in its class export: from x 0 at y 384, a 200 spacer, the left
--- list (356 wide, items 100 high), a 120 spacer, the rows (1640 wide, 130 a slot), a 120 spacer, the description pane
--- (780 by 1344, 68 down).
-Page.AT={list={x=200,y=384,pitch=100,w=356,h=100},rows={x=676,y=384,pitch=130,w=1640,h=130},
-    detail={x=2436,y=452,w=780,h=1344}}
+-- Slots in the rows window, the most lines it holds (11 rows of 130 in 1448; a longer category scrolls); seconds
+-- between mouse looks: none, SB's own menus answer the mouse at once and a look each 0.1 s read as lag in the game.
+local Page={ROWS=11,HOVER=0}
+-- SB's Settings page in 3840 by 2160 units, read in the class exports of 26123051. WB_Setting_Set: HB_SettingRoot from
+-- y 384 down to 2160 holds a 200 spacer, the left list (WB_Setting_Tab), a 120 spacer, the rows column, a 120 spacer,
+-- the description pane (its slot's top padding 68). WB_Setting_Tab: the deco image (54 high), a 14 spacer, then the
+-- list items (WB_Setting_TabButton: Image_Normal 100 high, SizeBox_1 356 wide in a padding of 30 each side) with a 20
+-- spacer between them. The rows column, as WB_Display_Detail and WB_Graphic_Detail (the pages with section headers)
+-- place it: their overlay slot's top padding 8 and bottom 200 in WB_Setting_Set, the scroll box in a padding of 60
+-- (top, right, bottom); in it a header (WB_Setting_Category's SizeBox_21: 1640 by 100), a header after rows with a top
+-- padding of 100 (its ScrollBoxSlot), a row (the slot classes' SizeBox_0: 1640 by 130). The rows window ends at y 1900
+-- (2160 less 200 and 60), above the key hints. The slot classes' SizeBox_0 also holds a render translation of 60 on x:
+-- SB draws each row 60 right of its place (shift).
+Page.AT={list={x=200,y=452,pitch=120,w=416,h=100},
+    rows={x=736,y=452,w=1640,h=130,head=100,band=100,bottom=1900,shift=60},
+    detail={x=2556,y=452,w=780,h=1344}}
 -- The value part of WB_Setting_Rolling_Slot and of WB_Setting_Slider_Slot, from the row's left edge: HorizontalBox_1
 -- holds SizeBox_3 (580 wide, the title), then SizeBox_1 (960 wide after a left padding of 30, the value). Read in
 -- their class exports. SB's own click button of the rolling row (Button_Action_ForClick) spans the whole row.
@@ -100,12 +108,30 @@ local function first(list) for i,line in ipairs(list) do if not line.head then r
 -- The cursor: in the left list (list) or in the rows, its category, its line in that category and the first line
 -- shown (top).
 function Page.cursor() return {list=true,cat=1,row=2,top=0} end
--- Keeps the cursor's line in view with one line around it (a header above the first row shows).
-local function scroll(cur,n)
-    local top=math.max(0,math.min(cur.top,n-Page.ROWS))
+-- The lines of list shown from line top+1 down the rows window, as SB's Settings rows: each line's index i, its y and
+-- its height h. A header is head high with a band above it unless it is the first line shown, a row h high; the lines
+-- that end inside the window.
+function Page.place(list,top)
+    local A,out=Page.AT.rows,{}
+    local y=A.y
+    for i=top+1,#list do
+        local h=list[i].head and A.head or A.h
+        if list[i].head and i>top+1 then y=y+A.band end
+        if y+h>A.bottom or #out==Page.ROWS then break end
+        out[#out+1]={i=i,y=y,h=h}
+        y=y+h
+    end
+    return out
+end
+-- Keeps the cursor's line in view with one line around it (a header above the first row shows), the window filled down
+-- to the category's last line.
+local function scroll(cur,list)
+    local function last(top) return top+#Page.place(list,top) end
+    local top=cur.top
+    while top>0 and last(top-1)>=#list do top=top-1 end
     if cur.row<=top+1 then top=math.max(0,cur.row-2)
-    elseif cur.row>=top+Page.ROWS then top=math.min(n-Page.ROWS,cur.row-Page.ROWS+1) end
-    cur.top=math.max(0,top)
+    else while top<cur.row-1 and last(top)<math.min(#list,cur.row+1) do top=top+1 end end
+    cur.top=top
 end
 -- A navigation word ('up', 'down', 'left', 'right', 'select', 'back') over cats (online_model's categories now): the
 -- cursor moves (up and down wrap; in the rows they skip the headers); right or select goes into the rows, on the
@@ -126,7 +152,7 @@ function Page.move(cur,cats,word)
     if not list[cur.row] or list[cur.row].head then cur.row=first(list) end -- The rows changed meanwhile.
     if word=='up' or word=='down' then
         repeat cur.row=(cur.row-1+(word=='up' and -1 or 1))%#list+1 until not list[cur.row].head
-        scroll(cur,#list)
+        scroll(cur,list)
     elseif word=='back' then cur.list=true end
     return nil
 end
@@ -144,29 +170,29 @@ function Page.press(row,word)
     if row.key and not row.bind then return 'change',word=='left' and -1 or 1 end
 end
 -- The press a left click at x (the page's units) makes on row: left or right on the two halves of a rolling or slider
--- row's value part (Page.AT.value), select elsewhere on the row.
+-- row's value part (Page.AT.value, where SB draws it), select elsewhere on the row.
 function Page.word_at(row,x)
-    local from,w=Page.AT.rows.x+Page.AT.value.x,Page.AT.value.w
+    local from,w=Page.AT.rows.x+Page.AT.rows.shift+Page.AT.value.x,Page.AT.value.w
     if Page.kind(row)=='option' or x<from or x>=from+w then return 'select' end
     return x<from+w/2 and 'left' or 'right'
 end
--- What is under x, y (the kit's pointer, in the page's units) in the boxes the page placed: 'list' and the category, or
--- 'row' and the slot of a row (a header's slot is no row), or nil.
+-- What is under x, y (the kit's pointer, in the page's units) in the boxes SB draws the page's parts in: 'list' and the
+-- category, or 'row' and the slot of a row (a header's slot is no row), or nil.
 function Page.under(cats,cur,x,y)
-    local function inside(at,i)
-        local top=at.y+(i-1)*at.pitch
-        return x>=at.x and x<at.x+at.w and y>=top and y<top+at.h
+    local L,R=Page.AT.list,Page.AT.rows
+    for i=1,#cats do
+        local top=L.y+(i-1)*L.pitch
+        if x>=L.x and x<L.x+L.w and y>=top and y<top+L.h then return 'list',i end
     end
-    local A=Page.AT
-    for i=1,#cats do if inside(A.list,i) then return 'list',i end end
     local list=cats[cur.cat] and lines(cats[cur.cat]) or {}
-    for i=1,Page.ROWS do
-        local line=list[cur.top+i]
-        if line and not line.head and inside(A.rows,i) then return 'row',i end
+    local from=R.x+R.shift
+    for i,p in ipairs(Page.place(list,cur.top)) do
+        if not list[p.i].head and x>=from and x<from+R.w and y>=p.y and y<p.y+p.h then return 'row',i end
     end
 end
 -- What to draw: list {kind='tab', label=, look=} per category; rows, one per slot ({kind='header', head=true,
--- label=}, {kind=, label=, value=, percent= (a slider's), row=, look=} or false); detail {title=, desc=}. look:
+-- label=, y=}, {kind=, label=, value=, percent= (a slider's), row=, look=, y=} or false; y: Page.place's); detail
+-- {title=, desc=}. look:
 -- 'focus' (the cursor), 'select' (the category the rows show while the cursor is in them, and the list item under
 -- the mouse, cur.over) or 'normal'. The pane's description is the last press's note
 -- (cur.note: a confirm's question, a refusal's why, the reload note) while the cursor is in the rows.
@@ -183,14 +209,17 @@ function Page.specs(cats,cur,w,gw,ctx)
             look=i==cur.cat and (cur.list and 'focus' or 'select') or i==cur.over and 'select' or 'normal'}
     end
     local list=lines(cats[cur.cat])
+    local placed=Page.place(list,cur.top)
     for i=1,Page.ROWS do
-        local line=list[cur.top+i]
+        local p=placed[i]
+        local line=p and list[p.i]
         if not line then out.rows[i]=false
-        elseif line.head then out.rows[i]={kind='header',head=true,label=w.online_page.sec[line.head] or line.head}
+        elseif line.head then
+            out.rows[i]={kind='header',head=true,label=w.online_page.sec[line.head] or line.head,y=p.y}
         else
             local row=line.row
             local s={kind=Page.kind(row),row=row,label=Page.label(w,gw,row,ctx),value=Page.value(w,row,ctx),
-                look=(not cur.list and cur.top+i==cur.row) and 'focus' or 'normal'}
+                look=(not cur.list and p.i==cur.row) and 'focus' or 'normal',y=p.y}
             if row.bind and row.key==cur.capturing then s.value=w.press end -- Waiting for a key, as in the co-op menu.
             if s.kind=='slider' then s.percent=percent(row,ctx) end
             out.rows[i]=s
@@ -314,6 +343,7 @@ function Page.new(o)
             return rec
         end
         local at=kind=='tab' and Page.AT.list or Page.AT.rows
+        if kind~='tab' then x=x+at.shift end -- Where SB draws its row, so the mouse boxes hold.
         rec.back=keep(border(theme.clear,x,y,at.w,at.h-10))
         rec.bar=keep(border(theme.beta,x,y,6,at.h-10))
         rec.bar:SetVisibility(COLLAPSED)
@@ -393,7 +423,7 @@ function Page.new(o)
         local s=Page.specs(cats,cur,w,gw,ctx)
         local A=Page.AT
         for i=1,LIST do sync(slots.list,i,s.list[i],A.list.x,A.list.y+(i-1)*A.list.pitch) end
-        for i=1,Page.ROWS do sync(slots.rows,i,s.rows[i],A.rows.x,A.rows.y+(i-1)*A.rows.pitch) end
+        for i=1,Page.ROWS do sync(slots.rows,i,s.rows[i],A.rows.x,s.rows[i] and s.rows[i].y) end
         local d=slots.detail
         if not d then
             d=make('detail',s.detail,A.detail.x,A.detail.y)
@@ -522,7 +552,7 @@ function Page.new(o)
         local list=lines(cats[cur.cat])
         cur.row=first(list)
         for i,line in ipairs(list) do if line.row==row then cur.row=i end end
-        scroll(cur,#list)
+        scroll(cur,list)
     end
     -- The row under the cursor pressed with word at now; act's answer.
     local function press(word,now)
