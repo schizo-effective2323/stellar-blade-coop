@@ -5,13 +5,18 @@
 -- the co-op menu draws them; the cursor over ui/kit/online_model.lua's categories in solo and while hosting (the list
 -- wraps, right and select land on Open the co-op menu, the rows skip headers and wrap, select there opens the co-op
 -- menu, select elsewhere and left do nothing, back goes to the list, back in the list closes, a long category keeps
--- the cursor inside the 12 slots). Engine: the build adds one collapsed canvas last to the master's root; each of the
+-- the cursor inside the 12 slots); what is under the mouse in the boxes the page places its parts in (a list item, a
+-- row, never a header or a slot past the rows, edges exclusive). Engine: the build adds one collapsed canvas last to
+-- the master's root, nothing in it before the show; each of the
 -- six SB classes says once that it was built; each part's Blueprint texts are set before it enters the canvas and its
 -- TextBlocks and calls after; a class whose Create raises is drawn with a TextBlock and a Border in its place, one line
 -- for it, the others SB's; show makes the canvas SelfHitTestInvisible with the focused item's PlayFocusAnim and the
 -- category's word in the pane; right gives Select, StateFocus on Open the co-op menu and its words in the pane; a click
--- moves the cursor to the hovered row, on Open the co-op menu it answers 'open_menu'; a refused look is logged once; a
--- canvas that cannot be made turns the page off with one line; visibility() names SB's eight pages with their state.
+-- (the kit's pointer) selects the row under the mouse, on Open the co-op menu it answers 'open_menu', on a header or
+-- with no pointer it does nothing, on a list item it shows that category; the mouse look (tick, every HOVER s) only
+-- notes what is under the mouse at its first look, then the item the mouse moved onto takes the cursor, while a
+-- resting mouse never does, even after the keys moved the cursor; a refused look is logged once; a canvas that cannot
+-- be made turns the page off with one line; visibility() names SB's eight pages with their state.
 package.path='mod/StellarCoop/Scripts/?.lua;'..package.path
 local U=require('core.unreal')
 local T=require('ui.text')
@@ -82,6 +87,21 @@ for _,cats in ipairs({solo,hosting}) do
     assert(Page.move(cur,cats,'back')=='close' and cur.list,'Back in the list closes the pause menu')
 end
 assert(Page.move(Page.cursor(),{},'back')=='close' and Page.move(Page.cursor(),{},'down')==nil,'No category')
+-- Pure: what is under the mouse. List items 356 by 100 from 200, 384; rows 1640 by 130 from 676, 384 (WB_Setting_Set's
+-- layout, Page.AT).
+local function row_at(i) return 1000,384+(i-1)*130+65 end
+local function item_at(i) return 300,384+(i-1)*100+50 end
+do
+    local function under(cur,x,y) return table.concat({Page.under(solo,cur,x,y)},' ') end
+    local cur=Page.cursor()
+    assert(under(cur,item_at(1))=='list 1' and under(cur,item_at(#solo))=='list '..#solo,'The list items')
+    assert(under(cur,item_at(#solo+1))=='','No item past the last category')
+    assert(under(cur,200,384)=='list 1' and under(cur,556,384)=='' and under(cur,199,384)=='','Edges')
+    assert(under(cur,row_at(1))=='' and under(cur,row_at(2))=='row 2' and under(cur,row_at(4))=='row 4',
+        'A header is no row: '..under(cur,row_at(1)))
+    assert(under(cur,676+1640,500)=='' and under(cur,row_at(Page.ROWS+1))=='','Past the rows')
+    assert(under(cur,600,500)=='','Between the list and the rows')
+end
 -- A long category (Controls: 4 headers, 13 rows) keeps the cursor inside the 12 slots, the first header shown at top.
 do
     local cur,at=Page.cursor(),nil
@@ -180,10 +200,12 @@ local function master()
 end
 local THEME={text='text',grey='grey',beta='beta',focus='focus',clear='clear'}
 local ctx=SOLO
+local mouse=nil -- The kit's pointer: {x, y} or nil.
 local function new()
-    events,logs,made,constructed,raising,no_canvas={},{},{},{},{},false
+    events,logs,made,constructed,raising,no_canvas,mouse={},{},{},{},{},false,nil
     return Page.new({log=function(line) logs[#logs+1]=line end,words=function() return w end,
-        guide_words=function() return gw end,ctx=function() return ctx end,theme=THEME})
+        guide_words=function() return gw end,ctx=function() return ctx end,theme=THEME,
+        pointer=function() if mouse then return mouse[1],mouse[2] end end})
 end
 local function first_made(kind) for _,m in ipairs(made) do if m.kind==kind then return m.o end end end
 local function made_n(kind)
@@ -192,14 +214,14 @@ local function made_n(kind)
     return n
 end
 
--- The build: one canvas, collapsed, added last to the master's root; its 12 list and 12 row hit boxes; no part yet.
+-- The build: one canvas, collapsed, added last to the master's root; nothing in it yet.
 local page=new()
 local m,root=master()
 assert(page.build(m)==true and not page.off() and not page.shown())
 local canvas=root.props.children[1]
 assert(#root.props.children==1 and canvas.name:find('^CanvasPanel') and canvas.props.visibility==1,'A collapsed canvas')
 assert(constructed[1].outer==m.props.WidgetTree,'Made in the master\'s WidgetTree')
-assert(#canvas.props.children==24 and #made==0,'The hit boxes, no part before the show')
+assert(#(canvas.props.children or {})==0 and #made==0,'No part before the show')
 assert(page.build(m)==true and #root.props.children==1,'The same master: built once')
 -- Show: SelfHitTestInvisible; solo's Session drawn from SB's six classes, each said once; the first item focused.
 page.show(true)
@@ -251,29 +273,53 @@ assert(called(tab,'PlayFocusAnim')==2,'Back in the list: focused again')
 local parts=#made
 page.nav('right'); page.nav('down'); page.nav('up')
 assert(#made==parts,'Moving in the rows makes no part again')
--- A click: the row under the mouse takes the cursor; on Open the co-op menu it answers open_menu.
-local function hit_row(i) return canvas.props.children[12+i] end
-hit_row(4).props.hovered=true -- Slot 4: Host a session.
+-- A click: the row under the kit's pointer selected; on Open the co-op menu it answers open_menu.
+mouse={row_at(4)} -- Slot 4: Host a session.
 assert(page.click()==nil)
-local host
-for _,x in ipairs(made) do if x.kind=='option' and x.o.props.Text_TitleValue=='Host a session' then host=x.o end end
+local function part(title)
+    local found
+    for _,x in ipairs(made) do if x.kind=='option' and x.o.props.Text_TitleValue==title then found=x.o end end
+    return found
+end
+local host=part('Host a session')
 assert(host.calls[#host.calls][2]=='StateFocus' and open_menu.calls[#open_menu.calls][2]=='StateNormal')
 assert(detail.props.Text_ItemName.props.text=='Host a session')
-hit_row(4).props.hovered=false; hit_row(2).props.hovered=true
+mouse={row_at(2)}
 assert(page.click()=='open_menu','A click on Open the co-op menu')
-hit_row(2).props.hovered=false
-assert(hit_row(1).props.visibility==1 and hit_row(2).props.visibility==0,'No hit box over a header')
+mouse={row_at(1)}
+assert(page.click()==nil and detail.props.Text_ItemName.props.text=='Open the co-op menu','A header takes no click')
+mouse=nil
+assert(page.click()==nil and detail.props.Text_ItemName.props.text=='Open the co-op menu','No pointer: nothing')
 -- Another category: its rows made, the tab parts kept.
-canvas.props.children[2].props.hovered=true -- The second list item: Controls.
+mouse={item_at(2)} -- The second list item: Controls.
 local tabs=made_n('tab')
 assert(page.click()==nil and made_n('tab')==tabs and detail.props.Text_ItemName.props.text=='Controls')
-canvas.props.children[2].props.hovered=false
+-- The mouse look: the first look notes only; the item the mouse moved onto takes the cursor; a resting mouse never.
+page.show(true)
+local function pane() return detail.props.Text_ItemName.props.text end
+mouse={row_at(2)}
+page.tick(40); assert(pane()=='Session','The first look moves nothing')
+mouse={row_at(4)}
+page.tick(40.05); assert(pane()=='Session','Not before HOVER s')
+page.tick(40.1)
+host=part('Host a session') -- The latest one: Session's rows were made again after Controls.
+assert(pane()=='Host a session' and host.calls[#host.calls][2]=='StateFocus','Moved onto Host a session')
+page.nav('up'); assert(pane()=='Open the co-op menu')
+page.tick(40.3); assert(pane()=='Open the co-op menu','A resting mouse never moves the cursor')
+mouse={item_at(2)}
+page.tick(40.4); assert(pane()=='Controls','Moved onto Controls in the list')
+mouse={row_at(1)} -- Controls' first header: no item.
+page.tick(40.5); assert(pane()=='Controls')
+mouse=nil
+page.tick(40.6); assert(pane()=='Controls' and not page.off())
 -- visibility(): SB's eight page widgets by name.
 assert(page.visibility()=='WB_Equip_Set=Hidden WB_QuestJournal=Hidden WB_Map_Set=Hidden WB_Bag_Set=Hidden '
     ..'WB_NewSkill_Master=Hidden WB_Album_Set=Hidden WB_Manual_Set=Hidden WB_GameMenu_Setting=Collapsed',
     page.visibility())
 -- Hidden: collapsed; nav and click do nothing.
 page.show(false)
+mouse={row_at(4)}
+page.tick(50)
 assert(not page.shown() and canvas.props.visibility==1 and page.nav('back')==nil and page.click()==nil)
 -- forget(): no engine call; the next build makes a new canvas in the new master.
 page.forget()
@@ -310,7 +356,7 @@ assert(lines_with('WB_Setting_Rolling_Slot_C not built (')==1
     table.concat(logs,'|'))
 local texts={}
 for _,c in ipairs(constructed) do texts[c.umg]=(texts[c.umg] or 0)+1 end
-assert(texts.TextBlock==4 and texts.Border==24+4,'Two rows drawn: a label, a value, a back and a bar each')
+assert(texts.TextBlock==4 and texts.Border==4,'Two rows drawn: a label, a value, a back and a bar each')
 local public=false
 for _,child in ipairs(m4.props.WidgetTree.props.RootWidget.props.children[1].props.children) do
     if child.props.text=='Public' or child.props.text=='Who can join' then public=true end

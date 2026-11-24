@@ -1,28 +1,30 @@
 -- Copyright (C) 2026 MotherSphere and the Stellar Blade Online contributors
 -- SPDX-License-Identifier: LicenseRef-SBO-1.0-or-later
 -- SBO License 1.0 or later, in LICENSE and at github.com/MotherSphere/stellar-blade-coop; NOTICE adds a permission.
--- The pause menu's Online page, stage 1. SB's pause menu (WB_GameMenu_Master) maps its tabs 1 to 8 to its own pages
--- in code, so this page is SBO's own widget: a CanvasPanel added last to the master's root (its WidgetTree's
--- RootWidget, CanvasPanel_0), full screen as SB's pages are, collapsed until ui/kit/pause_tab.lua shows it on tab 9.
--- It lays out ui/kit/online_model.lua's categories for the state now where SB's Settings page has its parts
--- (WB_Setting_Set's layout): the left list, the section headers, the rows with their values and the description pane.
--- Each kind is made from SB's own Settings class (ui/kit/parts.lua's paths) with WidgetBlueprintLibrary:Create, as
--- kit.part does. A class that cannot be made or filled is drawn with UMG TextBlocks and Borders in the kit's THEME
--- instead, one log line per class at its first build saying which way it went. A transparent Border over each list
--- item and row takes the mouse: a click asks IsHovered. Inside the page: up and down in the list, right or select
--- into the rows, up and down there over the headers, back to the list; back in the list closes the pause menu; select
--- or a click on Open the co-op menu opens the co-op menu. Stage 1 changes no value and runs no other row.
--- Every engine call runs in pcall on the game thread. An engine error that is not a part's own turns the page off
--- until the mod reloads with one line; the Online tab then opens the co-op menu as before. A look a part refuses is
--- logged once a kind. Only UI: no save, no SetInputMode, no Slate focus taken. main/input.lua builds it behind its own
--- guard. tests/lua/ui/kit/online_page_test.lua covers it over fakes.
+-- The pause menu's Online page, stage 1. SB's pause menu (WB_GameMenu_Master) maps its tabs 1 to 8 to its own pages in
+-- code, so this page is SBO's own widget: a CanvasPanel added last to the master's root (its WidgetTree's RootWidget,
+-- CanvasPanel_0), full screen as SB's pages are, collapsed until ui/kit/pause_tab.lua shows it on tab 9. It lays out
+-- ui/kit/online_model.lua's categories for the state now where SB's Settings page has its parts (WB_Setting_Set's
+-- layout): the left list, the section headers, the rows with their values and the description pane. Each kind is made
+-- from SB's own Settings class (ui/kit/parts.lua's paths) with WidgetBlueprintLibrary:Create, as kit.part does. A class
+-- that cannot be made or filled is drawn with UMG TextBlocks and Borders in the kit's THEME instead, one log line per
+-- class at its first build saying which way it went. The mouse: the kit's pointer (ui/kit/kit.lua's, in the viewport's
+-- layout units, the page's own) over the boxes the page placed its list items and rows in (Page.under). Every HOVER s
+-- the item the mouse moved onto takes the focus look, as on the Sessions screen; a resting mouse never moves the
+-- cursor. A left click selects the item under the mouse. Inside the page: up and down in the list, right or select into
+-- the rows, up and down there over the headers, back to the list; back in the list closes the pause menu; select or a
+-- click on Open the co-op menu opens the co-op menu. Stage 1 changes no value and runs no other row. Every engine call
+-- runs in pcall on the game thread. An engine error that is not a part's own turns the page off until the mod reloads
+-- with one line; the Online tab then opens the co-op menu as before. A look a part refuses is logged once a kind. Only
+-- UI: no save, no SetInputMode, no Slate focus taken. main/input.lua builds it behind its own guard.
+-- tests/lua/ui/kit/online_page_test.lua covers it over fakes.
 local U=require('core.unreal')
 local Keep=require('core.keep')
 local Parts=require('ui.kit.parts')
 local Model=require('ui.kit.model')
 local Online=require('ui.kit.online_model')
 local Join=require('core.line')
-local Page={ROWS=12} -- Slots in the rows area; a longer category scrolls.
+local Page={ROWS=12,HOVER=0.1} -- Slots in the rows area (a longer category scrolls); seconds between mouse looks.
 -- WB_Setting_Set's layout in 3840 by 2160 units, read in its class export: from x 0 at y 384, a 200 spacer, the left
 -- list (356 wide, items 100 high), a 120 spacer, the rows (1640 wide, 130 a slot), a 120 spacer, the description pane
 -- (780 by 1344, 68 down).
@@ -33,7 +35,7 @@ Page.KINDS={'tab','header','option','rolling','slider','detail'}
 -- init 0x141d90210), for the log line that says what SB's deactivate left shown.
 Page.SB_PAGES={'WB_Equip_Set','WB_QuestJournal','WB_Map_Set','WB_Bag_Set','WB_NewSkill_Master','WB_Album_Set',
     'WB_Manual_Set','WB_GameMenu_Setting'}
-local VISIBLE,COLLAPSED,HIT_TEST_INVISIBLE,SELF_HIT_TEST_INVISIBLE=0,1,3,4 -- ESlateVisibility.
+local COLLAPSED,HIT_TEST_INVISIBLE,SELF_HIT_TEST_INVISIBLE=1,3,4 -- ESlateVisibility.
 local SHOWN={[0]='Visible','Collapsed','Hidden','HitTestInvisible','SelfHitTestInvisible'}
 local WIDGETS='/Script/UMG.Default__WidgetBlueprintLibrary'
 local BOLD='/Game/Art/Font/Bold.Bold' -- The kit's item font (ui/kit/kit.lua's GAME_FONT), for the kit's drawing.
@@ -113,6 +115,21 @@ function Page.move(cur,cats,word)
     elseif word=='back' then cur.list=true end
     return nil
 end
+-- What is under x, y (the kit's pointer, in the page's units) in the boxes the page placed: 'list' and the category, or
+-- 'row' and the slot of a row (a header's slot is no row), or nil.
+function Page.under(cats,cur,x,y)
+    local function inside(at,i)
+        local top=at.y+(i-1)*at.pitch
+        return x>=at.x and x<at.x+at.w and y>=top and y<top+at.h
+    end
+    local A=Page.AT
+    for i=1,#cats do if inside(A.list,i) then return 'list',i end end
+    local list=cats[cur.cat] and lines(cats[cur.cat]) or {}
+    for i=1,Page.ROWS do
+        local line=list[cur.top+i]
+        if line and not line.head and inside(A.rows,i) then return 'row',i end
+    end
+end
 -- What to draw: list {kind='tab', label=, look=} per category; rows, one per slot ({kind='header', head=true,
 -- label=}, {kind=, label=, value=, percent= (a slider's), row=, look=} or false); detail {title=, desc=}. look:
 -- 'focus' (the cursor), 'select' (the category the rows show while the cursor is in them) or 'normal'.
@@ -189,7 +206,7 @@ local FILL={
 }
 -- o: {log=function(line) ([PT] lines), words=function() ui/text's words now, guide_words=function() ui/text/guide's,
 -- ctx=function() online_model's ctx (mode, chat, code, stranger, values, members, pages), theme=ui/kit/kit.lua's
--- THEME}.
+-- THEME, pointer=function() the mouse in the viewport's layout units (ui/kit/kit.lua's pointer): x, y, or nil}.
 function Page.new(o)
     local log,theme=o.log,o.theme
     local wanted={}
@@ -201,7 +218,9 @@ function Page.new(o)
     local off=nil -- Why the page is off for the Lua load, or nil.
     local master,tree,canvas=nil,nil,nil
     local shown,cur,ctx,cats=false,Page.cursor(),{},{}
-    local slots,hits,hit_on={list={},rows={}},{list={},rows={}},{}
+    local slots={list={},rows={}}
+    -- The item under the mouse at the last look ('list1', 'row3'; nil: none; false: no look yet); when to look again.
+    local hover,hover_at=false,0
     local broken,said,refused={},{},{} -- Kinds drawn by the kit; class lines said; look refusals said.
     local built_at,made=nil,{sb=0,kit=0} -- The clock of a build whose first draw is not logged yet; parts it made.
     local function short(kind) return Parts.CLASS[kind]:match('[^.]+$') end
@@ -321,24 +340,13 @@ function Page.new(o)
         end
         if have then look(have,s.look or 'normal') end
     end
-    local function show_hit(b,on)
-        if hit_on[b]==on then return end
-        hit_on[b]=on
-        b:SetVisibility(on and VISIBLE or COLLAPSED)
-    end
     local function draw()
         local w,gw=o.words(),o.guide_words()
         cats=model.categories(ctx)
         local s=Page.specs(cats,cur,w,gw,ctx)
         local A=Page.AT
-        for i=1,LIST do
-            sync(slots.list,i,s.list[i],A.list.x,A.list.y+(i-1)*A.list.pitch)
-            show_hit(hits.list[i],s.list[i]~=nil)
-        end
-        for i=1,Page.ROWS do
-            sync(slots.rows,i,s.rows[i],A.rows.x,A.rows.y+(i-1)*A.rows.pitch)
-            show_hit(hits.rows[i],s.rows[i]~=false and not s.rows[i].head)
-        end
+        for i=1,LIST do sync(slots.list,i,s.list[i],A.list.x,A.list.y+(i-1)*A.list.pitch) end
+        for i=1,Page.ROWS do sync(slots.rows,i,s.rows[i],A.rows.x,A.rows.y+(i-1)*A.rows.pitch) end
         local d=slots.detail
         if not d then
             d=make('detail',s.detail,A.detail.x,A.detail.y)
@@ -362,8 +370,8 @@ function Page.new(o)
         pcall(function() if U.valid(canvas) then canvas:SetVisibility(COLLAPSED) end end)
         log('online page: off until the mod reloads: '..off..'; the Online tab opens the co-op menu as before')
     end
-    -- The page in this pause menu (m, its WB_GameMenu_Master): its canvas and the hit boxes, once a master. true, or
-    -- false and why (the page is then off).
+    -- The page in this pause menu (m, its WB_GameMenu_Master): its canvas, once a master. true, or false and why (the
+    -- page is then off).
     function self.build(m)
         if off then return false,off end
         if canvas and master and U.valid(canvas) and U.valid(m) and U.address(m)==U.address(master) then return true end
@@ -377,17 +385,6 @@ function Page.new(o)
             local slot=assert(U.valid(root:AddChildToCanvas(canvas)),'the root widget took no canvas')
             slot:SetAnchors({Minimum={X=0,Y=0},Maximum={X=1,Y=1}})
             slot:SetOffsets({Left=0,Top=0,Right=0,Bottom=0})
-            local A=Page.AT
-            for i=1,LIST do
-                hits.list[i]=new_widget('Border')
-                hits.list[i]:SetBrushColor(theme.clear)
-                put(hits.list[i],A.list.x,A.list.y+(i-1)*A.list.pitch,A.list.w,A.list.h)
-            end
-            for i=1,Page.ROWS do
-                hits.rows[i]=new_widget('Border')
-                hits.rows[i]:SetBrushColor(theme.clear)
-                put(hits.rows[i],A.rows.x,A.rows.y+(i-1)*A.rows.pitch,A.rows.w,A.rows.h)
-            end
             master=m
         end)
         if not ok then
@@ -402,7 +399,7 @@ function Page.new(o)
         if off or not canvas then shown=false; return end
         local ok,why=pcall(function()
             if on then
-                ctx,cur=o.ctx(),Page.cursor()
+                ctx,cur,hover=o.ctx(),Page.cursor(),false
                 draw()
                 canvas:SetVisibility(SELF_HIT_TEST_INVISIBLE)
             elseif U.valid(canvas) then canvas:SetVisibility(COLLAPSED) end
@@ -420,31 +417,44 @@ function Page.new(o)
         if not ok then fail(why); return nil end
         return action
     end
-    -- A left click while shown: the cursor on the list item or row under the mouse; 'open_menu' on that row.
+    -- The cursor on what is under the mouse (Page.under's kind and slot): a category in the list, or a row; true when
+    -- there is one.
+    local function point(kind,i)
+        if kind=='list' then
+            if i~=cur.cat or not cur.list then cur.list,cur.cat,cur.row,cur.top=true,i,first(lines(cats[i])),0 end
+        elseif kind=='row' then cur.list,cur.row=false,cur.top+i
+        else return false end
+        draw()
+        return true
+    end
+    local function under()
+        local x,y=o.pointer()
+        if x then return Page.under(cats,cur,x,y) end
+    end
+    -- A left click while shown: the list item or row under the mouse selected; 'open_menu' on that row.
     function self.click()
         if off or not shown then return nil end
         local ok,answer=pcall(function()
-            for i,b in ipairs(hits.list) do
-                if cats[i] and b:IsHovered()==true then
-                    if i~=cur.cat or not cur.list then
-                        cur.list,cur.cat,cur.row,cur.top=true,i,first(lines(cats[i])),0
-                    end
-                    draw()
-                    return nil
-                end
-            end
-            local list=cats[cur.cat] and lines(cats[cur.cat]) or {}
-            for i,b in ipairs(hits.rows) do
-                local line=list[cur.top+i]
-                if line and not line.head and b:IsHovered()==true then
-                    cur.list,cur.row=false,cur.top+i
-                    draw()
-                    return line.row.id=='open_menu' and 'open_menu' or nil
-                end
-            end
+            local kind,i=under()
+            if not point(kind,i) or kind~='row' then return nil end
+            return Page.move(cur,cats,'select')
         end)
         if not ok then fail(answer); return nil end
         return answer
+    end
+    -- Each frame while shown: every HOVER s, the item the mouse moved onto (another one than at the last look) takes
+    -- the cursor and its focus look. A resting mouse never moves it, even while the keys move the cursor under it.
+    function self.tick(now)
+        if off or not shown or now<hover_at then return end
+        hover_at=now+Page.HOVER
+        local ok,why=pcall(function()
+            local kind,i=under()
+            local key=kind and kind..i
+            local moved=hover~=false and key~=hover
+            hover=key
+            if moved and key then point(kind,i) end
+        end)
+        if not ok then fail(why) end
     end
     -- SB's eight page widgets' visibilities by name ('WB_Equip_Set=Hidden ...'): what SB's deactivate left.
     function self.visibility()
@@ -463,7 +473,7 @@ function Page.new(o)
     -- The master went (a map change, the menu destroyed): every reference dropped, no engine call.
     function self.forget()
         master,tree,canvas,shown=nil,nil,nil,false
-        slots,hits,hit_on={list={},rows={}},{list={},rows={}},{}
+        slots={list={},rows={}}
     end
     function self.off() return off~=nil end
     return self

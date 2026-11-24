@@ -5,20 +5,20 @@
 -- loaded, the keeper made and the Construct hook registered once; a Construct adds one button after SB's 8 with the
 -- word, SB's last button's style, RefreshDesign, the visibilities of SB's last button and of its Button_Action; a
 -- button without Button_Action stops the tab and leaves no half-made button; a second Construct adds none; a row
--- rebuilt to SB's 8 gets it again at the next slow while paused. With no page: a click over the Button (its
--- IsHovered, not the button's; the cached geometry is never read) closes the pause menu once through the native
--- part's close (SB's own, never the widget's CloseSelf),
--- one elsewhere or with no pause menu does nothing; RB closes it, the co-op menu opens at the first tick after the
--- unpause, or after 2 s still paused a give-up line and notice; a close refused for now logs one line and waits for
--- nothing, one that can never work stops the tab with one STOP line and asks pausetab off; pause_tab off makes nothing
--- and asks pausetab off; the asks: once a change, a refused one again at the next slow and logged once; a pause menu of
--- another shape stops the tab with one STOP line and asks pausetab off; coop off stops it. With a page: RB and a
--- hovered click read the tab, build the page, enter, show it, focus our button and defocus SB's button of the tab
--- left, with the shown line and SB's pages now and 0.5 s later; each click logs both hovers in one line and SB's tab
--- one frame later; the page hides when SB shows another tab or the menu closed; it forgets the master when that
--- is gone; Open the co-op menu closes then opens the co-op menu, back in the list closes only; the entry's locked and
--- none change nothing with one line each, off or a page that does not build take the path before the page; a page
--- that turns off while shown closes and opens the co-op menu; coop off hides it with SB's close.
+-- rebuilt to SB's 8 gets it again at the next slow while paused. With no page: a click over the Button (its IsHovered,
+-- not the button's; the cached geometry is never read) closes the pause menu once through the native part's close (SB's
+-- own, never the widget's CloseSelf), one elsewhere or with no pause menu does nothing; RB closes it, the co-op menu
+-- opens at the first tick after the unpause, or after 2 s still paused a give-up line and notice; a close refused for
+-- now logs one line and waits for nothing, one that can never work stops the tab with one STOP line and asks pausetab
+-- off; pause_tab off makes nothing and asks pausetab off; the asks: once a change, a refused one again at the next slow
+-- and logged once; a pause menu of another shape stops the tab with one STOP line and asks pausetab off; coop off stops
+-- it. With a page: RB and a hovered click read the tab, build the page, enter, show it, focus our button and defocus
+-- SB's button of the tab left, with the shown line and SB's pages now and 0.5 s later; each click logs both hovers in
+-- one line and SB's tab one frame later; on tab 9 the page's mouse look runs each frame (a page off there takes the
+-- fault path); the page hides when SB shows another tab or the menu closed; it forgets the master when that is gone;
+-- Open the co-op menu closes then opens the co-op menu, back in the list closes only; the entry's locked and none
+-- change nothing with one line each, off or a page that does not build take the path before the page; a page that turns
+-- off while shown closes and opens the co-op menu; coop off hides it with SB's close.
 package.path='mod/StellarCoop/Scripts/?.lua;'..package.path
 local MASTER='/Game/Art/UI/Widget/GameMenu/WB_GameMenu_Master.WB_GameMenu_Master'
 local MASTER_KEEPER=MASTER..'.StellarCoop_PauseTabKeeper'
@@ -273,13 +273,14 @@ assert(#b11==8 and logs[#logs]:find('^STOP: ') and logs[#logs]:find('the tab but
 
 -- With the page (a fake of ui/kit/online_page.lua's): what it was asked, in order.
 local function fake_page()
-    local p={calls={},on=false,off=false,built=true,answer=nil,clicked=nil,vis='WB_GameMenu_Setting=Hidden'}
+    local p={calls={},on=false,off=false,built=true,answer=nil,clicked=nil,vis='WB_GameMenu_Setting=Hidden',ticks={}}
     local function note(...) p.calls[#p.calls+1]=table.concat({...},' ') end
     p.page={build=function(m) note('build'); p.master=m; return p.built,not p.built and 'no canvas' or nil end,
         show=function(on) note('show',tostring(on)); if not p.off then p.on=on end end,
         shown=function() return p.on end,
         nav=function(word) note('nav',word); return p.answer end,
         click=function() note('click'); return p.clicked end,
+        tick=function(now) p.ticks[#p.ticks+1]=now; if p.tick_off then p.off,p.on=true,false end end,
         visibility=function() return p.vis end,
         forget=function() note('forget'); p.on=false end,
         off=function() return p.off end}
@@ -303,6 +304,7 @@ s.tab.tick(10.2); assert(not logged('0.5 s after'),'Not yet')
 p.vis='WB_GameMenu_Setting=Collapsed'
 s.tab.tick(10.6); s.tab.tick(10.7)
 assert(count(logs,"online page: SB's pages 0.5 s after the deactivate: WB_GameMenu_Setting=Collapsed")==1)
+assert(table.concat(p.ticks,' ')=='10.2 10.6 10.7','The page\'s mouse look each frame on tab 9')
 -- The keys: a move stays on the page; back in the list closes the pause menu only (no co-op menu).
 s.tab.nav('down',10.8); assert(s.closes==0 and p.calls[#p.calls]=='nav down')
 p.answer='close'; s.tab.nav('back',10.9)
@@ -366,7 +368,7 @@ s.paused,s.entry,p.built=true,'entered',false
 local m17=menu(); construct(m17)
 s.tab.event(60); assert(s.closes==5 and not s.tab.page_shown())
 p.built=true
--- A page that turns off while shown: SB's close, the co-op menu, one line.
+-- A page that turns off while shown: SB's close, the co-op menu, one line; in its mouse look too.
 local m18,b18=menu(); construct(m18)
 s.tab.event(70); s.now=9
 p.off=true; p.on=false
@@ -374,9 +376,15 @@ s.tab.nav('down',70.1)
 assert(logged('online page: off while shown; the pause menu closes and the co-op menu opens as before')
     and s.closes==6 and b18[9].defocus==1)
 p.off=false
+local m20,b20=menu(); construct(m20)
+s.now=8; s.tab.event(75); s.now=9
+p.tick_off=true; s.tab.tick(75.1); p.tick_off=false
+assert(count(logs,'online page: off while shown; the pause menu closes and the co-op menu opens as before')==2
+    and s.closes==7 and b20[9].defocus==1 and not s.tab.page_shown(),'Off in its mouse look: the same path')
+p.off=false
 -- coop off with the page shown: hidden, SB's close once, one line; no more buttons.
 local m19=menu(); construct(m19)
 s.tab.event(80)
 s.tab.stop()
-assert(not s.tab.page_shown() and s.closes==7 and logged('online page hidden: coop off') and not s.tab.armed())
+assert(not s.tab.page_shown() and s.closes==8 and logged('online page hidden: coop off') and not s.tab.armed())
 print('pause_tab_test ok')

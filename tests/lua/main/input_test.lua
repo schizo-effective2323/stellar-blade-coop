@@ -481,8 +481,8 @@ end)()
 -- The pause menu's Online page: while it shows (ui/kit/pause_tab.lua's page_shown), the pad's words, the navigation
 -- keys, Enter and Esc go to the tab's nav and to no screen of ours (E and F do nothing); pause_tab still goes to its
 -- event. While it does not show, nothing changes. main/input.lua builds the page behind its own guard: the tab gets it
--- with the native entry and tab read, its ctx gives online_model.lua's fields; a page that does not build logs one
--- line, the tab gets none and the keys work on.
+-- with the native entry and tab read, its ctx gives online_model.lua's fields, its pointer the kit's; a page that does
+-- not build logs one line, the tab gets none and the keys work on.
 ;(function()
     local function pad(...) for _,e in ipairs({...}) do pd.q[#pd.q+1]=e end; loops[1].f() end
     settings_text,status_text,link_mode,in_world,photo_mode='',plain,'none',true,false
@@ -513,6 +513,9 @@ end)()
     assert(ctx.mode=='host' and ctx.code=='0CS-CBMH' and ctx.stranger.name=='S' and ctx.values.who_can_join=='friends'
         and type(ctx.pages)=='table' and type(ctx.members)=='table' and ctx.words==captured.words(),'The page\'s ctx')
     assert(captured.theme==require('ui.kit.kit').THEME and captured.guide_words().row=='Guide')
+    wh.mouse={700,450}
+    local x,y=captured.pointer()
+    assert(x==700 and y==450,'The page\'s mouse: the kit\'s pointer')
     -- A page that does not build: one line, no page for the tab, the keys work on.
     package.loaded['ui.kit.online_page']={new=function() error('no page today') end}
     link_mode,link_code,link_stranger,settings_text='none',nil,nil,''

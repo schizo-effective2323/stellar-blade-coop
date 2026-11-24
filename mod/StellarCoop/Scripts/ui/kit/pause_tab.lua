@@ -198,8 +198,8 @@ function Tab.new(o)
     -- Whether the page shows (the keys and the pad go to nav then). No engine call: the key thread reads it.
     function self.page_shown() return page~=nil and page.shown() end
     -- Each frame: the hook once a Lua load, as soon as the game is far enough and the keep settled; the tab one frame
-    -- after a click; while the page shows, the open tab, hidden when it is not 9 or the pause menu is gone; then, after
-    -- a close, the co-op menu once the game is unpaused, or the give-up after WAIT s.
+    -- after a click; while the page shows, the open tab, hidden when it is not 9 or the pause menu is gone, else the
+    -- page's mouse look; then, after a close, the co-op menu once the game is unpaused, or the give-up after WAIT s.
     function self.tick(now)
         if not hooked and not stopped and o.ready() and (not Keep.wanted(MASTER..'_C') or Keep.ready()) then
             hooked=true
@@ -223,9 +223,13 @@ function Tab.new(o)
                 if t~=9 then
                     hide(type(t)=='number' and 'SB shows tab '..t or t=='none' and 'the pause menu closed'
                         or 'the native part answers '..tostring(t or why))
-                elseif look_at and now>=look_at then
-                    look_at=nil
-                    log("online page: SB's pages "..Tab.LOOK..' s after the deactivate: '..page.visibility())
+                else
+                    if look_at and now>=look_at then
+                        look_at=nil
+                        log("online page: SB's pages "..Tab.LOOK..' s after the deactivate: '..page.visibility())
+                    end
+                    page.tick(now) -- The item the mouse moved onto takes the focus look.
+                    if page.off() then fault(now) end
                 end
             end
         end
