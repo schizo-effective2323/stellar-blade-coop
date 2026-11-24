@@ -1004,14 +1004,16 @@ fails the test. The `main/` tests load `main/fixture.lua` first, with UE4SS stub
   `coop off`. `coop xion recover` is refused outside SBO Xion, sets each of its three modes inside and prints the
   state alone. A stay left in the mode `death` is followed by an arrival in the mode `on`. `coop xion status` ends
   with the recovery's part and the rooms' part inside SBO Xion only. No wall call and no walls part are left. With
-  the pak of 23 November an arrival logs one rooms line and asks no piece. With the five room levels in the pak the
-  arrival's pass opens the five rooms, their hidden rows go to the store the wiring hands over, `coop xion rooms` is
-  refused outside SBO Xion and prints, closes and opens them inside. A map change that took the world calls no row.
-  `coop off` puts every row back. At a map change and at `coop off` the recovery ends before the rooms close. With
-  the full test pak's 161 levels the 34 volume-streamed ones are counted apart and never named as missing, 155
-  characters beside EVE are counted by class with only the five nearest named (class and distance) and the five rooms
-  open. The zone and area of the `engine=` line and EVE's life state are logged at the arrival and once at each
-  change, within a second. The levels line and the characters line come again 10 s later. A look 10 s after that
+  the pak of 23 November an arrival logs one rooms line and asks no piece. With the five room levels in the pak one
+  line says the pak holds 5 of the 10 rooms. The arrival's pass opens those five, their hidden rows go to the store
+  the wiring hands over, `coop xion rooms` is refused outside SBO Xion and prints, closes and opens them inside. A
+  map change that took the world calls no row. `coop off` puts every row back. At a map change and at `coop off` the
+  recovery ends before the rooms close. With two room levels in the pak those two open, the pak asked once a room a
+  Lua load. With the full test pak's 161 levels the 34 volume-streamed ones are counted apart and never named as
+  missing, 155 characters beside EVE are counted by class with only the five nearest named (class and distance) and
+  the ten rooms of the third build's pak open. The zone and area of the `engine=` line and EVE's life state are
+  logged at the arrival and once at each change, within a second. The levels line and the characters line come
+  again 10 s later. A look 10 s after that
   reads once and says nothing. The next look says the two levels that changed and the characters line with the two
   that spawned, once. `coop xion status` ends with the last look;
 - `world/maps/sboxion/recover_test` runs `world/maps/sboxion/recover.lua` over a fake world and a fake status text.
@@ -1058,13 +1060,17 @@ fails the test. The `main/` tests load `main/fixture.lua` first, with UE4SS stub
   doorway: found by its names and refused for another class, mesh, place or instance count, a whole component hidden
   with its two values read first, an instance scaled to nothing where it stands, a piece that reads hidden already
   refused, the put-back and no call on an object that is gone;
-- `world/maps/sboxion/rooms/list_test` checks `world/maps/sboxion/rooms/list.lua`: the five rooms with their levels,
-  the 23 rows as the level dumps of build 26123051 gave them, 11 whole components and 12 instances of 9 instanced
-  components in 8 sublevels, no piece twice, the instance count of each instanced component, each door a waypoint of
+- `world/maps/sboxion/rooms/list_test` checks `world/maps/sboxion/rooms/list.lua`: the ten rooms with their levels,
+  the 41 rows as the level dumps of build 26123051 gave them, 18 whole components and 23 instances of 18 instanced
+  components in 10 sublevels, no piece twice, the instance count of each instanced component (the same in the two
+  rooms that share one), each room starting with its door piece, `D039` left out, each door a waypoint of
   `data.lua`;
 - `world/maps/sboxion/rooms/rooms_test` runs `world/maps/sboxion/rooms/rooms.lua` over a fake world, a fake pak gate
-  and a fake store. With a pak that holds no room it logs one line and reads no level. With the rooms pak the five
-  rooms open in one look once their levels read loaded and visible. A room waits for a missing level and closes
+  and a fake store. The gate is asked for each room on its own. With a pak that holds no room it logs one line with
+  the first reason and reads no level. With a pak of the second build one line names the five rooms it holds of the
+  ten. They open in one look once their levels read loaded and visible. The other five are never looked at. A pak
+  with two rooms opens those two. A room whose ask raises is left out. With all ten the ten open, `D036` and `D158`
+  each hiding their own instances of one component. A room waits for a missing level and closes
   after 30 looks. A row that is not found closes its room with nothing hidden. A row that cannot be hidden closes
   its room with the rows before it put back, while the other rooms open. The put-back asks each hidden row once,
   with a world that still stands and with one that is gone. `coop xion rooms off` puts the rows back and `on` opens
@@ -2108,6 +2114,14 @@ and `tools/install.py` names its program after that path (`tests/native/game/cod
   `tools/install.py` faked;
 - `save_read_test.py`: `tools/save_read.py` on GVAS bodies built in the test (the header, values, containers, the EVAS
   wrapper's checks, the byte-or-name guess, value paths) and its commands on saves in a temporary folder;
+- `cns_coop_saves_test.py`: `tools/compat/cns_coop_saves.py` on a stand-in for CNS's `main.lua` written for the test,
+  with its own hash and insertion lines. No line of CNS is needed. It covers the apply with its backup, a second apply
+  that changes nothing, the remove back to the same bytes and the check of each state. A file of another hash is
+  refused by each command. Apply and remove refuse while the game runs. A remove after a line of the stand-in changed
+  restores the shipped backup, or refuses without one. Then the stand-in with both blocks runs in Lua 5.4 on temporary
+  saves: solo save only, co-op copy only (the fallback), both (the union, the first path put back), neither, the cache
+  reset. On a PC with CNS v2.2 installed, a copy of its `main.lua` goes through apply, a Lua load and remove. Without
+  it, the test says so;
 - `story_lines_test.py`: `tools/story_lines.py` on an invented 29-line example with a known digest, on
   `story_case.json` against `story_case.txt`, on what must leave the digest alone, and its commands on saves and dump
   files in a temporary folder. It also checks `float_repr.txt`, Python's `repr` of 2,331 doubles for the Lua side;
