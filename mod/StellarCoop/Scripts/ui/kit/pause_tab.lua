@@ -198,7 +198,8 @@ function Tab.new(o)
             local left=sb_button(from)
             if left then tab_look(left,false) end
             log('online page shown (from tab '..tostring(from)..', by '..by..')')
-            sound('tab_top')
+            -- shortcut: ui_move, the list items' sound; the cue SB's own tab row plays is native and not read yet.
+            sound('wheel_move')
             log("online page: SB's pages after the deactivate: "..page.visibility())
             look_at=now+Tab.LOOK
         elseif answer=='locked' then log("online page: SB's tab lock is on; nothing changed")

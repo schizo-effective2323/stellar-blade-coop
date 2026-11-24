@@ -101,9 +101,7 @@ for _,a in ipairs({{'mark',TEX..'Item/CommonIcon/4DotMark'},{'link',TEX..'Common
         {'wheel_open',SOUND..'UI_BodySuit_Open',1},{'wheel_move',SOUND..'ui_move',1},
         -- The pause menu's Online page (ui/kit/online_page.lua): tab is the focus sound of SB's Settings page
         -- (FocusChangedSound of WB_Setting_Tab and of WB_Setting_DetailBase).
-        -- shortcut: tab_top is a pick by its name for the Online tab; the cue SB's own tab row plays is native and
-        -- not read yet, change it once it is.
-        {'tab',SOUND..'MainMenu/UI_Tab_2_Cue',1},{'tab_top',SOUND..'MainMenu/UI_Tab_1_Cue',1},
+        {'tab',SOUND..'MainMenu/UI_Tab_2_Cue',1},
         -- confirm: the SelectedSound of WB_Setting_Button_Slot (an action run); refuse: the CantSound of
         -- WB_Setting_Rolling_Slot (a SoundWave, as ui_move). Read in their class exports:
         -- /Game/Sound/UI/MainMenu/UI_Setting_Confirm_Cue.0 and /Game/Sound/UI/ui_beep.0.

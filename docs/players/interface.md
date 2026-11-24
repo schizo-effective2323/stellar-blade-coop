@@ -666,11 +666,11 @@ A row that needs the game world waits for the game to run after the pause menu c
 session, Remove a player, Reset all keys, Mute a player) run with the pause menu open. The page draws its rows again
 after each press.
 
-The focus moving, with the keys or under the mouse, plays the focus sound of the game's Settings page
-(`UI_Tab_2_Cue`). A value changed plays the select sound of its rows (`UI_Setting_Select_Cue`), a row run their
-confirm sound (`UI_Setting_Confirm_Cue`). A click that shows another category plays `ui_move`. Entering the page plays
-`UI_Tab_1_Cue`. The mouse arriving on the Online tab plays `UI_Common_Hover_Cue`. The last two are picks by name: the
-cues the game plays for its own tab row are not read yet.
+A list item reached by the mouse or the keys plays `ui_move`, the sound the game's Settings list items hold. A row
+reached, and a click that shows another category, play the focus sound of the game's Settings page (`UI_Tab_2_Cue`).
+A value changed plays the select sound of its rows (`UI_Setting_Select_Cue`), a row run their confirm sound
+(`UI_Setting_Confirm_Cue`). Entering the page plays `ui_move` too. The mouse arriving on the Online tab plays
+`UI_Common_Hover_Cue`. These last two are picks: the cues the game plays for its own tab row are not read yet.
 
 The co-op menu keeps every row it has: Open the co-op menu on the page, or F5.
 

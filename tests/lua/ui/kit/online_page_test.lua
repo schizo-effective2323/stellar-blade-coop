@@ -379,12 +379,13 @@ local function tab_part(name)
 end
 mouse={item_at(5)}
 page.tick(40.4)
-assert(pane()=='Open the co-op menu' and sounds[#sounds]=='tab' and #sounds==n+2,'Lit, not shown')
+assert(pane()=='Open the co-op menu' and sounds[#sounds]=='wheel_move' and #sounds==n+2,
+    "Lit, not shown, with the sound of SB's list items")
 local controls,session=tab_part('Controls'),tab_part('Session')
 local boxes=called(controls,'PlayFocusAnim')
 assert(controls.calls[#controls.calls][1]=='Select' and session.calls[#session.calls][1]=='Select',
     'Under the mouse: white as the shown category, never the white box')
-assert(page.click()==nil and pane()=='Controls' and sounds[#sounds]=='wheel_move','A click shows its rows')
+assert(page.click()==nil and pane()=='Controls' and sounds[#sounds]=='tab','A click shows its rows')
 assert(called(controls,'PlayFocusAnim')==boxes+1,'The click puts the cursor on it: the white box')
 mouse={item_at(1)} -- The cursor stays on Controls while the mouse lights Session.
 page.tick(40.45)

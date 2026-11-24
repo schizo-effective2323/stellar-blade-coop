@@ -264,8 +264,9 @@ function Page.new(o)
     local slots={list={},rows={}}
     -- The item under the mouse at the last look ('list1', 'row3'; nil: none; false: no look yet); when to look again.
     local hover,hover_at=false,0
-    -- The kit's sounds by name: 'tab' is the focus sound of SB's Settings page; 'wheel_move' is ui_move, the wave
-    -- SB's Settings list item holds in its Movesound animation, played here when a click shows another category.
+    -- The kit's sounds by name. 'wheel_move' is ui_move, the wave SB's Settings list item holds in its Movesound
+    -- animation: a list item reached by the mouse or the keys. 'tab' is the FocusChangedSound of SB's Settings list
+    -- and rows: a row reached, and a click that shows another category.
     local sound=o.sound or function() end
     local broken,said,refused={},{},{} -- Kinds drawn by the kit; class lines said; look refusals said.
     local built_at,made=nil,{sb=0,kit=0} -- The clock of a build whose first draw is not logged yet; parts it made.
@@ -560,7 +561,7 @@ function Page.new(o)
             local a,b
             if line and line.row and (word=='select' or word=='left' or word=='right') then a,b=press(word,now)
             else a=Page.move(cur,cats,word) end
-            if moved(was) then sound('tab') end
+            if moved(was) then sound(cur.list and 'wheel_move' or 'tab') end
             draw()
             return a,b
         end)
@@ -606,7 +607,7 @@ function Page.new(o)
             local shown_cat=cur.cat
             if not point(kind,i) then return nil end
             if kind~='row' then
-                if cur.cat~=shown_cat then sound('wheel_move') end
+                if cur.cat~=shown_cat then sound('tab') end
                 return nil
             end
             local was=where()
@@ -638,7 +639,7 @@ function Page.new(o)
                 cur.over=over
                 draw()
             end
-            if key then sound('tab') end
+            if key then sound(kind=='list' and 'wheel_move' or 'tab') end
         end)
         if not ok then fail(why) end
     end

@@ -349,7 +349,7 @@ assert(logged('click: Online tab hovered: Button_Action no, tab button refused')
 hovered,widget_hovered=true,false
 s.tab.click(30.2)
 assert(logged('click: Online tab hovered: Button_Action yes, tab button no')
-    and s.sounds[#s.sounds]=='tab_top' and logged('online page shown (from tab 3, by a click)')
+    and s.sounds[#s.sounds]=='wheel_move' and logged('online page shown (from tab 3, by a click)')
     and b14[3].defocus==1 and b14[9].focus==1)
 s.now=9
 s.tab.tick(30.3)
