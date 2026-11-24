@@ -613,9 +613,10 @@ without the key path the mod watches.
 
 ### What the page shows
 
-The left list depends on the state. With no online session: Session, Controls, Display, Other players, Photo mode,
-Saves, Help and Test tools while a module's test tools are on. In an online session the list also has Players,
-Shared world, Combat and Game modes. Each category has sections with a header, as in the game's Settings page. Session
+The left list depends on the state. With no online session: Session, Shared world, Combat, Game modes, Controls,
+Display, Other players, Photo mode, Saves, Help and Test tools while a module's test tools are on. A host sets her
+rules before she hosts, as on the co-op menu's Options page. In an online session the list also has Players. Each
+category has sections with a header, as in the game's Settings page. Session
 starts with Open the co-op menu. Each row shows its value as the co-op menu shows it: On or Off, a choice, a number,
 a key name. The pane on the right shows the name of the focused row, or of the category while you are in the list. No
 row has a description or a picture yet: the pane shows the name alone, at its top.
@@ -694,8 +695,7 @@ from the least risky to the most.
    the co-op menu opens. Then pause, open Settings and check that none of its values changed.
 6. On the page, press the key that opened the pause menu (Start on a controller). Expect: the menu closes.
 7. Last: with the page shown, type `coop off` in the console. Expect: the page goes and the pause menu closes.
-8. With a friend: host an online session and open the page again. Expect: Players, Shared world, Combat and Game
-   modes in the list.
+8. With a friend: host an online session and open the page again. Expect: Players in the list.
 
 ### What is not known before the test
 

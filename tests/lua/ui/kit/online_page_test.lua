@@ -229,12 +229,12 @@ assert(page.build(m)==true and #root.props.children==1,'The same master: built o
 -- Show: SelfHitTestInvisible; solo's Session drawn from SB's six classes, each said once; the first item focused.
 page.show(true)
 assert(page.shown() and canvas.props.visibility==4,'Shown, hit tests to its children only')
-assert(made_n('tab')==8 and made_n('header')==3 and made_n('option')==4 and made_n('rolling')==2
+assert(made_n('tab')==11 and made_n('header')==3 and made_n('option')==4 and made_n('rolling')==2
     and made_n('slider')==1 and made_n('detail')==1,'Solo\'s Session: '..#made..' parts')
 for _,kind in ipairs(Page.KINDS) do
     assert(lines_with(Parts.CLASS[kind]:match('[^.]+$')..' built from SB\'s class')==1,kind)
 end
-assert(logged('online page: built in ') and logged(': 19 SB parts, 0 drawn by the kit'),table.concat(logs,'|'))
+assert(logged('online page: built in ') and logged(': 22 SB parts, 0 drawn by the kit'),table.concat(logs,'|'))
 -- Each Blueprint text before AddChildToCanvas, each TextBlock and call after it.
 local function order(x,before,after)
     local added=assert(at(canvas.name..':add '..x.name),x.name..' not added')
@@ -296,7 +296,7 @@ assert(page.click()==nil and detail.props.Text_ItemName.props.text=='Open the co
 mouse=nil
 assert(page.click()==nil and detail.props.Text_ItemName.props.text=='Open the co-op menu','No pointer: nothing')
 -- Another category: its rows made, the tab parts kept.
-mouse={item_at(2)} -- The second list item: Controls.
+mouse={item_at(5)} -- The fifth list item: Controls.
 local tabs=made_n('tab')
 assert(page.click()==nil and made_n('tab')==tabs and detail.props.Text_ItemName.props.text=='Controls')
 -- The mouse look: the first look notes only; the item the mouse moved onto takes the cursor; a resting mouse never.
@@ -317,7 +317,7 @@ page.tick(40.3); assert(pane()=='Open the co-op menu' and #sounds==n+1,'A restin
 local function tab_part(name)
     for _,m in ipairs(made) do if m.kind=='tab' and m.o.props.TabName==name then return m.o end end
 end
-mouse={item_at(2)}
+mouse={item_at(5)}
 page.tick(40.4)
 assert(pane()=='Open the co-op menu' and sounds[#sounds]=='tab' and #sounds==n+2,'Lit, not shown')
 local controls,session=tab_part('Controls'),tab_part('Session')
@@ -379,7 +379,7 @@ local public=false
 for _,child in ipairs(m4.props.WidgetTree.props.RootWidget.props.children[1].props.children) do
     if child.props.text=='Public' or child.props.text=='Who can join' then public=true end
 end
-assert(public and logged(': 17 SB parts, 2 drawn by the kit'),table.concat(logs,'|'))
+assert(public and logged(': 20 SB parts, 2 drawn by the kit'),table.concat(logs,'|'))
 page.nav('down')
 assert(page.shown() and not page.off(),'The kit\'s drawing moves with the cursor')
 

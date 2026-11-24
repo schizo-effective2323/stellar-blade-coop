@@ -39,19 +39,21 @@ M.CATEGORIES={
         -- Chat shows with no session too: the loopback, the SBO lobby.
         section('current',main('invite'),main('copy'),main('chat'),main('leave')),
         section('hosting',opt('who_can_join'),opt('friends_ask'),opt('max_players'))),
-    -- No blocked section: no row blocks a player today.
+    -- No blocked section: no row blocks a player today. Players only in an online session: its rows are the session's
+    -- players. Shared world, Combat and Game modes show in solo too, as the co-op menu's Options page shows them: a host
+    -- sets her rules before she hosts.
     category('players',SESSION,section('members',M.MUTES,main('remove'))),
-    category('world',SESSION,
+    category('world',BOTH,
         -- Same place, same spawns and bosses: what shared enemies share.
         section('sharing',opt('shared_enemies'),opt('same_place'),opt('same_spawns'),opt('bosses'),
             opt('shared_quests'),opt('shared_world'),opt('shared_story'),opt('cutscene_wait')),
         section('travel',opt('follow_host'))),
-    category('combat',SESSION,
+    category('combat',BOTH,
         section('difficulty',opt('enemy_hp_scale'),opt('enemy_balance_scale'),opt('boss_hp_scale'),
             opt('enemy_extra')),
         section('rules',opt('aggro'),opt('boss_finish'),opt('kill_credit'),opt('hit_reactions'),
             opt('stagger_resist'),opt('revive'),opt('spectate'))),
-    category('modes',SESSION,
+    category('modes',BOTH,
         section('modes',opt('scoreattack'),opt('fishing'),opt('race_match'),opt('photohunt'))),
     category('controls',BOTH,
         section('keyboard',opt('menu_key'),opt('status_key'),opt('leave_key'),opt('follow_key'),opt('race_key'),

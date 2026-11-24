@@ -70,7 +70,8 @@ assert(O.state({mode='host'})=='session' and O.state({mode='guest'})=='session')
 -- The two states' category lists, in the approved order.
 local page=O.new()
 local got=ids(page.categories(SOLO))
-assert(got=='session controls display others photo saves help tools',got)
+assert(got=='session world combat modes controls display others photo saves help tools',got)
+assert(not got:find('players',1,true),'Solo: no players category, its rows are the online session\'s')
 got=ids(page.categories(hosting()))
 assert(got=='session players world combat modes controls display others photo saves help tools',got)
 assert(ids(page.categories(hosting({mode='guest'})))==got,'A guest sees the same categories')
@@ -88,18 +89,23 @@ local BOTH={
     'help(help:guide report)',
     'tools(tools:page:1 page:2)',
 }
-local want={'session(menu:open_menu|play:host find join_code|hosting:who_can_join friends_ask max_players)'}
-for _,line in ipairs(BOTH) do want[#want+1]=line end
-same(dump(page.categories(SOLO)),want,'solo')
-want={
-    'session(menu:open_menu|current:invite copy chat leave|hosting:who_can_join friends_ask max_players)',
-    'players(members:mute:7 mute:8 remove)',
+-- Shared world, Combat and Game modes in both states: a host sets her rules before she hosts.
+local RULES={
     'world(sharing:shared_enemies same_place same_spawns bosses shared_quests shared_world shared_story cutscene_wait'
         ..'|travel:follow_host)',
     'combat(difficulty:enemy_hp_scale enemy_balance_scale boss_hp_scale enemy_extra'
         ..'|rules:aggro boss_finish kill_credit hit_reactions stagger_resist revive spectate)',
     'modes(modes:scoreattack fishing race_match photohunt)',
 }
+local want={'session(menu:open_menu|play:host find join_code|hosting:who_can_join friends_ask max_players)'}
+for _,line in ipairs(RULES) do want[#want+1]=line end
+for _,line in ipairs(BOTH) do want[#want+1]=line end
+same(dump(page.categories(SOLO)),want,'solo')
+want={
+    'session(menu:open_menu|current:invite copy chat leave|hosting:who_can_join friends_ask max_players)',
+    'players(members:mute:7 mute:8 remove)',
+}
+for _,line in ipairs(RULES) do want[#want+1]=line end
 for _,line in ipairs(BOTH) do want[#want+1]=line end
 same(dump(page.categories(hosting())),want,'online session')
 
@@ -167,7 +173,8 @@ assert(dump(page.categories({mode='guest',chat=true,values=VALUES,pages=PAGES}))
 local lone=page.categories({mode='guest',values=VALUES,pages=PAGES,members={}})
 assert(ids(lone)=='session world combat modes controls display others photo saves help tools',
     'No other player and no stranger: no players category')
-assert(ids(page.categories({mode='none',values=VALUES}))=='session controls display others photo saves help',
+assert(ids(page.categories({mode='none',values=VALUES}))
+    =='session world combat modes controls display others photo saves help',
     'No module page: no test tools category')
 
 -- The order is stable: the same rows, the same tables, in the same order from call to call; the mute rows in the
