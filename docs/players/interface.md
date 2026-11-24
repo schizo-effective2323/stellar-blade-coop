@@ -647,8 +647,10 @@ the game's own close (the one Back uses). The co-op menu opens once the game is 
 paused for 2 s after the pause menu closed, the co-op menu does not open: a notice says so. This happens when:
 
 - the page could not load or be made (`UE4SS.log` says why once);
-- `StellarCoop.dll` is older than the page (no `coop_pause_enter` or `coop_pause_page`);
-- the native part answers off (not the game build it knows, after `coop off`, or after its fault).
+- `StellarCoop.dll` is older than the page (no `coop_pause_enter` or `coop_pause_page`).
+
+When the native part answers off (not the game build it knows, after `coop off`, or after its fault), nothing opens.
+A click on the tab stops the tab with the `[PT] STOP` line, as before the page. RB on Settings goes to Equipment.
 
 If the page fails while it shows, it hides. The pause menu closes and the co-op menu opens. At `coop off` the page
 hides and the pause menu closes as Back closes it.
@@ -660,9 +662,9 @@ step keep `UE4SS.log` (the `[PT]` lines) and `coop-link.log` (the `pause tab` li
 risky to the most.
 
 1. Pause, go to Settings, click Online. Expect: Settings goes away and the Online page shows with its left list.
-   Stop on a crash or a freeze, if the pause menu closes, or if the game stays paused with no menu. Note without
-   stopping: Settings still drawn under the page, the page drawn over the key hints, a part drawn in the co-op menu's
-   style.
+   Stop on a crash or a freeze, if the pause menu closes, or if the game stays paused with no menu. If Settings is
+   still drawn under the page, do steps 2 and 3 only, then stop: keys and clicks could reach Settings' own rows. Note
+   without stopping: the page drawn over the key hints, a part drawn in the co-op menu's style.
 2. On the page's left list, press Esc (keyboard) or B (controller). Expect: the pause menu closes as Back does on
    Settings. Stop if nothing closes or the menu cannot be left.
 3. Pause again, go to Settings, press RB (or E). Expect: Online. Then LB: Settings. RB, RB: Online, then Equipment. On
@@ -671,7 +673,7 @@ risky to the most.
 4. On the page: up and down in the list, right or Enter into the rows, up and down there, Esc or B back to the list,
    a click on a list item and on a row. Watch the focus look and the pane on the right.
 5. In Session, select Open the co-op menu, once with Enter or A, once with a click. Expect: the pause menu closes and
-   the co-op menu opens.
+   the co-op menu opens. Then pause, open Settings and check that none of its values changed.
 6. On the page, press the key that opened the pause menu (Start on a controller). Expect: the menu closes.
 7. Last: with the page shown, type `coop off` in the console. Expect: the page goes and the pause menu closes.
 8. With a friend: host an online session and open the page again. Expect: Players, Shared world, Combat and Game
@@ -705,7 +707,7 @@ Each point has its own log line.
   from the game while the page shows. `pause tab refused: ...` means another mod holds that pointer or its page would
   not change: RB on Settings goes to Equipment as in the game. A click on the tab still opens the page. `pause tab
   fault ...: off for this run` means a fault in the mod's hook or in its reads of the open pause menu: RB on Settings
-  goes to Equipment. A click on the tab opens the co-op menu as before the page. `pause tab: asked off, ...` and
+  goes to Equipment. A click on the tab stops the tab with the `[PT] STOP` line. `pause tab: asked off, ...` and
   `pause tab: asked on, ...` follow the setting.
 - `UE4SS.log`: `[PT] hook on: WB_GameMenu_Master_C:Construct` once a Lua load, or `[PT] STOP: <why>; the pause menu
   keeps its 8 tabs until the mod reloads`, after which the mod asks the native part `pausetab off`.

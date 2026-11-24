@@ -305,7 +305,8 @@ local m4=master()
 page.build(m4)
 page.show(true)
 assert(lines_with('WB_Setting_Rolling_Slot_C not built (')==1
-    and logged('Create refused rolling); the kit\'s drawing in its place') and made_n('rolling')==0 and made_n('option')==4 and lines_with('built from SB\'s class')==5,
+    and logged('Create refused rolling); the kit\'s drawing in its place') and made_n('rolling')==0
+    and made_n('option')==4 and lines_with('built from SB\'s class')==5,
     table.concat(logs,'|'))
 local texts={}
 for _,c in ipairs(constructed) do texts[c.umg]=(texts[c.umg] or 0)+1 end

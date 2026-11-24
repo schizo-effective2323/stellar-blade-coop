@@ -14,7 +14,8 @@ local Parts={}
 Parts.ORDER={'row','option','header','hint','popup','count'}
 local PATH={row='Lobby/WB_Lobby_Menu_Slot',option='GameMenu/Setting/Slot/WB_Setting_Button_Slot',
     header='GameMenu/Setting/Slot/WB_Setting_Category',hint='GameMenu/Common/Indicator/WB_Common_IndicatorBtnDefault',
-    popup='GameMenu/Common/WB_Common_Popup',count='HUD/WB_MainHUD_CountDown',tab='GameMenu/Setting/WB_Setting_TabButton',
+    popup='GameMenu/Common/WB_Common_Popup',count='HUD/WB_MainHUD_CountDown',
+    tab='GameMenu/Setting/WB_Setting_TabButton',
     rolling='GameMenu/Setting/Slot/WB_Setting_Rolling_Slot',slider='GameMenu/Setting/Slot/WB_Setting_Slider_Slot',
     detail='GameMenu/Setting/Detail/WB_Setting_SlotDetail'}
 -- Each kind's object path (kit.warm_part) and class (kit.part).

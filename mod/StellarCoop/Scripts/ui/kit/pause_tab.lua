@@ -182,7 +182,8 @@ function Tab.new(o)
         elseif answer=='locked' then log("online page: SB's tab lock is on; nothing changed")
         elseif answer=='none' then log('online page: the game has no pause menu open')
         elseif answer~='shown' then
-            log('online page: not entered ('..tostring(answer or why)..'); the co-op menu opens as before')
+            -- No promise here: with the native part off, the close below is refused too and the tab stops.
+            log('online page: not entered ('..tostring(answer or why)..')')
             close(now,true)
         end
     end

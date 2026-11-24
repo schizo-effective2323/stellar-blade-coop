@@ -351,7 +351,7 @@ s.entry='none'; s.tab.event(51)
 assert(logs[#logs]=='online page: the game has no pause menu open' and not s.tab.page_shown() and s.closes==3)
 assert(table.concat(p.calls,',',calls+1)=='build,build','Built, never shown')
 s.entry='off'; s.tab.event(52)
-assert(logged('online page: not entered (off); the co-op menu opens as before') and s.closes==4)
+assert(logged('online page: not entered (off)') and s.closes==4)
 s.paused=false; s.tab.tick(52.1); assert(s.opens==3,'The path before the page: the co-op menu')
 -- A page that does not build: the path before the page.
 s.paused,s.entry,p.built=true,'entered',false

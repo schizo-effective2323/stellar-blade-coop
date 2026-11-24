@@ -59,7 +59,7 @@ for _,list in ipairs({{
             if not stopped then log('gun rounds: '..tostring(e)) end
         end
         M.region_tabs.stop() -- No more tabs: only a flag.
-        M.pause_tab.stop() -- Likewise; the native part gives its slot back.
+        M.pause_tab.stop() -- The Online page hidden with SB's close when it shows; the native part gives its slot back.
         stopped,e=pcall(M.wear.stop) -- EVE's own meshes back.
         if not stopped then log('wear: '..tostring(e)) end
         if M.roxanne then -- Her two choices back before the native part stops taking requests.
