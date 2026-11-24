@@ -476,6 +476,9 @@ do
     away('Host a session','host'); away('Find a session','find'); away('Join with a code','join_code')
     page.nav('back',7); to('Help'); page.nav('right',7)
     away('Guide','guide'); away('Write a bug report','report')
+    -- A Test tools row: 'open_menu' and its module page, SB's confirm cue.
+    page.nav('back',7); to('Test tools'); page.nav('right',7)
+    local a,b=page.nav('select',7); assert(a=='open_menu' and b==PAGE and heard()=='confirm' and #acts==n,tostring(a))
     -- The Online tab written off on the page: 'close', the pause menu closes as Back closes it.
     page.nav('back',8)
     to('Display')

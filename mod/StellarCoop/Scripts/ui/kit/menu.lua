@@ -27,7 +27,8 @@
 -- listed while its module is on): Select opens it in the menu, its rows made by its module at each draw, Back comes
 -- back; a row's select or step runs its module's console words through M.run, its refusal shown under the rows. No
 -- engine call here: the kit makes them. The pause menu's Online page (ui/kit/online_page.lua) runs its rows through
--- act, away and bind, so both menus change a value and run a row with the same code.
+-- act, away and bind, so both menus change a value and run a row with the same code. Its Test tools rows open this
+-- menu on their page (toggle's p).
 local M=require('ui.kit.model')
 local Link=require('core.link')
 local T=require('ui.text')
@@ -295,8 +296,9 @@ function Menu.new(o)
     function self.capturing() return open and capturing~=nil end
     -- menu_key: open, or close; when it cannot open, false, why for the log, the same for the screen in the menu's
     -- words and in English (the kit off when it took the game's input: the menu would be open unseen). at: the camp
-    -- phone booth within reach (booth.near's {id, class, d}), which opens the co-op line; nil, the main page.
-    function self.toggle(at)
+    -- phone booth within reach (booth.near's {id, class, d}), which opens the co-op line; nil, the main page. p: a
+    -- module page (o.pages' entry), opened as Select on its row opens it (the pause menu's Online page's Test tools).
+    function self.toggle(at,p)
         if open then return self.close() end
         if o.guide and o.guide.is_open() then return end -- Its keys are the guide's.
         local culture=kit.language()
@@ -316,6 +318,10 @@ function Menu.new(o)
         if kit.off() then self.close(); return false,OFF,words.refused.off,T.en.refused.off end
         kit.show('line_hint',false)
         if at then o.log(string.format('line: booth %s (%s) at %.1f m',at.id,at.class,at.d)) end
+        local ctx=p and context()
+        for _,row in ipairs(p and model.rows(ctx) or {}) do -- A page no longer listed: the main page.
+            if row.page==p then model.point(ctx,row); model.select(ctx,os.clock(),values) end
+        end
         kit.sound('open')
         draw()
     end

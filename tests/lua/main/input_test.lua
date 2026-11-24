@@ -577,6 +577,21 @@ end)()
     in_world,kit_ready=false,false
 end)()
 
+-- A Test tools row of the Online page, once the pause tab closed the pause menu (its open with that module page): the
+-- co-op menu opens on that page; with none, on its main page as before.
+;(function()
+    local page_o
+    local real=package.loaded['ui.kit.online_page']
+    package.loaded['ui.kit.online_page']={new=function(o) page_o=o; return real.new(o) end}
+    settings_text,status_text,link_mode,in_world,photo_mode='',plain,'none',true,false
+    load_main(true)
+    package.loaded['ui.kit.online_page']=real
+    kit_ready=true; quarter()
+    pt.o.open(page_o.ctx().pages[1]); assert(kit_shown.menu and menu_view.title.s=="EVE's cut moves",menu_view.title.s)
+    key('ESCAPE'); key('ESCAPE'); pt.o.open(); assert(menu_view.title.s=='CO-OP' and focus()=='Host a session')
+    key('ESCAPE'); in_world,kit_ready=false,false
+end)()
+
 -- An F-key while a key row of the pause menu's Online page waits for a key: the pause tab's capture takes it and no
 -- action of ours runs; with no wait the key runs as before.
 ;(function()

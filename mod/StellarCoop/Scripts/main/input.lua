@@ -107,10 +107,11 @@ function M.bike_press(by)
     M.report(ok,message)
     if not ok then M.say(tostring(message)) end
 end
--- menu_key's path with nothing open in a world: B in the lobby world, the co-op menu elsewhere, its refusals said.
-local function open_menu()
+-- menu_key's path with nothing open in a world: B in the lobby world, the co-op menu elsewhere, its refusals said. p: a
+-- module page to open it on (a Test tools row of the pause menu's Online page).
+local function open_menu(p)
     if M.sbo.in_lobby() then return M.lobby_key() end
-    local ok,why,shown,en=M.menu.toggle(M.booth.near(require('core.where').me()))
+    local ok,why,shown,en=M.menu.toggle(not p and M.booth.near(require('core.where').me()) or nil,p)
     if why then M.report(ok,why); M.say(shown or why,en) end
 end
 function M.pad_event(what)

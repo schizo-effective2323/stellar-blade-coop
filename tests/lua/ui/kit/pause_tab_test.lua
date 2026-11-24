@@ -457,5 +457,8 @@ p.answer,p.arg='away','guide'; s.tab.nav('select',99.1)
 s.paused=false; s.tab.tick(99.2); s.away_raise=nil
 assert(logs[#logs]=='pause tab: guide failed: no guide today' and #s.aways==2,logs[#logs])
 s.paused=true; shown(100); assert(s.tab.page_shown(),'The tab goes on')
+-- 'open_menu' and a Test tools page: the co-op menu opened on that page once unpaused.
+p.answer,p.arg='open_menu','P'; s.tab.nav('select',100.1); s.paused=false; s.tab.tick(100.2)
+assert(s.opened=='P' and s.opens==1,tostring(s.opened))
 p.answer,p.clicked,p.arg=nil,nil,nil
 print('pause_tab_test ok')
