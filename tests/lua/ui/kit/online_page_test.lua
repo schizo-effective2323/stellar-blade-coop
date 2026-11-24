@@ -339,8 +339,8 @@ local parts=#made
 page.nav('right'); page.nav('down'); page.nav('up')
 assert(#made==parts,'Moving in the rows makes no part again')
 -- A click: the row under the kit's pointer selected; on Open the co-op menu it answers open_menu.
-mouse={row_at(4)} -- Slot 4: Host a session, a row that needs the game world: the co-op menu until the page runs it.
-assert(page.click(1)=='open_menu' and #acts==0 and sounds[#sounds]=='confirm')
+mouse={row_at(4)} -- Slot 4: Host a session, a row that needs the game world: 'away' and its id, run after SB's close.
+assert(table.concat({page.click(1)},' ')=='away host' and #acts==0 and sounds[#sounds]=='confirm')
 local function part(title)
     local found
     for _,x in ipairs(made) do if x.kind=='option' and x.o.props.Text_TitleValue==title then found=x.o end end
@@ -467,6 +467,15 @@ do
         local s=#sounds
         assert(page.nav('left',7)==nil and page.nav('right',7)==nil and #acts==n and #sounds==s,label)
     end
+    -- Select on a row that needs the game world: 'away' and its id with SB's confirm cue, nothing run on the page.
+    local function away(label,id)
+        to(label)
+        local a,b=page.nav('select',7)
+        assert(a=='away' and b==id and #acts==n and heard()=='confirm',label..': '..tostring(a)..' '..tostring(b))
+    end
+    away('Host a session','host'); away('Find a session','find'); away('Join with a code','join_code')
+    page.nav('back',7); to('Help'); page.nav('right',7)
+    away('Guide','guide'); away('Write a bug report','report')
     -- The Online tab written off on the page: 'close', the pause menu closes as Back closes it.
     page.nav('back',8)
     to('Display')
@@ -511,6 +520,8 @@ do
     act_ok,act_note=false,'x'
     page.nav('select',51); assert(acts[#acts]=='copy nil nil' and heard()=='refuse' and desc()=='x','Refused')
     act_ok,act_note=true,nil
+    n=#acts
+    away('Invite a friend (Steam)','invite'); away('Chat','chat')
     -- A mute row: right mutes her (its select); the cursor stays on her row when the row above it goes.
     page.nav('back',23)
     to('Players')

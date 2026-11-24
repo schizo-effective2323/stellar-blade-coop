@@ -20,7 +20,8 @@
 -- change nothing with one line each, off or a page that does not build take the path before the page; a page that turns
 -- off while shown closes and opens the co-op menu; coop off hides it with SB's close. The page's nav and click get the
 -- clock; their 'close' (the Online tab written off on the page) closes the pause menu with no co-op menu. An F-key goes
--- to the page's capture only while the page shows.
+-- to the page's capture only while the page shows. Their 'away' and a row's id close the pause menu, then run that row
+-- once unpaused (o.away), or give up after 2 s; a run that raises is one line.
 package.path='mod/StellarCoop/Scripts/?.lua;'..package.path
 local MASTER='/Game/Art/UI/Widget/GameMenu/WB_GameMenu_Master.WB_GameMenu_Master'
 local MASTER_KEEPER=MASTER..'.StellarCoop_PauseTabKeeper'
@@ -110,13 +111,14 @@ local function new(page)
     -- entry's and tab read's calls; entry, now: what they answer.
     local s={opens=0,notices=0,asks={},paused=true,enabled=true,ready=true,closes=0,answer={true},enters=0,tabs=0,
         entry='entered',now=8}
-    s.sounds={}
+    s.sounds,s.aways={},{} -- aways: the ids o.away ran; away_raise: it raises that.
     s.tab=Tab.new({log=function(line) logs[#logs+1]=line end,ready=function() return s.ready end,page=page,
         sound=function(name) s.sounds[#s.sounds+1]=name end,
         enter=page and function() s.enters=s.enters+1; return s.entry end or nil,
         tab=page and function() s.tabs=s.tabs+1; return s.now end or nil,
         enabled=function() return s.enabled end,word=function() return 'Online' end,
-        paused=function() return s.paused end,open=function() s.opens=s.opens+1 end,
+        paused=function() return s.paused end,open=function(p) s.opens,s.opened=s.opens+1,p end,
+        away=function(id) s.aways[#s.aways+1]=id; if s.away_raise then error(s.away_raise) end end,
         notice=function() s.notices=s.notices+1 end,
         ask=function(line)
             s.asks[#s.asks+1]=line
@@ -282,8 +284,8 @@ local function fake_page()
     p.page={build=function(m) note('build'); p.master=m; return p.built,not p.built and 'no canvas' or nil end,
         show=function(on) note('show',tostring(on)); if not p.off then p.on=on end end,
         shown=function() return p.on end,
-        nav=function(word,now) note('nav',word); p.nav_at=now; return p.answer end,
-        click=function(now) note('click'); p.click_at=now; return p.clicked end,
+        nav=function(word,now) note('nav',word); p.nav_at=now; return p.answer,p.arg end,
+        click=function(now) note('click'); p.click_at=now; return p.clicked,p.arg end,
         capture=function(name)
             note('capture',name)
             if p.capture_off then p.off,p.on=true,false end
@@ -433,4 +435,27 @@ p.capture_off=true
 assert(s.tab.capture('F7',94.7)==true and s.closes==3 and not s.tab.page_shown()
     and logged('online page: off while shown; the pause menu closes and the co-op menu opens as before'))
 p.capture_off,p.off=false,false
+-- A row of the page that needs the game world ('away' and its id): SB's close once, nothing while paused, the row run
+-- once at the first unpaused tick (never the co-op menu); still paused after 2 s: the give-up line and notice, nothing
+-- run; a run that raises: one line, the tab goes on.
+local function shown(at) construct(menu()); s.now=8; s.tab.event(at); s.now=9 end
+shown(95)
+p.answer,p.arg='away','find'; s.tab.nav('select',95.1)
+assert(s.closes==4 and not s.tab.page_shown(),'SB\'s close')
+s.tab.tick(95.2); assert(#s.aways==0,'Still paused: nothing run')
+s.paused=false; s.tab.tick(95.3); s.tab.tick(95.4)
+assert(table.concat(s.aways,' ')=='find' and s.opens==0,'Run once after the unpause')
+s.paused=true; shown(96)
+local notices=s.notices
+p.clicked,p.arg='away','host'; s.tab.click(96.1)
+s.tab.tick(97); s.tab.tick(98.2); s.paused=false; s.tab.tick(98.3)
+assert(s.closes==5 and #s.aways==1 and s.notices==notices+1
+    and count(logs,"pause tab: the game stayed paused for 2 s; the pause menu is the player's")==1,'Given up')
+s.paused=true; shown(99)
+s.away_raise='no guide today'
+p.answer,p.arg='away','guide'; s.tab.nav('select',99.1)
+s.paused=false; s.tab.tick(99.2); s.away_raise=nil
+assert(logs[#logs]=='pause tab: guide failed: no guide today' and #s.aways==2,logs[#logs])
+s.paused=true; shown(100); assert(s.tab.page_shown(),'The tab goes on')
+p.answer,p.clicked,p.arg=nil,nil,nil
 print('pause_tab_test ok')

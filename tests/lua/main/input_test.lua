@@ -561,6 +561,22 @@ end)()
     in_world=false
 end)()
 
+-- A row of the Online page that needs the game world, once the pause tab closed the pause menu (its away): the co-op
+-- menu's own run. Find a session opens the Sessions screen, Host a session runs coop host as the menu's row does (the
+-- Create a session screen), Write a bug report asks report and puts the co-op menu's words for it on the notice line.
+;(function()
+    settings_text,status_text,link_mode,in_world,photo_mode='',plain,'none',true,false
+    load_main(true)
+    kit_ready=true; quarter()
+    pt.o.away('find'); assert(ss.calls[#ss.calls]=='open' and ss.open,'The Sessions screen')
+    ss.o.kit.input(false); ss.open=false
+    pt.o.away('host'); assert(cr.calls[#cr.calls]=='open' and cr.open,'coop host: the Create a session screen')
+    cr.o.kit.input(false); cr.open=false
+    pt.o.away('report')
+    assert(asked[#asked]=='report' and fed()=='The bug report goes to coop-report.txt in the mod folder.',fed())
+    in_world,kit_ready=false,false
+end)()
+
 -- An F-key while a key row of the pause menu's Online page waits for a key: the pause tab's capture takes it and no
 -- action of ours runs; with no wait the key runs as before.
 ;(function()

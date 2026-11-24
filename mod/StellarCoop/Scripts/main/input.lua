@@ -188,7 +188,8 @@ local function pt_log(m) print('[StellarCoop][PT] '..tostring(m)..'\n') end
 -- the mod reloads, with one line. The Online tab then opens the co-op menu as before; the kit, the co-op menu and the
 -- keys go on. Its words are the co-op menu's. Its ctx (the fields online_model.lua reads) is read at each call: the
 -- link's state, the chat box, the module pages and the values of coop-settings.txt. Its mouse is the kit's pointer.
--- Its rows change a value and take a key through the co-op menu's own act and bind (ui/kit/menu.lua).
+-- Its rows change a value and take a key through the co-op menu's own act and bind (ui/kit/menu.lua); a row that needs
+-- the game world runs through the co-op menu's away once the pause tab closed the pause menu.
 local page_built,page=pcall(function()
     local Model=require('ui.kit.model')
     return require('ui.kit.online_page').new({log=pt_log,words=M.words,
@@ -218,6 +219,12 @@ M.pause_tab=require('ui.kit.pause_tab').new({log=pt_log,page=page,
     enabled=function() return M.settings~=nil and M.settings.pause_tab==true end,
     word=function() return M.words().pause_tab.tab end,paused=function() return M.kit~=nil and M.kit.paused(true) end,
     open=open_menu,notice=function() M.say(M.words().pause_tab.stuck,T.en.pause_tab.stuck) end,
+    -- A row of the Online page that needs the game world, once SB closed the pause menu: the co-op menu's own run of
+    -- it. The bug report's words go on the notice line, where the co-op menu shows them under its rows.
+    away=function(action)
+        local ok,note=M.menu.away(action)
+        if action=='report' and note then M.say(note,ok and T.en.report or note) end
+    end,
     ask=function(line) return M.ask(line)() end,close=M.pause_close,enter=M.pause_enter,tab=M.pause_page})
 RegisterConsoleCommandHandler('coop',function(_,parameters)
     M.typed_at=os.clock()

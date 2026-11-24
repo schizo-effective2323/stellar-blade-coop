@@ -19,7 +19,9 @@
 -- SB's own code: the page hides as soon as the tab is not 9. The native part keeps SB's Back from SB on tab 9, so
 -- main/keys.lua and main/input.lua hand Esc, the pad's B and the navigation words to the page (nav). Back in its left
 -- list runs SB's close (coop_pause_close, what SB's Back runs). Open the co-op menu runs SB's close, then the co-op
--- menu. The page hides at coop off (with SB's close) and when the master is gone. With no page (it did not load or
+-- menu. A row of the page that needs the game world (the page's 'away') runs SB's close, then that row (o.away) once
+-- the game is unpaused, with the same give-up; a step that raises then is logged with one line, the tab goes on. The
+-- page hides at coop off (with SB's close) and when the master is gone. With no page (it did not load or
 -- build, or an older DLL without the two exports) the tab does what it did before the page: SB's close, then the co-op
 -- menu once the game is unpaused, as menu_key does; still paused after WAIT s, it gives up with one log line and one
 -- notice. A page that turns off while shown hides, closes the pause menu and opens the co-op menu, with one line. A
@@ -53,7 +55,8 @@ end
 
 -- o: {log=function(line), ready=function() the game is far enough to load the menu's class, enabled=function() the
 -- pause_tab setting, word=function() the tab's word in the menu's language, paused=function() the game is paused,
--- open=function() the co-op menu as menu_key opens it, notice=function() the give-up notice on screen,
+-- open=function(p) the co-op menu as menu_key opens it (on module page p, a Test tools page, when given),
+-- away=function(id) the co-op menu's run of a row that needs the game world, notice=function() the give-up notice,
 -- ask=function(line) the native ask: ok, why, close=function() SB's close of the pause menu through the native part:
 -- true, or false and why with lasting true when no later close can work, page=ui/kit/online_page.lua's or nil,
 -- enter=function() the native entry: 'entered', 'shown', 'none', 'locked', 'off', or nil and why, tab=function() the
@@ -61,7 +64,8 @@ end
 function Tab.new(o)
     local log,page=o.log,o.page
     local hooked,failed,stopped=false,false,false
-    local master,button,closed_at=nil,nil,nil
+    -- closed_at: the clock of our close; pending: the step that runs once the game is unpaused, {what=, run=}.
+    local master,button,closed_at,pending=nil,nil,nil,nil
     local asked,refused=nil,nil -- The last ask written (true: on); the last refusal logged.
     -- The page shown by us; when to log SB's pages again; a click to report at the next tick; a refused tab look said.
     local showing,look_at,clicked,look_said=false,nil,false,false
@@ -152,9 +156,9 @@ function Tab.new(o)
         tab_look(button,false)
         if why then log('online page hidden: '..why) end
     end
-    -- The pause menu closed through SB's own close (the page hidden first); then_menu: the co-op menu opens from tick
-    -- once the game runs again.
-    local function close(now,then_menu)
+    -- The pause menu closed through SB's own close (the page hidden first); step (what: its name in the log) runs from
+    -- tick once the game runs again.
+    local function close(now,what,step)
         if showing then hide() end
         local shown=U.valid(master)
         master=nil
@@ -162,20 +166,29 @@ function Tab.new(o)
         local ok,why,lasting=o.close()
         if lasting then return fail(why) end
         if not ok then return log('pause tab: nothing closed: '..tostring(why)) end
-        if then_menu then closed_at=now end
+        if step then closed_at,pending=now,{what=what,run=step} end
+    end
+    -- SB's close, then the co-op menu (on module page p when given).
+    local function to_menu(now,p) close(now,'the co-op menu',function() o.open(p) end) end
+    -- The page's answer to a press: 'open_menu' (a module page) or 'away' (a row's id) close the pause menu, then open
+    -- the co-op menu or run that row; 'close' closes it only.
+    local function answer(now,a,b)
+        if a=='open_menu' then to_menu(now,b)
+        elseif a=='away' then close(now,b,function() o.away(b) end)
+        elseif a=='close' then close(now) end
     end
     -- A page that turned off while shown: the pause menu closed and the co-op menu opened, as before the page.
     local function fault(now)
         log('online page: off while shown; the pause menu closes and the co-op menu opens as before')
         showing=false
         tab_look(button,false)
-        close(now,true)
+        to_menu(now)
     end
     -- The page entered from SB's tab now (RB or a click: by), or the path before the page when it cannot be.
     local function enter(now,by)
-        if not (page and not page.off() and o.enter and o.tab) then return close(now,true) end
+        if not (page and not page.off() and o.enter and o.tab) then return to_menu(now) end
         local from=o.tab()
-        if not page.build(master) then return close(now,true) end -- The page logged why it is off.
+        if not page.build(master) then return to_menu(now) end -- The page logged why it is off.
         local answer,why=o.enter()
         if answer=='entered' or answer=='shown' and not page.shown() then
             page.show(true)
@@ -193,7 +206,7 @@ function Tab.new(o)
         elseif answer~='shown' then
             -- No promise here: with the native part off, the close below is refused too and the tab stops.
             log('online page: not entered ('..tostring(answer or why)..')')
-            close(now,true)
+            to_menu(now)
         end
     end
     local self={}
@@ -203,7 +216,8 @@ function Tab.new(o)
     function self.page_shown() return page~=nil and page.shown() end
     -- Each frame: the hook once a Lua load, as soon as the game is far enough and the keep settled; the tab one frame
     -- after a click; while the page shows, the open tab, hidden when it is not 9 or the pause menu is gone, else the
-    -- page's mouse look; then, after a close, the co-op menu once the game is unpaused, or the give-up after WAIT s.
+    -- page's mouse look; then, after a close, its step (the co-op menu, a row of the page) once the game is unpaused,
+    -- in pcall with one line when it raises, or the give-up after WAIT s.
     function self.tick(now)
         if not hooked and not stopped and o.ready() and (not Keep.wanted(MASTER..'_C') or Keep.ready()) then
             hooked=true
@@ -249,11 +263,14 @@ function Tab.new(o)
         end
         if not closed_at then return end
         if not o.paused() then
-            closed_at=nil
-            return o.open()
+            local step=pending
+            closed_at,pending=nil,nil
+            local ok,why=pcall(step.run)
+            if not ok then log('pause tab: '..step.what..' failed: '..U.why(why)) end
+            return
         end
         if now-closed_at<Tab.WAIT then return end
-        closed_at=nil
+        closed_at,pending=nil,nil
         log("pause tab: the game stayed paused for 2 s; the pause menu is the player's")
         o.notice()
     end
@@ -287,16 +304,15 @@ function Tab.new(o)
             log('pause tab: LB or RB at an end of the tab row with no Online tab shown; nothing opened')
         end
     end
-    -- A left click while armed and paused: the page's while it shows (Open the co-op menu runs; the Online tab written
-    -- off closes the pause menu), else the page entered when the mouse is over our Button_Action. Its IsHovered and the
-    -- button's, logged each click.
+    -- A left click while armed and paused: the page's while it shows (its answer: Open the co-op menu or a row that
+    -- needs the game world runs after SB's close; the Online tab written off closes the pause menu), else the page
+    -- entered when the mouse is over our Button_Action. Its IsHovered and the button's, logged each click.
     function self.click(now)
         if not self.armed() or not o.paused() then return end
         if showing then
-            local action=page.click(now)
+            local a,b=page.click(now)
             if page.off() then return fault(now) end
-            if action=='open_menu' then close(now,true) elseif action=='close' then close(now,false) end
-            return
+            return answer(now,a,b)
         end
         local ok,over=pcall(function()
             return assert(U.valid(button.Button_Action),'the tab button lost its Button_Action'):IsHovered()==true
@@ -313,13 +329,13 @@ function Tab.new(o)
         enter(now,'a click')
     end
     -- A navigation word on the game thread while the page shows ('up', 'down', 'left', 'right', 'select', 'back'), at
-    -- now: Open the co-op menu closes the pause menu and opens the co-op menu; back in the list and the Online tab
-    -- written off on the page close the pause menu.
+    -- now: Open the co-op menu closes the pause menu and opens the co-op menu, a row that needs the game world closes
+    -- it and runs that row; back in the list and the Online tab written off on the page close the pause menu.
     function self.nav(word,now)
         if not showing then return end
-        local action=page.nav(word,now)
+        local a,b=page.nav(word,now)
         if page.off() then return fault(now) end
-        if action=='open_menu' then close(now,true) elseif action=='close' then close(now,false) end
+        answer(now,a,b)
     end
     -- A key pressed (main/keys.lua's F-keys, keybind.text's name) while the page shows: true when one of its key rows
     -- waited for it. A page that turned off doing it takes the fault path.

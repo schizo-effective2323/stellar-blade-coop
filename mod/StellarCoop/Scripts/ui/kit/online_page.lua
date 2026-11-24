@@ -21,10 +21,13 @@
 -- there is a why. Select on a key row waits for the next key as the co-op menu does: the row reads Press a key, the
 -- pane says which keys; an F-key (main/keys.lua through ui/kit/pause_tab.lua's capture) is checked against the other
 -- keys by the co-op menu's own bind, Enter puts back its default, Esc or B stops the wait, the mouse and the other
--- words do nothing meanwhile. Select or a click on Open the co-op menu or a Test tools row opens the co-op menu. Every
--- engine call runs in pcall on the game thread. An engine error that is not a part's own turns the page off until the
--- mod reloads with one line; the Online tab then opens the co-op menu as before. A look a part refuses is logged once
--- a kind. Only UI: no save, no SetInputMode, no Slate focus taken. main/input.lua builds it behind its own guard.
+-- words do nothing meanwhile. Select or a click on Open the co-op menu or a Test tools row opens the co-op menu. On a
+-- row that needs the game world (Host a session, Find a session, Join with a code, Invite, Chat, Guide, Write a bug
+-- report) it answers 'away': ui/kit/pause_tab.lua closes the pause menu, then runs the row as the co-op menu does.
+-- Every engine call runs in pcall on the game thread. An engine error that is not a part's own turns the page off
+-- until the mod reloads with one line; the Online tab then opens the co-op menu as before. A look a part refuses is
+-- logged once a kind. Only UI: no save, no SetInputMode, no Slate focus taken. main/input.lua builds it behind its own
+-- guard.
 -- tests/lua/ui/kit/online_page_test.lua covers it over fakes.
 local U=require('core.unreal')
 local Keep=require('core.keep')
@@ -477,8 +480,8 @@ function Page.new(o)
     local function refuse(n) sound('refuse'); cur.note=n end
     -- A press (Page.press's words) on row at now, through the co-op menu's model for that row (online_model's owner:
     -- the same change, select, show rules and confirm window as the co-op menu) and its code (o.act). The ctx is read
-    -- again before and after. 'open_menu' and the module page, 'close' once the Online tab was written off (the pause
-    -- menu closes as Back closes it), else nil.
+    -- again before and after. 'open_menu' and the module page, 'away' and the row's id for a row that needs the game
+    -- world, 'close' once the Online tab was written off (the pause menu closes as Back closes it), else nil.
     local function act(row,word,now)
         local how,dir=Page.press(row,word)
         if not how then return nil end
@@ -497,9 +500,9 @@ function Page.new(o)
             sound('confirm')
             return nil
         end
-        -- shortcut: a row that needs the game world opens the co-op menu (stage 1's path) until the page closes the
-        -- pause menu and runs it.
-        if Model.AWAY[action] or action=='report' then sound('confirm'); return 'open_menu' end
+        -- A row that needs the game world runs once SB closed the pause menu (ui/kit/pause_tab.lua). Write a bug report
+        -- too, as decided on 2026-11-24, though the co-op menu runs it in place: its notice then shows over the game.
+        if Model.AWAY[action] or action=='report' then sound('confirm'); return 'away',action end
         local ok,n=o.act(action,key,text,ctx)
         cur.note=n
         sound(not ok and 'refuse' or (action=='set' or action=='mute') and 'change' or 'confirm')
@@ -536,7 +539,8 @@ function Page.new(o)
     end
     -- A navigation word while shown, at now: in the rows, left, right and select press the cursor's row; other words
     -- move the cursor (Page.move). While a key row waits: back stops the wait, select puts back its default, the other
-    -- words do nothing. The page drawn again; the answer: 'close', 'open_menu' and a module page, or nil.
+    -- words do nothing. The page drawn again; the answer: 'close', 'open_menu' and a module page, 'away' and a row's
+    -- id, or nil.
     function self.nav(word,now)
         if off or not shown then return nil end
         local ok,a,b=pcall(function()
