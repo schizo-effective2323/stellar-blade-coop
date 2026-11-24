@@ -499,11 +499,13 @@ fails the test. The `main/` tests load `main/fixture.lua` first, with UE4SS stub
   the look to walk as before; `world/maps/matrix13/quest/on_time_test` the arrival talk waiting while the black is up;
   `world/maps/matrix13/level/drone_test` the hook tried once a stay, only once its class is found by name;
 - `ui/kit/model_test` covers the four Who can join values and the Friends join without asking row, shown under Public
-  and Invitation only, then the Online tab row named in `docs/players/interface.md`'s Options paragraph between the
-  bike's key and Reset all keys, the Spectate row (on by default, in effect at once) and the Boss finisher row
-  (First press by default, or The host only). The bike's riding pose row comes after the bike's key (`rig` by
-  default, `rig` read for any word but `hold`). The Options paragraph names it after the bike's key and before gun
-  mode's key; `main/menu_test` the Boss finisher row in the scrolled Options view;
+  and Invitation only, Host a session asking for a second Select within 3 s on a model made with the Online page's
+  confirm set (asked again after 3 s or a move) while the co-op menu's model hosts at once, then the Online tab row
+  named in `docs/players/interface.md`'s Options paragraph between the bike's key and Reset all keys, the Spectate row
+  (on by default, in effect at once) and the Boss finisher row (First press by default, or The host only). The bike's
+  riding pose row comes after the bike's key (`rig` by default, `rig` read for any word but `hold`). The Options
+  paragraph names it after the bike's key and before gun mode's key; `main/menu_test` the Boss finisher row in the
+  scrolled Options view;
 - `online/group/travel_test` covers the host's row in the session list: the rules word at each change, the map and
   nearest camp at once on each map and once a minute at most, from the follow's spawn point read (read again a minute
   later when it found no camp), nothing in a load, as a guest or in a match lobby. A refusal is logged once. For the
@@ -596,46 +598,52 @@ fails the test. The `main/` tests load `main/fixture.lua` first, with UE4SS stub
   logged with one line and the tab going on); their `open_menu` and a Test tools page open the co-op menu on that
   page;
 - `ui/kit/online_model_test` covers the Online page's arrangement (`ui/kit/online_model.lua`): the categories in the
-  solo state and in an online session with each section's rows, Open the co-op menu alone first in Session in both
-  states, every row of today's main page and Options placed once or left out with a reason (Options and Close), rows
-  hidden by their own show function, empty sections and categories dropped, the same order and the same row tables
-  from call to call (the mute rows in the members' order) and no file of the mod but `ui/kit/online_page.lua` that
-  requires it. Shared world, Combat and Game modes show in both states, Players in an online session only. `owner`
-  names the co-op menu's model page behind each row (Options for its rows and the mute rows, the main page for its
-  rows, none for Open the co-op menu and a Test tools row); Reset all keys and Leave run on a second Select within its
-  3 s window. After `forget` the next Select asks again;
+  solo state and in an online session with each section's rows, no Test tools category even with module pages in the
+  ctx, no Open the co-op menu row, every row of today's main page and Options placed once or left out with a reason
+  (Options, Close and the module pages), rows hidden by their own show function, empty sections and categories
+  dropped, the same order and the same row tables from call to call (the mute rows in the members' order) and no file
+  of the mod but `ui/kit/online_page.lua` that requires it. Shared world, Combat and Game modes show in both states,
+  Players in an online session only. `owner` names the co-op menu's model page behind each row (Options for its rows
+  and the mute rows, the main page for its rows); Reset all keys, Leave and Host a session (on the page's main page
+  only) run on a second Select within its 3 s window. After `forget` the next Select asks again;
 - `ui/kit/online_page_test` covers the pause menu's Online page (`ui/kit/online_page.lua`) over fakes. Pure: each row's
   part kind (option, rolling, slider), its words and value as the co-op menu draws them, the cursor over the model's
-  categories solo and while hosting (the list wrapping, right and select landing on Open the co-op menu, the rows
-  skipping headers and wrapping, select there answering `open_menu`, select elsewhere and left doing nothing, back to
-  the list, back in the list answering `close`, 20 downs in Controls staying inside the 12 slots), what is under the
-  mouse in the boxes the page places its parts in (`Page.under`: a list item, a row, never a header, a slot past the
-  rows or the gap between list and rows, edges exclusive). Engine: one collapsed canvas added last to the master's root,
-  made in its WidgetTree, empty until the show; the six SB classes each said once as built; each part's Blueprint texts
-  before it enters the canvas, its TextBlocks and calls after; show SelfHitTestInvisible with the first item's
-  PlayFocusAnim, the category's word in the pane with no description and the pane's `Thumbnail` collapsed once (a pane
-  without one logged once); right giving Select, StateFocus on Open the co-op menu and its words in the pane; no part
-  made again while the rows stay; a click at the kit's pointer selecting the row under it, answering `open_menu` on Open
-  the co-op menu and `away` with `host` on Host a session, nothing on a header or with no pointer, a click on another
-  category; the mouse look every 0.1 s (the first look moving nothing, the item the mouse moved onto taking the cursor,
-  a resting mouse never moving it after the keys did, a header or no pointer moving nothing); the game's eight pages by
-  name with their state; a look refused logged once; a class whose Create raises drawn with TextBlocks and Borders, one
-  line for it, the others the game's; a canvas that cannot be made turning the page off with one line. Pure: what a
-  press asks of each kind of row (`Page.press`: the next or previous value, select, `open_menu` with a Test tools row's
-  page, nothing on left or right of an action or key row) and which press a click at x makes on a row (`Page.word_at`:
-  the halves of the value part from 1286 to 2246, select elsewhere). Engine, through the co-op menu's model and a fake
-  act and bind: right, left and select on Who can join (the value written, the select sound, the part made again,
-  Friends join without asking hidden and skipped, the wrap), Players held at 4 with the refusal sound and no note, the
-  slider made again at 3, a click on each half and on the title, a refused write with its note in the pane until a move,
-  nothing on left or right of Open the co-op menu and Host a session, the Online tab written off answering `close`, Copy
-  my code refused and gone once the code went, Leave asked again after a move of the keys, of the mouse look or of a
-  click and after its 3 s window, its question in the pane, Copy my code run in place, a run refused with its why, a
-  mute row kept under the cursor when the row above it goes and muted by select too, Remove and Reset all keys asking
-  first then running, a key row waiting (Press a key, the capture words, a key refused or taken, Enter for the default,
-  back to stop, the keys and the mouse moving nothing), each row that needs the game world (Host a session, Find a
-  session, Join with a code, Guide and Write a bug report solo, Invite and Chat while hosting) answering `away` and its
-  id with the confirm cue and nothing run, a Test tools row answering `open_menu` and its page. An act that raises turns
-  the page off;
+  categories solo and while hosting (the list wrapping, right and select landing on the first row, Host a session or
+  Invite a friend, the rows skipping headers and wrapping, select and left there doing nothing, back to the list, back
+  in the list answering `close`, 20 downs in Controls staying inside the 12 slots), no Test tools category and no row
+  that answers `open_menu`, what is under the mouse in the boxes the page places its parts in (`Page.under`: a list
+  item, a row, never a header, a slot past the rows or the gap between list and rows, edges exclusive). Engine: one
+  collapsed canvas added last to the master's root, made in its WidgetTree, empty until the show; the six SB classes
+  each said once as built; each part's Blueprint texts before it enters the canvas, its TextBlocks and calls after; show
+  SelfHitTestInvisible with the first item's PlayFocusAnim, the category's word in the pane with no description and the
+  pane's `Thumbnail` collapsed once (a pane without one logged once); Session's 10 list items and 19 parts at the places
+  of the game's Settings page; right giving Select, StateFocus on Host a session and its words in the pane, Select there
+  asking first; no part made again while the rows stay; a click at the kit's pointer selecting the row under it,
+  answering `away` with `find` on Find a session, asking first on Host a session, nothing on a header or with no
+  pointer, a click on another category; the mouse look every 0.1 s (the first look moving nothing, the item the mouse
+  moved onto taking the cursor, a resting mouse never moving it after the keys did, a header or no pointer moving
+  nothing); the game's eight pages by name with their state; a look refused logged once; a class whose Create raises
+  drawn with TextBlocks and Borders, one line for it, the others the game's; a canvas that cannot be made turning the
+  page off with one line. Pure: what a press asks of each kind of row (`Page.press`: the next or previous value, select,
+  never `open_menu`, nothing on left or right of an action or key row) and which press a click at x makes on a row
+  (`Page.word_at`: the halves of the value part from 1286 to 2246, select elsewhere). Engine, through the co-op menu's
+  model and a fake act and bind: right, left and select on Who can join (the value written, the select sound, the part
+  made again, Friends join without asking hidden and skipped, the wrap), Players held at 4 with the refusal sound and no
+  note, the slider made again at 3, a click on each half and on the title, a refused write with its note in the pane
+  until a move, nothing on left or right of Host a session and Join with a code, Host a session asking first (its
+  question in the pane), hosting in place on a second Select within 3 s and asking again 4 s later, the Online tab
+  written off answering `close`, Copy my code refused and gone once the code went, Leave asked again after a move of the
+  keys, of the mouse look or of a click and after its 3 s window, its question in the pane, Copy my code run in place, a
+  run refused with its why, a mute row kept under the cursor when the row above it goes and muted by select too, Remove
+  and Reset all keys asking first then running, a key row waiting (Press a key, the capture words, a key refused or
+  taken, Enter for the default, back to stop, the keys and the mouse moving nothing), Write a bug report solo and Invite
+  while hosting run in place, each row that still needs the game world (Find a session, Join with a code and Guide solo,
+  Chat while hosting) answering `away` and its id with the confirm cue and nothing run, no Test tools list item though
+  the ctx has a module page. An act that raises turns the page off. The state read again every 0.25 s while the page
+  shows: an online session that begins adds Players second with the cursor kept on Who can join, no sound and no act; a
+  change before 0.25 s waits for the next read; the cursor's row gone (Host a session once hosting) puts it on Invite a
+  friend with the pane's question cleared; a first Select of Leave survives a read that changes nothing; a read that
+  raises turns the page off;
 - `world/daynight/rule_test` covers `world/daynight/rule.lua`: every row of the map table (keys in lower case, each open
   row complete for its kind of sky, the fixed maps, an unknown map), the rules in their order (SB's screens and
   cutscenes ignored, Xion's story night before photo mode, photo mode's hold whatever the hour, a test pin before Night
@@ -695,23 +703,24 @@ fails the test. The `main/` tests load `main/fixture.lua` first, with UE4SS stub
   of five modules, and the gap lines (a frame over 100 ms after the last, with the 250 ms pass in the gap or none, at
   most 200 a minute), then `INSTALL.md` and `docs/players/interface.md` both saying the mod reads any controller the
   game reads. The Online page's act and bind reach the co-op menu's own code with the words and values read again at
-  each call: a value written and logged as the menu writes it, a confirm in French with the co-op menu never opened, a
-  key refused on a clash as the file holds it now, a key taken with `host_key=none` written, `pause_tab=off` in effect
-  at once. An F-key goes to the pause tab's capture while a key row of the page waits. Otherwise it runs as before.
-  The tab's `away` is the co-op menu's own run of a row that needs the game world: Find a session opens the Sessions
-  screen, Host a session the Create a session screen, Write a bug report asks `report` and puts its words on the
-  notice line. The tab's `open` with a Test tools page opens the co-op menu on that page, with none on its main page.
+  each call: a value written and logged as the menu writes it, a confirm in French with the co-op menu never opened
+  (Leave's and Host a session's), a key refused on a clash as the file holds it now, a key taken with `host_key=none`
+  written, `pause_tab=off` in effect at once, Host a session asking `host public 4` with no screen opened (the line the
+  Create a session screen's Start asks through `online/session/wiring.lua`), Invite asking `invite`. An F-key goes to
+  the pause tab's capture while a key row of the page waits. Otherwise it runs as before. The tab's `away` is the co-op
+  menu's own run of a row that needs the game world: Find a session opens the Sessions screen, Host a session the Create
+  a session screen, Write a bug report asks `report` and puts its words on the notice line. The tab's `open` with a
+  module page (the co-op menu's own `pages`) opens the co-op menu on that page, with none on its main page.
   `main/menu_test` did not change when the co-op menu's rows moved into those functions, nor when its toggle took a
-  module page. While the pause menu's
-  Online page shows, the pad's words, the navigation keys, Enter and Esc go to the
+  module page. While the pause menu's Online page shows, the pad's words, the navigation keys, Enter and Esc go to the
   tab's `nav` and to no screen (E and F do nothing, RB on Settings still goes to the tab's event); while it does not,
-  nothing changes. The page is built behind its guard and handed to the tab with the native entry and tab read, its
-  ctx giving the model's fields, its pointer the kit's; a page that does not build logs one line. The keys work on.
-  `main/boot_test` covers the two native reads: each of `coop_pause_enter`'s 5 counts and `coop_pause_page`'s 12 as its
-  word or tab, any other count nil and why, an older DLL without them nil and the loadlib reason. For spectate it covers
-  the pad's left and right that nothing else took switching the member watched (the co-op menu open takes them first),
-  the Left and Right arrows the same way (never A, Q or D, nothing while it does not watch) and the camera's frame call
-  right after the ghost's place;
+  nothing changes. The page is built behind its guard and handed to the tab with the native entry and tab read, its ctx
+  giving the model's fields with no module pages, its pointer the kit's; a page that does not build logs one line. The
+  keys work on. `main/boot_test` covers the two native reads: each of `coop_pause_enter`'s 5 counts and
+  `coop_pause_page`'s 12 as its word or tab, any other count nil and why, an older DLL without them nil and the loadlib
+  reason. For spectate it covers the pad's left and right that nothing else took switching the member watched (the co-op
+  menu open takes them first), the Left and Right arrows the same way (never A, Q or D, nothing while it does not watch)
+  and the camera's frame call right after the ghost's place;
 - `main/match_test` covers `coop match` (search, create, cancel, end, join with a code, leave), search and create with
   the SBO lobby's room and hall words, `coop mute` and `coop unmute` with their usage line, `coop block`,
   `coop unblock` (a SteamID or `all`) with their usage lines and `coop blocked` (the count from the status for one
@@ -925,7 +934,7 @@ fails the test. The `main/` tests load `main/fixture.lua` first, with UE4SS stub
   card's title line and target rows (the longest target name with two-digit numbers, a taker's name cut to 19
   columns), its last line and the result panel's heading, line and notes stay within their columns. The pause menu's
   Online page has a word for each category and section of `ui/kit/online_model.lua` and for no other id; in every
-  language a category's word fits the page's list item (16 columns), a section's word and Open the co-op menu fit 40;
+  language a category's word fits the page's list item (16 columns), a section's word fits 40;
 - `online/lobby/arrival_test` covers the hold at a lobby arrival: nothing without a lobby warp or before its new
   controller; SB's black up and the kit veiled at the next pass; held while anything is missing, then lifted once with
   one line; the 8 s cap, which lifts whatever is missing and names it, also when the missing items cannot be read; a

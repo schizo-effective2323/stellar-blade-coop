@@ -45,21 +45,22 @@ achievements, which cannot be taken back.
 
 ## Features
 
-- F5 opens the co-op menu. Its first row opens the Create a session screen, where the host picks who can join and the
-  session rules before Start. Public, the default, lists the online session in Find a session for every player of the
-  same version. Friends only opens it to the host's Steam friends, Invitation to a Steam invite or a 7-character join
-  code, Private to nobody. A player who is not the host's Steam friend waits until the host accepts them. With
-  Friends join without asking off, the host's friends wait too. The invited friend joins once their save has loaded,
-  even if Steam had to start their game. The menu also finds sessions, invites, leaves and changes the settings. F6
-  shows the status and F8 leaves the session. On any controller the game reads (a DualSense with Steam Input off
-  included), View held for 1 s opens the menu. The mouse works in it too.
+- F5 opens the co-op menu, the menu for admins and debugging. It keeps every player row too. Its first row opens the
+  Create a session screen, where the host picks who can join and the session rules before Start. Public, the default,
+  lists the online session in Find a session for every player of the same version. Friends only opens it to the host's
+  Steam friends, Invitation to a Steam invite or a 7-character join code, Private to nobody. A player who is not the
+  host's Steam friend waits until the host accepts them. With Friends join without asking off, the host's friends wait
+  too. The invited friend joins once their save has loaded, even if Steam had to start their game. The menu also finds
+  sessions, invites, leaves and changes the settings. F6 shows the status and F8 leaves the session. On any controller
+  the game reads (a DualSense with Steam Input off included), View held for 1 s opens the menu. The mouse works in it
+  too.
 - The game's pause menu gets an Online tab after Settings. RB on Settings (E on the keyboard) or a click on the tab
   opens the Online page, laid out like the game's Settings page: SBO's settings and session rows with their values.
   Its rows change a value, take a key or run as the game's Settings rows do, through the same code as the co-op menu.
-  A row that needs the game world (Host a session, Find a session, Join with a code, Invite, Chat, Guide, Write a bug
-  report) closes the pause menu, then runs. A Test tools row opens the co-op menu on its page. Its Open the co-op menu
-  row closes the pause menu and opens the co-op menu. The page and its mouse were tested in game; its rows were not
-  tested in game yet.
+  Host a session asks first, then hosts with the rules set on the page, the pause menu staying open. Invite a friend
+  and Write a bug report run in place too. Find a session, Join with a code, Guide and Chat close the pause menu, then
+  run. The page has no Test tools: they stay in the co-op menu. The page and its mouse were tested in game; its rows
+  were not tested in game yet.
 - While at least one other player is linked with you, the game's tutorial popups and record popups are off in your
   game (Hide popups online, on by default). Your own values come back when you leave. The game's settings file keeps
   them the whole time. Not tested in game yet.

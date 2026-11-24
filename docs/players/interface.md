@@ -6,10 +6,13 @@ is in [Settings](settings.md). How the menu takes the game's input is in
 
 ## Co-op menu
 
-F5 opens the co-op menu on the left of the screen, and so does View held for 1 s on a [controller](#controller). It
-opens in a world only: not on the title screen, not while the game is paused or shows the mouse cursor for one of its
-own screens, and not during your own photo mode. While the menu is open, the game ignores its own keys and controller
-buttons, so EVE stands still.
+F5 opens the co-op menu on the left of the screen. View held for 1 s on a [controller](#controller) opens it too. It
+is the menu for admins and debugging: the [test tools](#test-tools) and the developer pages are there. Players host,
+find and join an online session, change the settings, read the guide and write a bug report on the
+[Online page](#pause-menu) of the game's pause menu. F5 keeps every row, so everything is still there with the Online
+tab off (`pause_tab=off`). The menu opens in a world only: not on the title screen, not while the game is paused or
+shows the mouse cursor for one of its own screens, and not during your own photo mode. While the menu is open, the
+game ignores its own keys and controller buttons, so EVE stands still.
 
 | Key | In the menu |
 | --- | --- |
@@ -598,9 +601,10 @@ The game's pause menu gets an Online tab after Settings. The tab opens the Onlin
 out like the game's Settings page: a list of categories on the left, the rows of the chosen category with their
 values in the middle, the name of the focused row on the right. Its rows change a value or run as the game's
 Settings rows do. The page and the co-op menu run the same code: a value changed on one shows on the other, written on
-the same line of [coop-settings.txt](settings.md#coop-settingstxt). A row that needs the game world closes the pause
-menu first, then runs once the game runs. One row, Open the co-op menu, does what the tab did before the page: it
-closes the pause menu and opens the co-op menu.
+the same line of [coop-settings.txt](settings.md#coop-settingstxt). Host a session, Invite a friend and Write a bug
+report run with the pause menu open. Find a session, Join with a code, Guide and Chat still close the pause menu
+first, then run once the game runs. The page has no test tools: they stay in the [co-op menu](#co-op-menu) (F5), the
+menu for admins and debugging.
 
 ### Opening the page
 
@@ -616,13 +620,14 @@ without the key path the mod watches.
 ### What the page shows
 
 The left list depends on the state. With no online session: Session, Shared world, Combat, Game modes, Controls,
-Display, Other players, Photo mode, Saves, Help and Test tools while a module's test tools are on. A host sets her
-rules before she hosts, as on the co-op menu's Options page. In an online session the list also has Players. Each
-category has sections with a header, as in the game's Settings page. Session
-starts with Open the co-op menu. Each row shows its value as the co-op menu shows it: On or Off, a choice, a number,
-a key name. The pane on the right shows the name of the focused row, or of the category while you are in the list.
-Under the name it shows what the last press asked or why it was refused: the question of a row that asks twice, which
-keys a key row takes, the co-op menu's note when a value could not be saved. A move clears it. No row has a picture.
+Display, Other players, Photo mode, Saves and Help. A host sets her rules before she hosts, as on the co-op menu's
+Options page. In an online session the list also has Players, second. Each category has sections with a header, as in
+the game's Settings page. With no online session, Session starts with Play online: Host a session, Find a session and
+Join with a code. In an online session it starts with This session: Invite a friend, Copy my code, Chat and Leave the
+session. Each row shows its value as the co-op menu shows it: On or Off, a choice, a number, a key name. The pane on the
+right shows the name of the focused row, or of the category while you are in the list. Under the name it shows what the
+last press asked or why it was refused: the question of a row that asks twice, which keys a key row takes, the co-op
+menu's note when a value could not be saved. A move clears it. No row has a picture.
 
 The page is made of the game's own Settings parts: the list item, the section header, the action row, the row with
 a choice, the slider row and the description pane. A part that cannot be made outside the game's Settings page is
@@ -650,11 +655,12 @@ In the rows, up and down skip the headers and wrap around. A long category scrol
 | A number (Players, Enemy HP, Menu size) | One step down or up, held at both ends | One step up | Settings select; the refusal beep at an end |
 | A key (Open this menu, Show the status) | Nothing | The row reads Press a key. The next F-key, with Shift, Ctrl or Alt if you like, is checked against your other keys as in the co-op menu. Enter (A) puts back its default; Esc (B) stops waiting | Settings confirm; Settings select when the key is taken, the refusal beep when it is refused |
 | Copy my code | Nothing | Copies the code | Settings confirm |
+| Invite a friend | Nothing | Opens Steam's invite overlay, as `coop invite`. The pause menu stays open | Settings confirm |
+| Write a bug report | Nothing | Runs `coop report`. The pane names `coop-report.txt`. The pause menu stays open | Settings confirm |
+| Host a session | Nothing | Asks first. A second Enter within 3 s on the same row hosts with the Who can join value set on the page, the request that Start sends on the Create a session screen. The pause menu stays open. A refusal shows in the pane | Settings confirm |
 | Leave the session, Remove a player, Reset all keys | Nothing | Asks first; a second Enter within 3 s on the same row runs it, as in the co-op menu | Settings confirm |
 | Mute a player | Mute or unmute | Mute or unmute | Settings select |
-| Host a session, Find a session, Join with a code, Chat, Invite a friend, Guide, Write a bug report | Nothing | Closes the pause menu, then runs the row once the game runs, as the co-op menu runs it: the Create a session screen, the Sessions screen, the code box, the chat box, the Steam overlay, the guide. The bug report shows its notice | Settings confirm |
-| Open the co-op menu | Nothing | Closes the pause menu, then opens the co-op menu | Settings confirm |
-| A Test tools row (EVE's cut moves, Developer menu, Cut models) | Nothing | Closes the pause menu, then opens the co-op menu on that tools page | Settings confirm |
+| Find a session, Join with a code, Chat, Guide | Nothing | Closes the pause menu, then runs the row once the game runs, as the co-op menu runs it: the Sessions screen, the code box, the chat box, the guide | Settings confirm |
 
 A press the co-op menu would refuse changes nothing and plays the refusal beep of the game's Settings rows
 (`ui_beep`): a number at its end, a row that is no longer shown (the session ended, the code went), a key another
@@ -662,9 +668,11 @@ action holds, a value that could not be saved, a row the co-op menu could not ru
 Off on the page closes the pause menu; the next pause menu has no Online tab.
 
 A row that needs the game world waits for the game to run after the pause menu closed. If the game stays paused for
-2 s, the row does not run and the notice of the Online tab shows. The rows that need no world (Copy my code, Leave the
-session, Remove a player, Reset all keys, Mute a player) run with the pause menu open. The page draws its rows again
-after each press.
+2 s, the row does not run and the notice of the Online tab shows. The other rows (Host a session, Invite a friend,
+Copy my code, Leave the session, Remove a player, Reset all keys, Mute a player, Write a bug report) run with the pause
+menu open. The page draws its rows again after each press. It also reads the state every 0.25 s while it shows: an
+online session that begins or ends changes the list and the rows at once. The cursor stays on its row. When that row
+went, the cursor goes to the first row of its category.
 
 A list item reached by the mouse or the keys plays `ui_move`, the sound the game's Settings list items hold. A row
 reached, and a click that shows another category, play the focus sound of the game's Settings page (`UI_Tab_2_Cue`).
@@ -672,7 +680,7 @@ A value changed plays the select sound of its rows (`UI_Setting_Select_Cue`), a 
 (`UI_Setting_Confirm_Cue`). Entering the page plays `ui_move` too. The mouse arriving on the Online tab plays
 `UI_Common_Hover_Cue`. These last two are picks: the cues the game plays for its own tab row are not read yet.
 
-The co-op menu keeps every row it has: Open the co-op menu on the page, or F5.
+F5 opens the co-op menu with every row it has, the test tools included.
 
 `pause_tab=off` in [coop-settings.txt](settings.md#coop-settingstxt) or Online tab in the pause menu (Options,
 Controls) removes the tab from the next pause menu. RB on Settings then goes to Equipment as in the game. LB on
@@ -697,12 +705,14 @@ hides and the pause menu closes as Back closes it.
 
 ### Testing the page in the game
 
-The game tests of the first build showed the page, its keys, the mouse and Open the co-op menu working. The steps
-below check the rows that change a value or run. Before the test, install the build when the game is closed. After
-each step keep `UE4SS.log` (the `[PT]` lines and the `menu:` lines) and `coop-link.log`. The steps go from the least
-risky to the most.
+The game tests of the first build showed the page, its keys, the mouse and its former row that opened the co-op menu
+working. The steps below check the rows that change a value or run. Before the test, install the build when the game
+is closed. After each step keep `UE4SS.log` (the `[PT]` lines and the `menu:` lines) and `coop-link.log`. The steps go
+from the least risky to the most.
 
-1. Pause and open Online with no online session. Expect: Shared world, Combat and Game modes in the list.
+1. Pause and open Online with no online session. Expect: Shared world, Combat and Game modes in the list, no Test
+   tools. Session starts with Play online and Host a session. Close the pause menu, press F5. Expect: the co-op menu
+   with every row, its Test tools included.
 2. Other players: HP marker. Press right, left, then Enter. Then click the left half of its value, then the right half.
    Expect: On and Off switch at each press, with the select sound of the game's Settings rows. Close the pause menu,
    open the co-op menu (F5), Options: HP marker shows the same value.
@@ -714,21 +724,26 @@ risky to the most.
    then Enter again: F6 is back. Enter, then Esc: it stops waiting. Note whether the F-keys reach the page at all.
 5. Controls: Reset all keys. Enter once. Expect: the pane asks. Wait 4 s, Enter: it asks again. Enter twice fast: the
    keys go back to their defaults.
-6. Help: Write a bug report. Expect: the pause menu closes, the game runs, a notice names `coop-report.txt`.
+6. Help: Write a bug report. Expect: the pause menu stays open, the pane names `coop-report.txt`. After the test,
+   check the time of that file in the mod folder.
 7. Session: Find a session. Expect: the pause menu closes, then the Sessions screen opens. Then Join with a code (the
    code box) and Help: Guide (the guide), each after the pause menu closes.
-8. Test tools: EVE's cut moves. Expect: the pause menu closes, then the co-op menu opens on that page.
-9. Session: Host a session. Expect: the pause menu closes, then the Create a session screen opens. Host, then pause
-   again. Copy my code: no screen changes, the code is copied. Chat: the chat box after the pause menu closes. Invite
-   a friend: the Steam overlay after the pause menu closes.
+8. Session: Host a session. Enter: the pane asks. Wait 4 s, Enter: it asks again. Enter twice fast. Expect: the pause
+   menu stays open, no Create a session screen. Within a second or two the Session rows change to Invite a friend,
+   Copy my code and Leave the session. `UE4SS.log`: `OK: asked the native part: host <who> <n>`. Note whether the
+   rows change while the game stays paused.
+9. While you host: Copy my code. Expect: no screen changes, the code is copied. Invite a friend: note whether the Steam
+   overlay shows over the pause menu. Chat: the chat box after the pause menu closes.
 10. Display: Online tab in the pause menu, Off. Expect: the pause menu closes and the next pause menu has no Online
     tab. Put it back On in the co-op menu's Options.
 11. With a friend: Players, Mute <name> with Enter, then with right. The co-op menu's Options show the same. Last,
     Session: Leave the session with two Enters. It runs while the game is paused, which the co-op menu never did.
 
 Stop on a crash, a freeze, a pause menu that does not close, or the game paused with no menu. Note without stopping: a
-row that flashes its focus look when its value changes, a sound that does not play, a click half that acts on the
-wrong side, a pane note you cannot read, a row that needs the game world and does not run.
+row that flashes its focus look when its value changes, a row that flashes every quarter second, a sound that does not
+play, a click half that acts on the wrong side, a pane note you cannot read, a row that needs the game world and does
+not run, a list that does not change after Host a session while the game stays paused, an overlay or a notice that does
+not show over the pause menu.
 
 ### What is not known before the test
 
@@ -764,9 +779,18 @@ Most points have their own log line.
 17. What a change of a ghost look, of Shared world or Leave the session does while the game is paused. The co-op menu
     only ever changed them with the game running.
 18. Whether a slider row's bar follows its value.
-19. Whether a row that needs the game world runs once the pause menu closed. Open the co-op menu takes the same path
-    and works. A row that fails then logs `[PT] pause tab: <row> failed: <why>`.
+19. Whether Find a session, Join with a code, Guide and Chat run once the pause menu closed. The first build's row that
+    opened the co-op menu took the same path and worked. A row that fails then logs
+    `[PT] pause tab: <row> failed: <why>`.
 20. The notice after 2 s still paused says the co-op menu did not open, also when the row was another one.
+21. Whether Steam's answer to Host a session (the lobby made) reaches the mod while the game is paused. The request
+    goes to the native part at once. Steam's callbacks run on the game's own thread, which the mod has not measured
+    while paused. Until the answer comes, the Session rows stay as they were.
+22. Whether Steam's invite overlay opens over the pause menu (Invite a friend).
+23. Whether the native part writes `coop-report.txt` while the game is paused, as it does with the game running.
+24. Whether a notice of the native part (a host refused) shows over the pause menu.
+25. Whether reading the state every 0.25 s shows on screen. A row is made again only when its words or its value
+    change.
 
 ### Log lines
 
@@ -781,7 +805,9 @@ Most points have their own log line.
   menu: RB on Settings goes to Equipment. A click on the tab stops the tab with the `[PT] STOP` line. `pause tab: asked
   off, ...` and `pause tab: asked on, ...` follow the setting.
 - `UE4SS.log`: a value changed on the page logs `menu: <setting>=<value> saved in coop-settings.txt`, as the co-op
-  menu does; one not saved logs `menu: <setting>=<value> not saved: <why>`.
+  menu does; one not saved logs `menu: <setting>=<value> not saved: <why>`. Host a session, Invite a friend and Write a
+  bug report log the console's line: `OK: asked the native part: host <who> <n>` (`invite`, `report`), or
+  `STOP: <why>`.
 - `UE4SS.log`: `[PT] hook on: WB_GameMenu_Master_C:Construct` once a Lua load, or `[PT] STOP: <why>; the pause menu
   keeps its 8 tabs until the mod reloads`, after which the mod asks the native part `pausetab off`.
   - `[PT] online page: <part> built from SB's class` or `[PT] online page: <part> not built (<why>); the kit's drawing
@@ -801,8 +827,8 @@ Most points have their own log line.
     online page: off while shown; the pause menu closes and the co-op menu opens as before`.
   - `[PT] pause tab: the game stayed paused for 2 s; the pause menu is the player's` comes with the notice. Nothing
     runs then: neither the co-op menu nor the page's row. `[PT] pause tab: <what> failed: <why>` means the step that
-    runs once the pause menu closed raised (`the co-op menu`, or the row's id: `host`, `find`, `join_code`, `invite`,
-    `chat`, `guide`, `report`); the tab goes on.
+    runs once the pause menu closed raised (`the co-op menu`, or the row's id: `find`, `join_code`, `chat`, `guide`);
+    the tab goes on.
     `[PT] pause tab: LB or RB at an end of the tab row with no Online tab shown; nothing opened` means the native part
     took LB or RB on a pause menu the mod had not seen built. `[PT] pause tab: nothing closed: the game has no pause
     menu open` means the game closed its pause menu first. When the native part cannot close the pause menu at all (an
