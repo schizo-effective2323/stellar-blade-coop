@@ -25,12 +25,16 @@ local function main(id) return (assert(MAIN[id],id)) end -- In brackets: assert 
 local function opt(id) return (assert(OPT[id],id)) end
 -- The place of the mute rows (model.lua's, one per other player of the online session past the handshake).
 M.MUTES={mutes=true}
+-- Open the co-op menu: the one row of the page that is not model.lua's. It closes the pause menu and opens the co-op
+-- menu, as the Online tab did before the page, so the page loses none of the menu's functions.
+M.OPEN_MENU={id='open_menu'}
 local function section(id,...) return {id=id,rows={...}} end
 local function category(id,states,...) return {id=id,states=states,sections={...}} end
 -- In order. A row with a show function is listed while it shows (model.lua's: the session rows by state, Friends join
 -- without asking under Public and Invitation only). In a section, the rows the approved list names come first.
 M.CATEGORIES={
     category('session',BOTH,
+        section('menu',M.OPEN_MENU),
         section('play',main('host'),main('find'),main('join_code')),
         -- Chat shows with no session too: the loopback, the SBO lobby.
         section('current',main('invite'),main('copy'),main('chat'),main('leave')),

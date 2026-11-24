@@ -1033,6 +1033,11 @@ wh={stick=0,held=0,fkey=0,missing=false,mouse={1920,1080},centred=0}
 -- The native part's pause menu close (coop_pause_close): each call hands back answer of its three arguments (1 closed,
 -- 2 no pause menu, 3 off); calls: how often it was called; missing: an older DLL without it.
 pc={answer=1,calls=0,missing=false}
+-- The native part's Online page entry (coop_pause_enter) and tab read (coop_pause_page): each call hands back answer of
+-- its 5 or 12 arguments (enter: 1 entered to 5 off; page: 1 to 9 the tab, 10 other, 11 no pause menu, 12 off); calls:
+-- how often it was called; missing: an older DLL without it.
+pe={answer=1,calls=0,missing=false}
+pp={answer=11,calls=0,missing=false}
 -- source: the chunk name main.lua gets instead of its path in the repository, as UE4SS gives it ('@<path>'), which sets
 -- the mod folder.
 function load_main(with_native,no_folder,source)
@@ -1046,6 +1051,15 @@ function load_main(with_native,no_folder,source)
                 assert(select('#',...)==3,'Three arguments: the most the native part hands back')
                 pc.calls=pc.calls+1
                 return table.unpack({...},1,pc.answer)
+            end
+        end
+        if name=='coop_pause_enter' or name=='coop_pause_page' then
+            local fake,most=name=='coop_pause_enter' and pe or pp,name=='coop_pause_enter' and 5 or 12
+            if fake.missing then return nil,'not exported' end
+            return function(...)
+                assert(select('#',...)==most,name..': '..most..' arguments, the most it hands back')
+                fake.calls=fake.calls+1
+                return table.unpack({...},1,fake.answer)
             end
         end
         if name=='coop_stick' or name=='coop_held' or name=='coop_fkey' then
@@ -1067,6 +1081,7 @@ function load_main(with_native,no_folder,source)
         return true
     end
     pd.q,pd.calls,pc.calls,kit_lost={},0,0,nil
+    pe.calls,pp.calls=0,0
     wh.stick,wh.held,wh.fkey,wh.mouse,wh.centred=0,0,0,{1920,1080},0
     printed,handler,loops,asked,huds,sessions,ticks,active,withdrawn,captured,states={},nil,{},{},{},{},0,false,{},{},{}
     pausetabs,popup_asks={},{}

@@ -57,6 +57,36 @@ function M.pause_close()
     if n==2 then return false,'the game has no pause menu open' end
     return false,'the native part refused the close (not the pinned game build, or after its fault)',true
 end
+-- The pause menu's Online page (ui/kit/online_page.lua), run by the native part on the game thread (ui/pause_tab.h).
+-- coop_pause_enter runs the shown SB page's deactivate and makes SBO's page the open tab: how many of five arguments it
+-- hands back is its answer. coop_pause_page reads the open menu's tab the same way out of twelve. An older DLL without
+-- one: nil and why, and the Online tab opens the co-op menu as before.
+local ENTER,TAB={'entered','shown','none','locked','off'},{[10]='other',[11]='none',[12]='off'}
+local native_enter,enter_why,native_page,page_why=nil,why,nil,why
+if loaded then
+    native_enter,enter_why=package.loadlib(M.folder..'\\StellarCoop.dll','coop_pause_enter')
+    native_page,page_why=package.loadlib(M.folder..'\\StellarCoop.dll','coop_pause_page')
+end
+-- 'entered' (SB's page left, SBO's tab now open), 'shown' (it was already), 'none' (SB has no pause menu open),
+-- 'locked' (SB's tab lock is on: nothing changed), 'off' (not the pinned game build, coop off, or after its fault).
+function M.pause_enter()
+    if type(native_enter)~='function' then
+        return nil,'the native part has no coop_pause_enter ('..tostring(enter_why)..')'
+    end
+    local n=select('#',native_enter(0,0,0,0,0))
+    if ENTER[n] then return ENTER[n] end
+    return nil,'coop_pause_enter answered '..n
+end
+-- 1 to 9 (the open menu's tab; 9: the Online page), 'other' (another number), 'none' (no pause menu open) or 'off'.
+function M.pause_page()
+    if type(native_page)~='function' then
+        return nil,'the native part has no coop_pause_page ('..tostring(page_why)..')'
+    end
+    local n=select('#',native_page(0,0,0,0,0,0,0,0,0,0,0,0))
+    if n>=1 and n<=9 then return n end
+    if TAB[n] then return TAB[n] end
+    return nil,'coop_pause_page answered '..n
+end
 M.link=loaded and require('core.link').new(M.folder) or nil
 M.settings=nil
 if M.link then

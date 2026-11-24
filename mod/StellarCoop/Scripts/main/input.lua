@@ -185,7 +185,7 @@ M.pause_tab=require('ui.kit.pause_tab').new({log=function(m) print('[StellarCoop
     enabled=function() return M.settings~=nil and M.settings.pause_tab==true end,
     word=function() return M.words().pause_tab.tab end,paused=function() return M.kit~=nil and M.kit.paused(true) end,
     open=open_menu,notice=function() M.say(M.words().pause_tab.stuck,T.en.pause_tab.stuck) end,
-    ask=function(line) return M.ask(line)() end,close=M.pause_close})
+    ask=function(line) return M.ask(line)() end,close=M.pause_close,enter=M.pause_enter,tab=M.pause_page})
 RegisterConsoleCommandHandler('coop',function(_,parameters)
     M.typed_at=os.clock()
     -- A seventh word too, so a command that takes six (coop leviathan show) refuses one more.
