@@ -515,4 +515,10 @@ b23[9].Button_Action.IsHovered=function() asks=asks+1; return true end
 b23[9].GetFullName=function() return 'WB_Common_Tab_Btn_C of another menu' end
 s.tab.tick(9); s.tab.click(10)
 assert(asks==0 and s.closes==0 and not s.tab.armed(),'Another widget at the kept address is not asked')
+-- Only the pause menu freed: its button is not asked either.
+local m24,b24=menu(); construct(m24)
+b24[9].Button_Action.IsHovered=function() asks=asks+1; return true end
+free(m24)
+s.tab.tick(11); s.tab.click(12)
+assert(asks==0 and touched==0 and not s.tab.armed(),'The button of a freed pause menu is not asked')
 print('pause_tab_test ok')
