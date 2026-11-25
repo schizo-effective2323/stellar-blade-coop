@@ -28,7 +28,9 @@
 -- close the native part cannot make at all stops the tab as an error does.
 --
 -- The button copies its text style from SB's last button. A container rebuilt without it gets it again from the 250 ms
--- loop while the game is paused. A rooted, never-shown master keeps the class in memory, so the hook stays on it. Every
+-- loop while the game is paused. The kept pause menu and button are asked whether they still live before each use from
+-- the frame, a click or LB and RB: SB frees them after a close or a rebuilt row, while a cursor left shown still reads
+-- as a paused game. A rooted, never-shown master keeps the class in memory, so the hook stays on it. Every
 -- engine call runs in pcall on the game thread; the first error stops the tab until the next Lua load with one STOP
 -- line. The native part is then asked pausetab off, so RB on Settings wraps to Equipment as in the game. Only UI: no
 -- save, trophy or inventory call of its own (SB's close saves only as it does on Back). Its [PT] lines answer what only
@@ -66,6 +68,7 @@ function Tab.new(o)
     local hooked,failed,stopped=false,false,false
     -- closed_at: the clock of our close; pending: the step that runs once the game is unpaused, {what=, run=}.
     local master,button,closed_at,pending=nil,nil,nil,nil
+    local named=nil -- Our button's full name, read when it was made.
     local asked,refused=nil,nil -- The last ask written (true: on); the last refusal logged.
     -- The page shown by us; when to log SB's pages again; a click to report at the next tick; a refused tab look said.
     local showing,look_at,clicked,look_said=false,nil,false,false
@@ -101,7 +104,16 @@ function Tab.new(o)
             pcall(row.RemoveChild,row,made)
             error(e,0)
         end
-        button=made
+        button,named=made,U.text(made:GetFullName())
+    end
+    -- Our button while SB still has it and its pause menu, else nil with the kept one dropped. SB frees both after
+    -- a close and frees the buttons when it rebuilds the tab row. A call on a freed widget crashed the game inside
+    -- UE4SS, where no pcall reaches (25 November 2026). The kept objects themselves are asked, the button with its
+    -- name as ui/kit/kit.lua's alive does: a child read off a freed button would read as valid.
+    local function ours()
+        local b=U.valid(master) and U.valid(button)
+        if b and U.text(b:GetFullName())==named then return b end
+        button=nil
     end
     local function on_construct(ctx)
         if failed or stopped or not o.enabled() then return end
@@ -230,8 +242,9 @@ function Tab.new(o)
         -- shortcut: the kit's move cue (UI_Common_Hover_Cue); SB's own tab hover cue is native and not read yet.
         if not showing and now>=over_at and self.armed() and o.paused() then
             over_at=now -- Each frame: SB's own tabs answer the mouse at once.
-            local ok,on=pcall(function() return button.Button_Action:IsHovered()==true end)
-            on=ok and on
+            local b=ours()
+            local ok,on=pcall(function() return b.Button_Action:IsHovered()==true end)
+            on=b~=nil and ok and on
             if on and not over then sound('move') end
             over=on
         end
@@ -300,7 +313,7 @@ function Tab.new(o)
     -- RB on Settings or LB on the first tab (coop_pad's event 12): the page entered. With the tab on, no button made
     -- (no Construct seen yet) and no close waiting, one line each time: the native part took the press.
     function self.event(now)
-        if self.armed() then return enter(now,'LB or RB') end
+        if self.armed() and ours() then return enter(now,'LB or RB') end
         if not (failed or stopped or closed_at) and o.enabled() then
             log('pause tab: LB or RB at an end of the tab row with no Online tab shown; nothing opened')
         end
@@ -315,13 +328,15 @@ function Tab.new(o)
             if page.off() then return fault(now) end
             return answer(now,a,b)
         end
+        local b=ours()
+        if not b then return end
         local ok,over=pcall(function()
-            return assert(U.valid(button.Button_Action),'the tab button lost its Button_Action'):IsHovered()==true
+            return assert(U.valid(b.Button_Action),'the tab button lost its Button_Action'):IsHovered()==true
         end)
         if not ok then return fail(over) end
         -- shortcut: both answers each click while unproven; the Button's alone once a game test shows it holds. The
         -- tab button's own answer is only for the log: a refusal there never stops the tab.
-        local asked,widget=pcall(function() return button:IsHovered()==true end)
+        local asked,widget=pcall(function() return b:IsHovered()==true end)
         local function yes(b) return b and 'yes' or 'no' end
         log('click: Online tab hovered: Button_Action '..yes(over)..', tab button '
             ..(asked and yes(widget) or 'refused'))

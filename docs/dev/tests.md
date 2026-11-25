@@ -596,7 +596,9 @@ fails the test. The `main/` tests load `main/fixture.lua` first, with UE4SS stub
   the page shows; a page that turns off in it takes the fault path. Their `away` and a row's id close the pause menu,
   then run that row once unpaused (never while paused, the give-up after 2 s with nothing run, a run that raises
   logged with one line and the tab going on); their `open_menu` and a Test tools page open the co-op menu on that
-  page;
+  page. A pause menu or a button the game freed is never read from the frame's hover look, a click or LB and RB (the
+  crash of 25 November 2026); a rebuilt row gets the button again; another widget at the kept button's address is
+  not asked;
 - `ui/kit/online_model_test` covers the Online page's arrangement (`ui/kit/online_model.lua`): the categories in the
   solo state and in an online session with each section's rows, no Test tools category even with module pages in the
   ctx, no Open the co-op menu row, every row of today's main page and Options placed once or left out with a reason

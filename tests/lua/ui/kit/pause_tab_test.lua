@@ -22,6 +22,8 @@
 -- clock; their 'close' (the Online tab written off on the page) closes the pause menu with no co-op menu. An F-key goes
 -- to the page's capture only while the page shows. Their 'away' and a row's id close the pause menu, then run that row
 -- once unpaused (o.away), or give up after 2 s; a run that raises is one line.
+-- A freed pause menu or button (the crash of 25 November 2026): no read of it from the frame's hover look, a click or
+-- LB and RB; a rebuilt row gets ours again; another widget at the kept button's address is not asked.
 package.path='mod/StellarCoop/Scripts/?.lua;'..package.path
 local MASTER='/Game/Art/UI/Widget/GameMenu/WB_GameMenu_Master.WB_GameMenu_Master'
 local MASTER_KEEPER=MASTER..'.StellarCoop_PauseTabKeeper'
@@ -33,7 +35,22 @@ local function object(fields)
     fields.type=function() return 'UObject' end
     fields.IsValid=function() return true end
     fields.GetAddress=function() return address end
+    fields.GetFullName=fields.GetFullName or function() return 'Widget '..address end
     return fields
+end
+-- SB freed this widget: it reads invalid. Any other read of it counts in touched: in the game such a read crashes
+-- inside UE4SS, where no pcall reaches.
+local touched=0
+local function free(o)
+    local kept={}
+    for k,v in pairs(o) do kept[k]=v end
+    for k in pairs(kept) do o[k]=nil end
+    setmetatable(o,{__index=function(_,k)
+        if k=='type' or k=='GetAddress' then return kept[k] end
+        if k=='IsValid' then return function() return false end end
+        touched=touched+1
+        return kept[k]
+    end})
 end
 local missing=setmetatable({},{__index=function(_,k)
     if k=='type' then return function() return 'UObject' end end
@@ -461,4 +478,41 @@ s.paused=true; shown(100); assert(s.tab.page_shown(),'The tab goes on')
 p.answer,p.arg='open_menu','P'; s.tab.nav('select',100.1); s.paused=false; s.tab.tick(100.2)
 assert(s.opened=='P' and s.opens==1,tostring(s.opened))
 p.answer,p.clicked,p.arg=nil,nil,nil
+
+-- A freed button. On 25 November 2026 the game crashed inside UE4SS: the pause menu was closed, SB had freed its
+-- widgets, a cursor left shown read as a paused game and the frame's hover look called the kept button. The kept
+-- button is asked only whether it lives: no read of it from the frame, a click or LB and RB. The tab is not armed
+-- until a pause menu gets a new button.
+reset(); s=new(); s.tab.tick(0)
+local m20,b20=menu(); construct(m20)
+hovered=true; s.tab.tick(1)
+assert(count(s.sounds,'move')==1 and s.tab.armed(),'The hover look runs on a live button')
+free(b20[9]); free(m20)
+s.tab.tick(2); s.tab.tick(3)
+assert(touched==0 and not s.tab.armed(),'The frame look: '..touched..' reads of a freed widget')
+s.tab.click(4); s.tab.event(5)
+assert(touched==0 and s.closes==0,'Not armed: nothing')
+-- A click first, then LB or RB first, each on a tab that was still armed.
+local m21,b21=menu(); construct(m21)
+free(b21[9]); free(m21)
+s.tab.click(6)
+assert(touched==0 and s.closes==0 and not s.tab.armed(),'A click: '..touched..' reads of a freed widget')
+local m22,b22=menu(); construct(m22)
+free(b22[9]); free(m22)
+s.tab.event(7)
+assert(touched==0 and s.closes==0 and not s.tab.armed(),'LB or RB: '..touched..' reads of a freed widget')
+assert(logs[#logs]=='pause tab: LB or RB at an end of the tab row with no Online tab shown; nothing opened',logs[#logs])
+-- Only the button freed (SB rebuilt the tab row): the same, then ours again at the next slow.
+local m23,b23=menu(); construct(m23)
+free(b23[9]); table.remove(b23)
+s.tab.tick(8)
+assert(touched==0 and not s.tab.armed(),'A rebuilt row: '..touched..' reads of a freed widget')
+s.tab.slow()
+assert(#b23==9 and s.tab.armed(),'Added again')
+-- The kept button's address given to another widget: it lives under another name. It is not ours: no call on it.
+local asks=0
+b23[9].Button_Action.IsHovered=function() asks=asks+1; return true end
+b23[9].GetFullName=function() return 'WB_Common_Tab_Btn_C of another menu' end
+s.tab.tick(9); s.tab.click(10)
+assert(asks==0 and s.closes==0 and not s.tab.armed(),'Another widget at the kept address is not asked')
 print('pause_tab_test ok')
