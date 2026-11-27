@@ -53,7 +53,7 @@ M.CATEGORIES={
         section('modes',opt('scoreattack'),opt('fishing'),opt('race_match'),opt('photohunt'))),
     category('controls',BOTH,
         section('keyboard',opt('menu_key'),opt('status_key'),opt('leave_key'),opt('follow_key'),opt('race_key'),
-            opt('bike_key'),opt('gun_key'),opt('emote_key')),
+            opt('bike_key'),opt('gun_key'),opt('emote_key'),opt('closet_key')),
         section('controller',opt('emote_pad')),
         section('features',opt('bike'),opt('bike_pose'),opt('gun_mode')),
         section('all',opt('reset_keys'))),

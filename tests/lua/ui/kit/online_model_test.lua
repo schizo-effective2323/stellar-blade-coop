@@ -80,7 +80,7 @@ assert(ids(page.categories(hosting({mode='guest'})))==got,'A guest sees the same
 
 -- Each category's sections and rows with every row shown.
 local BOTH={
-    'controls(keyboard:menu_key status_key leave_key follow_key race_key bike_key gun_key emote_key'
+    'controls(keyboard:menu_key status_key leave_key follow_key race_key bike_key gun_key emote_key closet_key'
         ..'|controller:emote_pad|features:bike bike_pose gun_mode|all:reset_keys)',
     'display(interface:status_overlay ui_scale ui_language ui_sounds pause_tab hide_popups|names:name_tag'
         ..'|sky:daynight)',

@@ -190,7 +190,7 @@ do
     assert(under(cur,row_at(8))=='row 8' and under(cur,row_at(9))=='','Past the last line')
     assert(under(cur,700,500)=='','Between the list and the rows')
 end
--- A long category (Controls: 4 headers, 13 rows) scrolls by height: the lines shown end inside SB's rows window (y
+-- A long category (Controls: 4 headers, 14 rows) scrolls by height: the lines shown end inside SB's rows window (y
 -- 1900, above the key hints), the line after the cursor's shows, the first header shown at top.
 do
     local cur,at=Page.cursor(),nil
@@ -202,7 +202,7 @@ do
         list[#list+1]={head=sec.id}
         for _,row in ipairs(sec.rows) do list[#list+1]={row=row} end
     end
-    assert(#list==17 and list[10].head and list[12].head and list[16].head,'Controls: '..#list..' lines')
+    assert(#list==18 and list[11].head and list[13].head and list[17].head,'Controls: '..#list..' lines')
     local moved=false
     for _=1,20 do
         Page.move(cur,solo,'down')
@@ -462,15 +462,15 @@ assert(page.click()==nil and detail.props.Text_ItemName.props.text=='Host a sess
 mouse={item_at(5)} -- The fifth list item: Controls.
 local tabs,was=made_n('tab'),#made
 assert(page.click()==nil and made_n('tab')==tabs and detail.props.Text_ItemName.props.text=='Controls')
--- Controls (4 headers, 13 rows): the lines that end inside SB's rows window (y 1900, above the key hints), its
--- keyboard rows then the controller header.
+-- Controls (4 headers, 14 rows): the lines that end inside SB's rows window (y 1900, above the key hints), its
+-- keyboard header and its 9 keyboard rows. The controller header ends below the window.
 do
     local ends={}
     for i=was+1,#made do
         local y=select(2,placed(made[i].o))
         ends[#ends+1]=y+(made[i].kind=='header' and 100 or 130)
     end
-    assert(#ends==10 and ends[1]==552 and ends[9]==1592 and ends[10]==1792,table.concat(ends,' '))
+    assert(#ends==10 and ends[1]==552 and ends[9]==1592 and ends[10]==1722,table.concat(ends,' '))
 end
 -- The mouse look: the first look notes only; the item the mouse moved onto takes the cursor; a resting mouse never.
 page.show(true)
