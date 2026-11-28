@@ -38,21 +38,26 @@ Party.
 
 SURVIVAL PROTOCOL
 
-Night Operation's run (coop nightop), the challenges (coop challenge,
-which run on the same code) and the friend's revive adapt code from Survival
-Protocol by SchizoEffective (Nexus Mods, Stellar Blade mod 4009,
-https://www.nexusmods.com/stellarblade/mods/4009). The challenge list
-follows Survival Protocol's graded stages: five difficulty stages picked
-from a list before a fight.
+Survival Protocol by SchizoEffective (Nexus Mods, Stellar Blade mod 4009,
+https://www.nexusmods.com/stellarblade/mods/4009) is brought into this
+repository as the SBO module online.modes.sp
+(mod/StellarCoop/Scripts/online/modes/sp/). Night Operation's run
+(coop nightop), the challenges (coop challenge, which run on the same code)
+and the friend's revive also adapt earlier Survival Protocol code. The
+challenge list follows Survival Protocol's graded stages: five difficulty
+stages picked from a list before a fight.
 
 SchizoEffective gave permission to use this code in Stellar Blade Online on
-2026-10-20, and agreed on Discord on 2026-11-14 to the project's move from
-GPL-3.0 to a license that bans AyakaMods. The adapted code is licensed here
-under the SBO License, version 1.0 or any later version that the Licensor
-publishes, with the additional permission above. The adapted functions are
-marked in mod/StellarCoop/Scripts/online/modes/nightop/run.lua,
-online/modes/nightop/waves.lua and core/unreal.lua. Stellar Blade Online
-contains no file from Survival Protocol.
+2026-10-20, agreed on Discord on 2026-11-14 to the project's move from
+GPL-3.0 to a license that bans AyakaMods, and on 2026-11-27 approved
+licensing the Survival Protocol scripts imported into this tree under the
+SBO License. The Survival Protocol module and the earlier adapted Night
+Operation / revive code are licensed here under the SBO License, version
+1.0 or any later version that the Licensor publishes, with the additional
+permission above. The earlier adapted functions are marked in
+mod/StellarCoop/Scripts/online/modes/nightop/run.lua,
+online/modes/nightop/waves.lua and core/unreal.lua. The module replaces
+Survival Protocol's own spnet.dll with SBO's Steam Link.
 
 EVE ON WHEELS
 
