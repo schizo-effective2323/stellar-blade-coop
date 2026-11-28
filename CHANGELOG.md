@@ -1,5 +1,27 @@
 # Changelog
 
+## [0.12.0](https://github.com/Project-Colony/stellar-blade-online/compare/v0.11.0...v0.12.0) (2026-11-28)
+
+
+### ⚠ BREAKING CHANGES
+
+* the link protocol is now 29, so every player must update.
+
+### Features
+
+* Stellar Closet, an outfit menu for EVE that reads installed CNS outfit packs (`.dekcns.json`). F1 opens it. It has presets, favourites, colours, piece toggles and a preview camera.
+* gun mode: third-person shooting with the rifle.
+* the bike: ride it, park it and fetch it back at Xion for 500 betacrystal.
+* day and night on open maps, in the hall lobbies and in Matrix XIII (the `daynight` setting).
+* new online modes: race, score attack, photo hunt and fishing contest.
+* the team shop sells team outfits for gold (`coop teamshop`).
+* shared boss fights: every member can hit a shared boss. Its QTE goes to the member whose hit brought it down.
+* shared story scenes (the `shared_story` setting).
+* each zone catches up from the partner. The host's state wins.
+* SBO's own UE4SS 4.0 package, installed with `install.py --ue4ss`.
+* the SBO Xion test map gets open rooms, NPCs and a first district under the city. It needs the SBO Xion test pak, which is not in this zip.
+* the release zip holds the game's own path (`SB/Binaries/Win64/ue4ss/Mods/StellarCoop/`): unzip it into the game folder.
+
 ## [0.11.0](https://github.com/MotherSphere/stellar-blade-coop/compare/v0.10.0...v0.11.0) (2026-11-15)
 
 
