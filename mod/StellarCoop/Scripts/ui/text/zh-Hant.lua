@@ -10,7 +10,7 @@ return {
         saves='存檔',combat='戰鬥',display='顯示',chat='聊天',line='合作線路'},
     row={emote_key='表情輪盤按鍵',emote_pad='手把表情輪盤',
         scoreattack='得分挑戰',fishing='釣魚大賽',race_match='DORO競速',
-        photohunt='拍照尋寶',
+        photohunt='拍照尋寶',sp='Survival Protocol',
         host='建立房間',leave='離開房間',invite='邀請好友（Steam）',find='尋找房間',copy='複製我的代碼',
         remove='移除%s',join_code='用代碼加入',chat='聊天',options='選項',report='撰寫錯誤報告',close='關閉',
         menu_key='開啟此選單',host_key='立即建立房間',status_key='顯示狀態',leave_key='離開房間',

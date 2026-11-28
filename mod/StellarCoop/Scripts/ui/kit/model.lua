@@ -15,7 +15,8 @@ local M={}
 -- lobby too), code=our join code while we host with one (link.code), stranger=a player we let in who is not our Steam
 -- friend ({id=, name=}, link.stranger), values=the settings' values (M.read), for a row shown by another one's value,
 -- members=the online session's other players past the handshake (link.members()'s), for their mute rows,
--- pages=the modules' TEST TOOLS pages (see below) whose title in these words is not nil, words=the player's words}.
+-- pages=the modules' TEST TOOLS pages (see below) whose title in these words is not nil, sp=true when
+-- online.modes.sp is on (Survival Protocol's row under MODES), words=the player's words}.
 -- A module's page: {title=function(words) -> its name or nil (off: not listed), rows=function(words) -> its rows, made
 -- anew at each draw from the module's state: {id= (unique on the page: the cursor follows it), label=, value= ('' for
 -- a button), head=true (a heading: grey, the cursor skips it), select=function() -> ok, note (Enter, Space, A, a left
@@ -33,6 +34,9 @@ M.MAIN={
     {id='find',show=none}, -- Find a session: the Sessions screen (online/session/ui/sessions.lua).
     {id='join_code',show=none},
     {id='chat',show=function(c) return c.chat end},
+    -- Survival Protocol (online.modes.sp): Select hosts a 2-player session through coop sp host.
+    {head='modes'},
+    {id='sp',show=function(c) return c.sp and none(c) end},
     {head='settings'},
     {id='options'},
     {head='tools'},
@@ -296,8 +300,8 @@ function M.new(start)
         return 'set',row.key,new
     end
     -- Select (now in seconds): the row's id for the caller ('host', 'leave', 'invite', 'copy', 'remove', 'find',
-    -- 'join_code', 'chat', 'guide', 'report', 'close', which Hang up gives too, 'reset_keys'); 'mute', her SteamID and
-    -- whether she is muted now (the caller mutes or unmutes her); 'confirm_leave',
+    -- 'join_code', 'chat', 'sp', 'guide', 'report', 'close', which Hang up gives too, 'reset_keys'); 'mute', her
+    -- SteamID and whether she is muted now (the caller mutes or unmutes her); 'confirm_leave',
     -- 'confirm_remove' or 'confirm_reset_keys' (the row runs on a second Select of it within 3 s); 'options' or
     -- 'main' (the page changed: Co-op menu gives 'main'); 'rebind', key; or a setting's next value, as change(). nil
     -- when a first Select on Leave or Remove is pending (under 3 s old) and that row went (the session ended, the

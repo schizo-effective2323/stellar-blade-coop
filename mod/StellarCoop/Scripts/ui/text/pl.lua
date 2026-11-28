@@ -11,7 +11,7 @@ return {
         line='LINIA CO-OP'},
     row={emote_key='Klawisz koła emotek',emote_pad='Koło emotek na padzie',
         scoreattack='Pogoń za punktami',fishing='Turniej wędkarski',race_match='Wyścig Doro',
-        photohunt='Polowanie na zdjęcia',
+        photohunt='Polowanie na zdjęcia',sp='Survival Protocol',
         host='Utwórz sesję',leave='Opuść sesję',invite='Zaproś znajomego (Steam)',find='Znajdź sesję',
         copy='Kopiuj mój kod',remove='Wyrzuć: %s',join_code='Dołącz za pomocą kodu',
         chat='Czat',options='Opcje',report='Zapisz raport o błędzie',close='Zamknij',

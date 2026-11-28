@@ -10,7 +10,7 @@ return {
         ghost='ร่างจำลอง',saves='เซฟ',combat='การต่อสู้',display='การแสดงผล',chat='แชท',line='สาย CO-OP'},
     row={emote_key='ปุ่มวงล้อท่าทาง',emote_pad='วงล้อท่าทางบนจอย',
         scoreattack='ล่าคะแนน',fishing='การแข่งขันตกปลา',race_match='โดโรเรซ',
-        photohunt='ล่าภาพถ่าย',
+        photohunt='ล่าภาพถ่าย',sp='Survival Protocol',
         host='โฮสต์เซสชัน',leave='ออกจากเซสชัน',invite='เชิญเพื่อน (Steam)',find='ค้นหาเซสชัน',
         copy='คัดลอกโค้ดของฉัน',remove='นำ %s ออก',join_code='เข้าร่วมด้วยโค้ด',
         chat='แชท',options='ตัวเลือก',report='เขียนรายงานบั๊ก',close='ปิด',

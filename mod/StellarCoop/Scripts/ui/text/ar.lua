@@ -11,7 +11,7 @@ return {
         line='خط اللعب التعاوني'},
     row={emote_key='مفتاح عجلة الإيماءات',emote_pad='عجلة الإيماءات على وحدة التحكم',
         scoreattack='سباق النقاط',fishing='بطولة صيد السمك',race_match='سباق دورو',
-        photohunt='صيد الصور',
+        photohunt='صيد الصور',sp='Survival Protocol',
         host='استضافة جلسة',leave='مغادرة الجلسة',invite='دعوة صديق عبر Steam',find='البحث عن جلسة',
         copy='نسخ رمز الانضمام',remove='إزالة %s',join_code='الانضمام برمز',
         chat='الدردشة',options='الخيارات',report='كتابة تقرير خطأ',close='إغلاق',

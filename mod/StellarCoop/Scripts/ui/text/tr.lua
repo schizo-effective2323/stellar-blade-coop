@@ -11,7 +11,7 @@ return {
         line='CO-OP HATTI'},
     row={emote_key='İfade çarkı tuşu',emote_pad='Kumandada ifade çarkı',
         scoreattack='Skor avı',fishing='Balıkçılık turnuvası',race_match='Doro yarışı',
-        photohunt='Fotoğraf avı',
+        photohunt='Fotoğraf avı',sp='Survival Protocol',
         host='Oturum kur',leave='Oturumdan ayrıl',invite='Arkadaş davet et (Steam)',find='Oturum bul',
         copy='Kodumu kopyala',remove='Çıkar: %s',join_code='Kodla katıl',
         chat='Sohbet',options='Seçenekler',report='Hata raporu yaz',close='Kapat',

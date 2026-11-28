@@ -11,7 +11,7 @@ return {
         line='LINHA CO-OP'},
     row={emote_key='Tecla da roda de gestos',emote_pad='Roda de gestos no comando',
         scoreattack='Corrida aos pontos',fishing='Torneio de pesca',race_match='Corrida de Doro',
-        photohunt='Caça fotográfica',
+        photohunt='Caça fotográfica',sp='Survival Protocol',
         host='Criar uma sessão',leave='Sair da sessão',invite='Convidar um amigo (Steam)',
         find='Procurar uma sessão',copy='Copiar o meu código',remove='Remover %s',join_code='Entrar com um código',
         chat='Chat',options='Opções',report='Escrever relatório de erro',close='Fechar',

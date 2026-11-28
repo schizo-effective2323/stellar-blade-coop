@@ -10,7 +10,7 @@ return {
         ghost='SPØKELSE',saves='LAGRINGER',combat='KAMP',display='SKJERM',chat='CHAT',line='CO-OP-LINJE'},
     row={emote_key='Tast for emote-hjulet',emote_pad='Emote-hjul på kontroller',
         scoreattack='Poengjakt',fishing='Fiskekonkurranse',race_match='Doro-løp',
-        photohunt='Fotojakt',
+        photohunt='Fotojakt',sp='Survival Protocol',
         host='Vær vert for en økt',leave='Forlat økten',invite='Inviter en venn (Steam)',
         find='Finn en økt',copy='Kopier koden min',remove='Fjern %s',join_code='Bli med via kode',
         chat='Chat',options='Alternativer',report='Skriv en feilrapport',close='Lukk',

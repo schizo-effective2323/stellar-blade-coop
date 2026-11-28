@@ -10,7 +10,7 @@ return {
         ghost='ゴースト',saves='セーブ',combat='戦闘',display='ディスプレイ',chat='チャット',line='協力プレイ回線'},
     row={emote_key='エモートホイールのキー',emote_pad='コントローラーのエモートホイール',
         scoreattack='スコアアタック',fishing='釣り大会',race_match='ドロレース',
-        photohunt='フォトハント',
+        photohunt='フォトハント',sp='Survival Protocol',
         host='セッションをホスト',leave='セッションから退出',invite='フレンドを招待（Steam）',
         find='セッションを探す',copy='自分のコードをコピー',remove='%sを退出させる',join_code='コードで参加',
         chat='チャット',options='オプション',report='バグレポートを作成',close='閉じる',

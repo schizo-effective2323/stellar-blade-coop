@@ -10,7 +10,7 @@ return {
         ghost='GEEST',saves='OPGESLAGEN GAMES',combat='VECHTEN',display='WEERGAVE',chat='CHAT',line='CO-OPLIJN'},
     row={emote_key='Toets van het emotewiel',emote_pad='Emotewiel op een controller',
         scoreattack='Scorejacht',fishing='Viswedstrijd',race_match='Dororace',
-        photohunt='Fotojacht',
+        photohunt='Fotojacht',sp='Survival Protocol',
         host='Een sessie hosten',leave='Sessie verlaten',invite='Vriend uitnodigen (Steam)',
         find='Een sessie zoeken',copy='Mijn code kopiëren',remove='%s verwijderen',
         join_code='Meedoen met een code',chat='Chat',options='Opties',report='Bugrapport schrijven',close='Sluiten',

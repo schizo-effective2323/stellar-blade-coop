@@ -11,7 +11,7 @@ return {
         line='ЛИНИЯ КООПЕРАТИВА'},
     row={emote_key='Клавиша колеса эмоций',emote_pad='Колесо эмоций на геймпаде',
         scoreattack='Погоня за очками',fishing='Рыболовный турнир',race_match='Гонка Доро',
-        photohunt='Фотоохота',
+        photohunt='Фотоохота',sp='Survival Protocol',
         host='Создать сессию',leave='Покинуть сессию',invite='Пригласить друга (Steam)',
         find='Найти сессию',copy='Скопировать мой код',remove='Исключить: %s',
         join_code='Присоединиться по коду',chat='Чат',options='Настройки',report='Написать отчет об ошибке',

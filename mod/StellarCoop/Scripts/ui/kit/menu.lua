@@ -82,7 +82,7 @@ function Menu.new(o)
         local pages={}
         for _,p in ipairs(o.pages and o.pages() or {}) do if p.title(words) then pages[#pages+1]=p end end
         return {mode=link.mode(),chat=o.chat~=nil and o.chat.can(),code=code,stranger=link.stranger(),values=values,
-            members=link.members(),pages=pages,words=words}
+            members=link.members(),pages=pages,sp=o.sp and o.sp() or false,words=words}
     end
     local function stranger(ctx) return Join.name(ctx.stranger.name) or words.ask.someone end
     -- The co-op line's state: free (no session), open (hosting, no friend linked or her connection lost), linked (her
@@ -327,6 +327,14 @@ function Menu.new(o)
             elseif action=='host' or action=='invite' then
                 self.close()
                 return o.run(action)
+            elseif action=='sp' then
+                -- Survival Protocol: 2 players at most, then coop sp host (friends, or public from Who can join).
+                local ok,message=self.set('max_players','2')
+                if not ok then note=message; draw(); return end
+                self.close()
+                local who=values.who_can_join
+                if who=='public' then return o.run('sp','host','public') end
+                return o.run('sp','host')
             elseif action=='leave' or action=='report' or action=='copy' then
                 local ok,message=o.run(action)
                 if not ok then note=message elseif action=='report' then note=words.report end

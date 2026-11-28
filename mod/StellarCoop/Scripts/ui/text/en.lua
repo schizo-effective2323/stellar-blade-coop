@@ -10,7 +10,7 @@ return {
         ghost='GHOST',saves='SAVES',combat='COMBAT',display='DISPLAY',chat='CHAT',line='CO-OP LINE'},
     row={emote_key='Emote wheel key',emote_pad='Emote wheel on a controller',
         scoreattack='Score attack',fishing='Fishing tournament',race_match='Doro race',
-        photohunt='Photo hunt',
+        photohunt='Photo hunt',sp='Survival Protocol',
         host='Host a session',leave='Leave the session',invite='Invite a friend (Steam)',find='Find a session',
         copy='Copy my code',remove='Remove %s',join_code='Join with a code',
         chat='Chat',options='Options',report='Write a bug report',close='Close',

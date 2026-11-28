@@ -10,7 +10,7 @@ return {
         ghost='FANTASMA',saves='PARTIDAS GUARDADAS',combat='COMBATE',display='PANTALLA',chat='CHAT',line='LÍNEA CO-OP'},
     row={emote_key='Tecla de la rueda de gestos',emote_pad='Rueda de gestos con mando',
         scoreattack='Ataque de puntos',fishing='Torneo de pesca',race_match='Carrera de Doro',
-        photohunt='Caza de fotos',
+        photohunt='Caza de fotos',sp='Survival Protocol',
         host='Crear una sesión',leave='Salir de la sesión',invite='Invitar a un amigo (Steam)',
         find='Buscar una sesión',copy='Copiar mi código',remove='Expulsar a %s',join_code='Unirse con un código',
         chat='Chat',options='Opciones',report='Escribir un informe de errores',close='Cerrar',

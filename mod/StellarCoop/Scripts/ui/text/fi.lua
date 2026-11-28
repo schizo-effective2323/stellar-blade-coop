@@ -10,7 +10,7 @@ return {
         ghost='HAAMU',saves='TALLENNUKSET',combat='TAISTELU',display='NÄYTTÖ',chat='KESKUSTELU',line='CO-OP-LINJA'},
     row={emote_key='Eleympyrän näppäin',emote_pad='Eleympyrä ohjaimella',
         scoreattack='Pistejahti',fishing='Kalastuskilpailu',race_match='Doro-kilpa',
-        photohunt='Valokuvajahti',
+        photohunt='Valokuvajahti',sp='Survival Protocol',
         host='Isännöi istuntoa',leave='Poistu istunnosta',invite='Kutsu kaveri (Steam)',find='Etsi istunto',
         copy='Kopioi koodini',remove='Poista %s',join_code='Liity koodilla',
         chat='Keskustelu',options='Asetukset',report='Kirjoita virheraportti',close='Sulje',

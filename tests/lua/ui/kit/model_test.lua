@@ -29,6 +29,18 @@ assert(ids(menu,NONE)=='head:session host find join_code head:settings options h
 assert(ids(menu,{mode='none',chat=true})
     =='head:session host find join_code chat head:settings options head:help guide report close',
     'The loopback chats with no session')
+-- Survival Protocol (online.modes.sp): its MODES row while sp and outside a session; gone while hosting or as guest.
+assert(ids(menu,{mode='none',sp=true})
+    =='head:session host find join_code head:modes sp head:settings options head:help guide report close')
+assert(ids(menu,{mode='host',sp=true})=='head:session leave invite head:settings options head:help guide report close',
+    'No Survival Protocol row while hosting')
+assert(ids(menu,NONE)=='head:session host find join_code head:settings options head:help guide report close',
+    'Without sp: no empty MODES header')
+local sp_menu=M.new()
+local SP={mode='none',sp=true}
+assert(sp_menu.current(SP).id=='host')
+sp_menu.move(SP,1); sp_menu.move(SP,1); sp_menu.move(SP,1)
+assert(sp_menu.current(SP).id=='sp' and sp_menu.select(SP,0)=='sp')
 assert(ids(menu,{mode='host',code='0CS-CBMH'})
     =='head:session leave invite copy head:settings options head:help guide report close','Hosting with a code')
 assert(ids(menu,{mode='host',chat=true,code='0CS-CBMH',stranger={id='9',name='S'}})

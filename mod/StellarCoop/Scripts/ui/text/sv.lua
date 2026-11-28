@@ -11,7 +11,7 @@ return {
         line='CO-OP-LINJE'},
     row={emote_key='Tangent för emote-hjulet',emote_pad='Emote-hjul på handkontroll',
         scoreattack='Poängjakt',fishing='Fisketävling',race_match='Dorolopp',
-        photohunt='Fotojakt',
+        photohunt='Fotojakt',sp='Survival Protocol',
         host='Bli värd för en session',leave='Lämna sessionen',invite='Bjud in en vän (Steam)',
         find='Hitta en session',copy='Kopiera min kod',remove='Ta bort %s',join_code='Gå med via kod',
         chat='Chatt',options='Alternativ',report='Skriv en felrapport',close='Stäng',

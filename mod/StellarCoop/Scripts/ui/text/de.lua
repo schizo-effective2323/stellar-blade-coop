@@ -11,7 +11,7 @@ return {
         line='KOOP-LEITUNG'},
     row={emote_key='Taste für das Emote-Rad',emote_pad='Emote-Rad am Controller',
         scoreattack='Punktejagd',fishing='Angelturnier',race_match='Doro-Rennen',
-        photohunt='Fotojagd',
+        photohunt='Fotojagd',sp='Survival Protocol',
         host='Sitzung hosten',leave='Sitzung verlassen',invite='Freund einladen (Steam)',
         find='Sitzung finden',copy='Meinen Code kopieren',remove='%s entfernen',
         join_code='Mit Code beitreten',

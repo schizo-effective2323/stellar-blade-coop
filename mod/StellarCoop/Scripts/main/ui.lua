@@ -40,6 +40,8 @@ if M.settings then
     M.menu=require('ui.kit.menu').new({kit=M.kit,link=M.link,settings=M.settings,look=M.look,
         puppet=require('main.loader').view(M,'puppet'),run=M.run,log=log,version=M.VERSION,
         chat=require('main.loader').view(M,'box'),code=require('main.loader').view(M,'code_box'),guide=M.guide,
+        -- Survival Protocol's row under MODES on the main page while online.modes.sp is on.
+        sp=function() return type(M.sp)=='table' and not M.off_modules['online.modes.sp'] end,
         -- The modules' TEST TOOLS pages, read at each draw: an off module's stub gives no title, so no row.
         pages=function()
             local list={}

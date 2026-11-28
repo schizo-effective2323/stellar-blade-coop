@@ -10,7 +10,7 @@ return {
         saves='存档',combat='战斗',display='显示',chat='聊天',line='合作线路'},
     row={emote_key='表情轮盘按键',emote_pad='手柄表情轮盘',
         scoreattack='得分挑战',fishing='钓鱼大赛',race_match='DORO竞速',
-        photohunt='拍照寻宝',
+        photohunt='拍照寻宝',sp='Survival Protocol',
         host='创建房间',leave='离开房间',invite='邀请好友（Steam）',find='查找房间',copy='复制我的房间码',
         remove='移除%s',join_code='用房间码加入',chat='聊天',options='选项',report='生成错误报告',close='关闭',
         menu_key='打开此菜单',host_key='立即创建房间',status_key='显示状态',leave_key='离开房间',
