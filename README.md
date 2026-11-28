@@ -22,8 +22,8 @@ no other program and no server of its own. It was called StellarCoop until Octob
 
 1. Install UE4SS for Stellar Blade ("Stellar Blade UE4SS 1.3").
 2. Download `StellarCoop-<version>.zip` from the
-   [Releases](https://github.com/MotherSphere/stellar-blade-coop/releases) page, unzip it, and copy the `StellarCoop`
-   folder into `SB/Binaries/Win64/ue4ss/Mods/` in the game folder.
+   [Releases](https://github.com/MotherSphere/stellar-blade-coop/releases) page and unzip it into the game folder. The
+   zip holds `SB/Binaries/Win64/ue4ss/Mods/StellarCoop/`, so the mod lands in the Mods folder.
 3. Start the game. On the title screen the mod opens its guide, then asks whether to play on co-op saves. Choose
    Decide later until you have backed up your saves. Load a save and press F6. The screen shows
    `Co-op: not in a session.`

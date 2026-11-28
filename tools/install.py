@@ -302,6 +302,7 @@ def changelog(ver, when, subjects):
 
 
 DOCS = ('INSTALL.md', 'LICENSE', 'NOTICE', 'EXCLUDED-PARTIES.md')  # Repository files every release zip ships.
+ZIP_DIR = 'SB/Binaries/Win64/ue4ss/Mods/StellarCoop'  # The zip holds the game's own path: it unzips into the game folder.
 
 
 def write_zip(path, files, changelog_text, when):
@@ -314,7 +315,7 @@ def write_zip(path, files, changelog_text, when):
     path.parent.mkdir(parents=True, exist_ok=True)
     with zipfile.ZipFile(path, 'w') as archive:
         for rel, data in sorted(files.items()):
-            entry = zipfile.ZipInfo(f'StellarCoop/{rel}', time.gmtime(when)[:6])
+            entry = zipfile.ZipInfo(f'{ZIP_DIR}/{rel}', time.gmtime(when)[:6])
             entry.compress_type, entry.external_attr = zipfile.ZIP_DEFLATED, 0o100644 << 16
             archive.writestr(entry, data)
 
