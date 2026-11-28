@@ -9,10 +9,10 @@ local M=require('online.lobby.ui.lobby_model')
 local function ids(v) local t={} for i,r in ipairs(v.rows) do t[i]=r.id..(r.locked and '*' or '') end return table.concat(t,',') end
 local me={id='76561198000000002',name='Eve'}
 local idle=M.view({role='none',me=me,now=0})
-assert(idle.state=='idle' and ids(idle)=='ffa,scoreattack*,race*,more*,search,private,join_code,room,settings,leave'
+assert(idle.state=='idle' and ids(idle)=='ffa,scoreattack*,race*,sp*,search,private,join_code,room,settings,leave'
     and idle.status.key=='status.idle')
 local s=M.view({match={state='searching',mode='ffa'},role='none',me=me,last='search',now=0})
-assert(s.state=='public' and ids(s)=='ffa*,scoreattack*,race*,more*,cancel,room,settings,leave'
+assert(s.state=='public' and ids(s)=='ffa*,scoreattack*,race*,sp*,cancel,room,settings,leave'
     and s.status.key=='status.searching')
 assert(M.act(s,'cancel').request=='match cancel')
 local mem={{id='76561198000000001',linked=true,lost=false,muted=false,rtt=90,name='Ann'},
@@ -34,10 +34,10 @@ assert(play.status.key=='status.open' and play.status.args[1]==3)
 local made=M.view({match={state='open',mode='ffa',members=1,limit=8},role='host',me=me,last='search',now=0})
 assert(made.status.key=='status.created')
 local code=M.view({match={state='open',mode='ffa',members=2,limit=8},role='host',code='ABC-1234',me=me,last='create',now=0})
-assert(ids(code)=='ffa*,scoreattack*,race*,more*,code,cancel,room,settings,leave' and code.status.key=='status.private'
+assert(ids(code)=='ffa*,scoreattack*,race*,sp*,code,cancel,room,settings,leave' and code.status.key=='status.private'
     and M.act(code,'code').copy)
 local joined=M.view({match={state='open',mode='ffa',members=2,limit=8},role='guest',me=me,last='join',now=0})
-assert(ids(joined)=='ffa*,scoreattack*,race*,more*,cancel,room,settings,leave')
+assert(ids(joined)=='ffa*,scoreattack*,race*,sp*,cancel,room,settings,leave')
 -- An online session: its member count over its host's max_players (limit), over 4 (the most) while it is not known.
 local coop=M.view({role='guest',me=me,now=0})
 assert(coop.state=='code' and coop.status.key=='status.private' and coop.status.args[1]==1 and coop.status.args[2]==4)
@@ -54,13 +54,13 @@ assert(M.act(idle,'search').request=='match search ffa' and M.act(idle,'private'
 -- Search and Private name the lobby's room and hall too (main.lua adds them); Cancel does not.
 assert(M.act(idle,'search').lobby and M.act(idle,'private').lobby and not M.act(s,'cancel').lobby)
 assert(M.act(idle,'join_code').open=='join' and M.act(idle,'room').close=='room' and M.act(idle,'settings').open=='settings')
-assert(M.act(idle,'leave').popup=='leave' and M.act(idle,'more')==nil and M.act(s,'ffa')==nil)
+assert(M.act(idle,'leave').popup=='leave' and M.act(idle,'sp')==nil and M.act(s,'ffa')==nil)
 assert(M.move(idle.rows,1,1)==2 and M.move(idle.rows,10,1)==1 and M.move(idle.rows,1,-1)==10)
 -- Score attack (online.modes.scoreattack): picked by default while it can play (sa); a mode row's Select picks its
 -- mode and marks it; Search and Private ask for the mode picked. Without sa (module off or scoreattack=off) its row is
 -- locked and free-for-all is the mode, a pick of score attack too.
 local sa_idle=M.view({role='none',me=me,now=0,sa={pick='random'}})
-assert(ids(sa_idle)=='ffa,scoreattack,race*,more*,search,private,join_code,room,settings,leave'
+assert(ids(sa_idle)=='ffa,scoreattack,race*,sp*,search,private,join_code,room,settings,leave'
     and sa_idle.mode=='scoreattack')
 assert(sa_idle.rows[2].picked and not sa_idle.rows[1].picked and not sa_idle.rows[3].picked
     and not sa_idle.rows[4].picked)
@@ -90,7 +90,7 @@ assert(ids(sa_off)=='scoreattack*,challenge*,more*,cancel,room,settings,leave' a
 -- default; with dr its Select picks it, marked. Search and Private then ask for it. Score attack stays the default.
 assert(M.act(sa_idle,'race')==nil and sa_idle.rows[3].locked)
 local dr_idle=M.view({role='none',me=me,now=0,sa={pick='random'},dr={pick='random'}})
-assert(ids(dr_idle)=='ffa,scoreattack,race,more*,search,private,join_code,room,settings,leave'
+assert(ids(dr_idle)=='ffa,scoreattack,race,sp*,search,private,join_code,room,settings,leave'
     and dr_idle.mode=='scoreattack' and M.act(dr_idle,'race').mode=='race')
 local dr_pick=M.view({role='none',me=me,now=0,sa={pick='random'},dr={pick='random'},pick='race'})
 assert(dr_pick.mode=='race' and dr_pick.rows[3].picked and not dr_pick.rows[2].picked)
@@ -113,6 +113,24 @@ assert(ids(dr_guest)=='race*,track*,more*,cancel,room,settings,leave' and dr_gue
 assert(M.act(dr_guest,'track')==nil)
 local dr_off=dr_lobby('host',nil)
 assert(ids(dr_off)=='race*,track*,more*,cancel,room,settings,leave' and dr_off.rows[2].value=='random')
+-- Survival Protocol (online.modes.sp): its row locked without sp; with sp its Select picks it (2-player match).
+assert(M.act(dr_idle,'sp')==nil and dr_idle.rows[4].locked)
+local sp_idle=M.view({role='none',me=me,now=0,sa={pick='random'},dr={pick='random'},sp={}})
+assert(ids(sp_idle)=='ffa,scoreattack,race,sp,search,private,join_code,room,settings,leave'
+    and sp_idle.mode=='scoreattack' and M.act(sp_idle,'sp').mode=='sp')
+local sp_pick=M.view({role='none',me=me,now=0,sa={pick='random'},dr={pick='random'},sp={},pick='sp'})
+assert(sp_pick.mode=='sp' and sp_pick.rows[4].picked and not sp_pick.rows[2].picked)
+assert(M.act(sp_pick,'search').request=='match search sp' and M.act(sp_pick,'private').request=='match create sp')
+assert(M.view({role='none',me=me,now=0,sa={pick='random'},pick='sp'}).mode=='scoreattack','A pick that cannot play')
+assert(M.view({role='none',me=me,now=0,sp={},pick='sp'}).mode=='sp','Without score attack')
+local function sp_lobby(role)
+    return M.view({match={state='open',mode='sp',members=2,limit=2},role=role,me=me,last='search',now=0,sp={}})
+end
+local sp_host=sp_lobby('host')
+assert(ids(sp_host)=='sp*,more*,cancel,room,settings,leave' and sp_host.mode=='sp' and sp_host.count.limit==2)
+assert(sp_host.rows[1].picked and M.act(sp_host,'more')==nil)
+local sp_guest=sp_lobby('guest')
+assert(ids(sp_guest)=='sp*,more*,cancel,room,settings,leave' and sp_guest.count.limit==2)
 local c=M.count(nil,10,0)
 assert(c.total==10 and c.start==0)
 assert(M.count(c,8,2.5)==c)                       -- shown 7.5, off by 0.5

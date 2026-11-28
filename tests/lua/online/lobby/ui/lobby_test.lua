@@ -192,14 +192,14 @@ for _,p in ipairs(hints) do assert(p.y==1990 and has(p,'SetButtonClickable',fals
 assert(hints[1].calls[2][2].text=='Back' and hints[1].calls[3][2].name=='Negative')
 assert(hints[1].calls[4][2].name=='None')
 assert(hints[3].calls[3][2].name=='UI_DPad_Up' and hints[3].calls[4][2].name=='UI_DPad_Down')
--- Labels (R24): mode.<id>, row.more with tag.soon beside it, row.<id> for the others. Score attack and the Doro race
--- cannot play here (no sa or dr in the view): their rows locked, free-for-all picked, with tag.picked beside it.
+-- Labels (R24): mode.<id>, row.<id> for the others. Score attack, the Doro race and Survival Protocol cannot play here
+-- (no sa, dr or sp in the view): their rows locked, free-for-all picked, with tag.picked beside it.
 local labels={}
 for i,p in ipairs(rows) do labels[i]=p.props.Text_Value.text end
 local joined=table.concat(labels,',')
-assert(joined=='Free-for-all,Score attack,Doro race,More modes,Search,Private match,Join with a code,Waiting room,'
-    ..'Settings,Leave',joined)
-assert(text_at('lobby_top',772,L.rows[4]+32).s=='soon' and text_at('lobby_top',772,L.rows[2]+32).s==''
+assert(joined=='Free-for-all,Score attack,Doro race,Survival Protocol,Search,Private match,Join with a code,'
+    ..'Waiting room,Settings,Leave',joined)
+assert(text_at('lobby_top',772,L.rows[4]+32).s=='' and text_at('lobby_top',772,L.rows[2]+32).s==''
     and text_at('lobby_top',772,L.rows[3]+32).s=='')
 assert(text_at('lobby_top',772,L.rows[1]+32).s=='picked')
 -- A locked row is disabled before it enters the canvas; an open one is not.
@@ -227,10 +227,10 @@ sounds={}
 lobby.nav('select')
 assert(#acts==1 and acts[1].request=='match search ffa',#acts)
 assert(count_of(rows[5],'EventNotification','PressAccept')==1 and #sounds==0)
--- Up to More (locked): no look on a locked row, the mode text says more modes come later; Select there does nothing.
+-- Up to Survival Protocol (locked): no look on a locked row, its mode text; Select there does nothing.
 lobby.nav('up')
 assert(count_of(rows[5],'NormalAnimation')==2 and not has(rows[4],'SelectAnimation'))
-assert(text_at('lobby_top',233,1234).s==T.en.lobby.desc.more)
+assert(text_at('lobby_top',233,1234).s==T.en.lobby.desc.sp)
 sounds={}
 lobby.nav('select')
 assert(#acts==1 and not has(rows[4],'EventNotification') and #sounds==0)
@@ -526,7 +526,7 @@ for _,name in ipairs({'lobby_top','lobby'}) do
         focus=focus+(z.state=='focus' and 1 or 0)
     end
 end
-assert(labels[T.en.lobby.mode.ffa] and labels[T.en.lobby.row.more] and focus==1 and #live(ROW)==rows_before)
+assert(labels[T.en.lobby.mode.ffa] and labels[T.en.lobby.mode.sp] and focus==1 and #live(ROW)==rows_before)
 assert(#logs3==1 and logs3[1]:find('left out until the mod reloads',1,true))
 fail_class=OPTION
 assert(lobby3.open('settings'))
@@ -554,7 +554,7 @@ local function row_labels()
     for i,p in ipairs(live(ROW)) do t[i]=p.props.Text_Value.text end
     return table.concat(t,',')
 end
-assert(top_tag(1)=='' and top_tag(2)=='picked' and top_tag(3)=='' and top_tag(4)=='soon',top_tag(2))
+assert(top_tag(1)=='' and top_tag(2)=='picked' and top_tag(3)=='' and top_tag(4)=='',top_tag(2))
 assert(text_at('lobby_top',233,1234).s==T.en.lobby.desc.scoreattack,'The mode picked: its text')
 lobby4.nav('select') -- Search, the first action row.
 assert(acts4[1].request=='match search scoreattack' and acts4[1].lobby)

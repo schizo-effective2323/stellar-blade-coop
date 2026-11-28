@@ -19,7 +19,7 @@ function Commands.new(o)
             if not word then return false,USE end
             local ok,why=o.sp.request(word)
             if not ok then return false,why end
-            return true,'Survival Protocol: '..word
+            return true,'Survival Protocol: '..word..' (2 players)'
         end
         if sub=='join' or sub=='leave' or sub=='invite' then
             if extra~=nil then return false,USE end

@@ -51,7 +51,7 @@ public:
       s += "match=searching " + seeking_ + "\n";
     else if (st != Match::none)
       s += std::string("match=") + kStages[static_cast<int>(st)] + " " + mode_ + " " +
-           std::to_string(members().size() + 1) + " " + std::to_string(kMatchMembers) +
+           std::to_string(members().size() + 1) + " " + std::to_string(mode_cap(mode_)) +
            (st == Match::countdown ? " " + std::to_string(count_left()) : std::string()) + "\n";
     // Our last round this run: "round=<n> start <mode> <map> <seed> <id>,..." while it plays, "round=<n> end <why>"
     // once over.

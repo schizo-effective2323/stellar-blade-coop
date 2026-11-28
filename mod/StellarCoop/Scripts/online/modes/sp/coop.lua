@@ -185,10 +185,14 @@ function C.new(o)
         if self.status.steam~='ready' and word~='loopback on' and word~='loopback off' then
             return false,'Steam is not ready yet'
         end
-        if word=='host' then word='host friends' end
-        if word=='find' then word='list public' end
-        if word=='loopback on' then word='loopback' end
-        if word=='loopback off' then word='leave' end
+        -- Online sessions for Survival Protocol hold 2 players (the host included).
+        if word=='host' then word='host friends 2'
+        elseif word=='host public' then word='host public 2'
+        elseif word=='host invitation' then word='host invitation 2'
+        elseif word=='host closed' then word='host closed 2'
+        elseif word=='find' then word='list public'
+        elseif word=='loopback on' then word='loopback'
+        elseif word=='loopback off' then word='leave' end
         local ok,why=link.request(word)
         if ok==false then return false,why or 'link refused' end
         self.log('SP request '..word)

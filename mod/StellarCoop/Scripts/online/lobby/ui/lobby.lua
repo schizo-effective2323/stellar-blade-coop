@@ -45,7 +45,7 @@ local SHADOW={2,2,0,0,0,0.8}
 local TONE={grey=THEME.grey,warn=THEME.warn,teal=THEME.teal,error=THEME.error}
 local MARK={ok=THEME.teal,warn=THEME.warn,error=THEME.error}
 -- The top block's rows (lobby_model.lua's four at most).
-local MODES={ffa=true,scoreattack=true,race=true,challenge=true,track=true,more=true}
+local MODES={ffa=true,scoreattack=true,race=true,sp=true,challenge=true,track=true,more=true}
 local TAG=18 -- Columns of a track's name beside the Track row, as B's labels hold.
 local TABS={'match','sbo'}
 -- B's layout for n_mode mode rows and n_action action rows: {top, rows={y...}, text_y (the mode text), logo_y}.
@@ -241,8 +241,8 @@ function Lobby.new(o)
         for k,slot in ipairs(v.slots) do kit_row(slot.zone,slot_row(k)) end
         -- The mode text: the mode row under the cursor, more's, else the mode of the lobby or picked.
         local cur=rows[cur_b]
-        local id=cur and (cur.id=='more' or cur.id=='ffa' or cur.id=='scoreattack' or cur.id=='race') and cur.id
-            or view.mode
+        local id=cur and (cur.id=='more' or cur.id=='ffa' or cur.id=='scoreattack' or cur.id=='race' or cur.id=='sp')
+            and cur.id or view.mode
         tv.desc.set(t.lobby.desc[id] or '')
         -- Beside a mode row: soon (more), the host's pick (Challenge, Track), picked (the mode Search asks for).
         for i,slot in ipairs(tv.slots) do

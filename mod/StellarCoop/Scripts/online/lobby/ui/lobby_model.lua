@@ -5,9 +5,9 @@
 -- row asks for, its status line and members box, a cursor that wraps and visits locked rows, the settings screen's
 -- rows of both tabs, and the countdown's local clock. Rows, statuses and values are ids or keys of ui/text.lua's
 -- lobby table; online/lobby/ui/lobby.lua gives them their words. The mode rows: free-for-all, score attack
--- (online.modes.scoreattack) and the Doro race (online.modes.race), the last two with their round in the waiting room,
--- picked before Search or Private match; in a score attack match lobby, its Challenge row in place of free-for-all; in
--- a Doro race match lobby, its Track row.
+-- (online.modes.scoreattack), the Doro race (online.modes.race) and Survival Protocol (online.modes.sp), picked before
+-- Search or Private match; in a score attack match lobby, its Challenge row in place of free-for-all; in a Doro race
+-- match lobby, its Track row; in an SP match lobby, only Survival Protocol (2 players).
 local Join=require('core.line')
 local Maps=require('online.lobby.sbo_maps')
 local M={}
@@ -15,12 +15,13 @@ local M={}
 -- line: the most one holds); seconds the copied word stays.
 local LIMIT,COOP,COPIED=8,4,3
 -- The mode rows (four at most, so B's top block keeps one layout), then the action rows of each state.
-local MODES={'ffa','scoreattack','race','more'}
+local MODES={'ffa','scoreattack','race','sp'}
 local SCORE={'scoreattack','challenge','more'} -- In a score attack match lobby.
 local RACE={'race','track','more'} -- In a Doro race match lobby.
-local OWN={scoreattack=SCORE,race=RACE}
--- Each mode row's round: it can play while the view holds it (sa, dr).
-local CAN={scoreattack='sa',race='dr'}
+local SP={'sp','more'} -- In a Survival Protocol match lobby.
+local OWN={scoreattack=SCORE,race=RACE,sp=SP}
+-- Each mode row's round: it can play while the view holds it (sa, dr, sp).
+local CAN={scoreattack='sa',race='dr',sp='sp'}
 local ROWS={
     idle={'search','private','join_code','room','settings','leave'},
     public={'cancel','room','settings','leave'},
@@ -32,12 +33,14 @@ local ROWS={
 -- row cycles the host's pick (online.modes.scoreattack's cycle), the Track row the host's track (online.modes.race's).
 local ACTS={search={request='match search',lobby=true},private={request='match create',lobby=true},
     join_code={open='join'},code={copy=true},room={close='room'},settings={open='settings'},leave={popup='leave'},
-    ffa={mode='ffa'},scoreattack={mode='scoreattack'},race={mode='race'},challenge={cycle=true},track={cycle='race'}}
+    ffa={mode='ffa'},scoreattack={mode='scoreattack'},race={mode='race'},sp={mode='sp'},challenge={cycle=true},
+    track={cycle='race'}}
 -- Tab match's rules of each mode; a value key of a mode's own where the rule's words differ from another mode's.
 local MATCH={ffa={'players','finish','tie','respawn','protection','difficulty','equipment','start'},
     scoreattack={'players','challenge','ranking','damage','equipment','start'},
-    race={'players','track','ranking','damage','start'}}
-local VALUE={race={ranking='race_ranking'}}
+    race={'players','track','ranking','damage','start'},
+    sp={'players','start'}}
+local VALUE={race={ranking='race_ranking'},sp={players='sp_players'}}
 -- The rows that read the host's pick: the score attack's challenge, the Doro race's track.
 local PICK={challenge='sa',track='dr'}
 -- A Private match's map: a draw, or one of the hall lobbies.
@@ -67,17 +70,20 @@ end
 -- the online session we are in, its host's max_players; nil otherwise), code=our code while we host with one,
 -- me={id=our SteamID, name=link.me()}, owner=link.owner(), last=our last request ('search', 'create', 'join' or nil),
 -- copied_at=, now= (seconds), version=, proto= (mod= and proto=), pick= (the mode picked on B: 'ffa', 'scoreattack',
--- 'race' or nil), sa= (score attack while it can play: online.modes.scoreattack on and scoreattack=on, {pick=the host's
--- challenge pick, 'random' or a challenge id}; nil otherwise), dr= (the Doro race while it can play: online.modes.race
--- on and race_match=on, {pick=the host's track pick, 'random' or a track's name}; nil otherwise)}. A countdown's status
--- is its left seconds; a match lobby playing a round reads as open. view.mode: the match lobby's mode, else the mode
--- picked (the Doro race when it was picked and can play, else score attack unless it cannot play or free-for-all was
--- picked: it is the mode whose round plays). The picked mode's row is marked (picked); the Challenge and Track rows'
--- value is the host's pick, or 'host' for a guest.
+-- 'race', 'sp' or nil), sa= (score attack while it can play: online.modes.scoreattack on and scoreattack=on, {pick=the
+-- host's challenge pick, 'random' or a challenge id}; nil otherwise), dr= (the Doro race while it can play:
+-- online.modes.race on and race_match=on, {pick=the host's track pick, 'random' or a track's name}; nil otherwise),
+-- sp= (Survival Protocol while online.modes.sp is on; empty table; nil otherwise)}. A countdown's status is its left
+-- seconds; a match lobby playing a round reads as open. view.mode: the match lobby's mode, else the mode picked (SP
+-- when it was picked and can play, else the Doro race when picked, else score attack unless it cannot play or
+-- free-for-all was picked: it is the mode whose round plays). The picked mode's row is marked (picked); the Challenge
+-- and Track rows' value is the host's pick, or 'host' for a guest.
 function M.view(o)
     local m,me,list=o.match,o.me or {},others(o)
     local state=state_of(o)
-    local mode=m and m.mode or (o.dr and o.pick=='race' and 'race' or o.sa and o.pick~='ffa' and 'scoreattack' or 'ffa')
+    local mode=m and m.mode or (o.sp and o.pick=='sp' and 'sp'
+        or o.dr and o.pick=='race' and 'race'
+        or o.sa and o.pick~='ffa' and 'scoreattack' or 'ffa')
     local rows={}
     for _,id in ipairs(m and OWN[m.mode] or MODES) do
         local locked=id=='more' or (id=='ffa' or CAN[id]) and (state~='idle' or CAN[id] and not o[CAN[id]])
@@ -92,7 +98,7 @@ function M.view(o)
         elseif o.code then rows[#rows+1]={id=id,args={o.code}} end
     end
     local n,limit=1,LIMIT
-    if m and m.state~='searching' then n,limit=m.members or 1,m.limit or LIMIT
+    if m and m.state~='searching' then n,limit=m.members or 1,m.limit or (m.mode=='sp' and 2 or LIMIT)
     elseif not m and state=='code' then n,limit=1+#list,o.limit or COOP end
     local key,args,tone
     if m and m.state=='searching' then key,tone='status.searching','warn'

@@ -92,8 +92,8 @@ end
 
 HA._mode,HB._mode='none','none'
 H.poll(); G.poll()
-assert(H.request('host public') and HA._reqs[#HA._reqs]=='host public')
-assert(H.request('host') and HA._reqs[#HA._reqs]=='host friends')
+assert(H.request('host public') and HA._reqs[#HA._reqs]=='host public 2')
+assert(H.request('host') and HA._reqs[#HA._reqs]=='host friends 2')
 assert(H.request('find') and HA._reqs[#HA._reqs]=='list public')
 HA._mode=nil; H.poll()
 local ok,why=H.request('find'); assert(not ok and why:find('Steam'))
