@@ -25,7 +25,7 @@ concurrency:
 
 jobs:
   upload:
-    if: github.repository == 'MotherSphere/stellar-blade-coop'
+    if: github.repository == 'Project-Colony/stellar-blade-online'
     environment: release # The key lives there: collaborators with write access cannot read it without an approval.
     runs-on: ubuntu-latest
     steps:
