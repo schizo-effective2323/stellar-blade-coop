@@ -1,7 +1,5 @@
 # Survival Protocol as an SBO module
 
-Plan only. No code changes until Schizo says go.
-
 This replaces the older bridge plan on branch `cursor/survival-protocol-coop-plan-86e4`
 (`docs/survival-protocol-coop.md`). That plan kept Survival Protocol (SP) as a separate UE4SS mod
 (`RoguelikeMode`) that talked to Stellar Blade Online (SBO) through files, then later through
@@ -10,6 +8,10 @@ ghosts, revive and shared enemies. It ships no `spnet.dll` beside `StellarCoop.d
 
 Source pin for the import: `schizo-effective2323/schizo-effective-mods` branch `sp-coop-phase1` tip
 `873b240` (SP 0.1.8 hotkey audit). Checkout on this machine: `/agent/repos/schizo-effective-mods`.
+
+**Go (2026-11-27, America/Creston):** Schizo approved converting imported SP scripts to the SBO
+License 1.0 and aligning the module with MotherSphere's guidelines (module layout, Link only, no
+`spnet.dll`). Coding may proceed on `sp-module`.
 
 ## Goal
 
@@ -48,11 +50,11 @@ modifiers, hazards and unlocks stay SP's product surface.
    reference only. Prefer history over a flat copy.
 9. **Push only `sp-module`.** Never force-push. No AI `Co-authored-by` lines. No pull request into
    MotherSphere's upstream. PRs stay on Schizo's fork into `dev` when asked.
-10. **License boundary.** SBO is SBO License 1.0. SP on Nexus has been closed. Bringing SP scripts
-    into this tree needs an explicit Schizo decision before the import commit: either relicense the
-    imported scripts under SBO License 1.0, or keep closed assets (pak / progress) outside the open
-    module and ship only the bridge under SBO. Do not copy MotherSphere code back into the closed
-    mods repo.
+10. **License (locked 2026-11-27).** Imported SP scripts in this repository are licensed under the
+    SBO License, version 1.0 or any later version the Licensor publishes, same as the rest of SBO.
+    SchizoEffective (copyright holder of Survival Protocol) approved that move. Pak / Announcer /
+    Music / CNS assets stay install-time outside the open tree until packaged under the same terms.
+    Do not copy MotherSphere code back into the closed mods repo.
 
 ## What SP has today (sp-coop-phase1)
 
@@ -216,7 +218,8 @@ Push each working step to `sp-module` only.
 | Module isolation rules | No cross-requires; copy with attribution line when needed; `modules_test.py` |
 | Large binary / build noise in mods history | Filter subtree; do not import `dev_builds` |
 
-## Wait here
+## Status
 
-No module skeleton, no subtree import, no deletion of spnet paths, until Schizo says go on this plan
-(and on the license choice in locked decision 10).
+License decision 10 is locked. Implementation starts with P1 on `sp-module`: module skeleton, Link
+Host/Join, mode line `sp`, no `spnet.dll`. Larger run / menu / hazards imports follow in later
+commits on the same branch.
