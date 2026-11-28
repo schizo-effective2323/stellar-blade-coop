@@ -345,20 +345,22 @@ with tempfile.TemporaryDirectory() as tmp:
     zips = [tmp / 'a/one.zip', tmp / 'b/two.zip']
     for path in zips: install.write_zip(path, files, '# changes\n', when)
     assert zips[0].read_bytes() == zips[1].read_bytes()
+    top = install.ZIP_DIR + '/'  # The game's own path, as UE4SS's zip has it.
+    assert top == 'SB/Binaries/Win64/ue4ss/Mods/StellarCoop/'
     with zipfile.ZipFile(zips[0]) as archive:
         entries = archive.infolist()
-        assert [e.filename for e in entries] == sorted(f'StellarCoop/{rel}' for rel in shipped - {install.ART})
+        assert [e.filename for e in entries] == sorted(f'{top}{rel}' for rel in shipped - {install.ART})
         for e in entries:
             assert (e.date_time, e.external_attr, e.compress_type) == (time.gmtime(when)[:6], 0o100644 << 16,
                                                                       zipfile.ZIP_DEFLATED), e
-        assert archive.read('StellarCoop/CHANGELOG.md') == b'# changes\n'
-        sums = archive.read('StellarCoop/SHA256SUMS.txt').decode()
-        assert sums == ''.join(f'{hashlib.sha256(archive.read(e)).hexdigest()}  {e.filename[len("StellarCoop/"):]}\n'
-                               for e in entries if e.filename != 'StellarCoop/SHA256SUMS.txt'), sums
+        assert archive.read(top + 'CHANGELOG.md') == b'# changes\n'
+        sums = archive.read(top + 'SHA256SUMS.txt').decode()
+        assert sums == ''.join(f'{hashlib.sha256(archive.read(e)).hexdigest()}  {e.filename[len(top):]}\n'
+                               for e in entries if e.filename != top + 'SHA256SUMS.txt'), sums
         assert all(f'  {name}\n' in sums for name in docs - {'SHA256SUMS.txt'}), sums
         for name in install.DOCS:  # The license files go into the zip as they are in the repository.
-            assert archive.read(f'StellarCoop/{name}') == (install.ROOT / name).read_bytes(), name
-        assert b'SBO License' in archive.read('StellarCoop/LICENSE')
+            assert archive.read(f'{top}{name}') == (install.ROOT / name).read_bytes(), name
+        assert b'SBO License' in archive.read(top + 'LICENSE')
 
     def put(root, files):
         for rel, data in files.items():

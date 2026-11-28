@@ -27,12 +27,13 @@ Linux PC have played together. The rest of the documentation is in
 ## Install
 
 1. Close the game.
-2. Unzip `StellarCoop-<version>.zip`. You get a folder named `StellarCoop`. Windows "Extract All" may put it one
-   level deeper, in `StellarCoop-<version>\StellarCoop\`; in that case, use the inner `StellarCoop` folder.
+2. Unzip `StellarCoop-<version>.zip` into the game folder, the one that holds the `SB` folder. The zip holds the
+   game's own path, `SB/Binaries/Win64/ue4ss/Mods/StellarCoop/`, so the mod lands in the Mods folder. If Windows asks,
+   let it merge the folders. Windows "Extract All" may put everything in a new folder named after the zip. In that
+   case, move the `SB` folder from it into the game folder.
 3. Optional but recommended: check the files (see "Check the files" below).
-4. Copy the whole `StellarCoop` folder (the one that holds `enabled.txt`) into the Mods folder. The result must be
-   `SB/Binaries/Win64/ue4ss/Mods/StellarCoop/Scripts/main.lua`, with `StellarCoop.dll` and `enabled.txt` next to
-   `Scripts/`.
+4. Check the result: `SB/Binaries/Win64/ue4ss/Mods/StellarCoop/Scripts/main.lua` exists, with `StellarCoop.dll` and
+   `enabled.txt` next to `Scripts/`.
 5. Start the game. On the title screen the mod first opens its guide (Esc closes it), then asks whether to play on
    co-op saves (see "Co-op saves" below). Choose Decide later until you have backed up your saves (see "Saves and
    Steam Cloud"). Load a save and press `F6`.
