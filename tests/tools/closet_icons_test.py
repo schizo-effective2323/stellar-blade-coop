@@ -19,7 +19,7 @@ import render  # noqa: E402
 svgs = {p.stem: p.read_text(encoding='utf-8') for p in render.SVG.glob('*.svg')}
 pngs = {p.stem: p.read_bytes() for p in render.OUT.glob('*.png')}
 assert sorted(svgs) == sorted(pngs), sorted(set(svgs) ^ set(pngs))
-assert len(svgs) == 51, len(svgs)  # 41 tile glyphs, none and 9 small glyphs.
+assert len(svgs) == 54, len(svgs)  # 44 tile glyphs (3 of them ponytail lengths, none) and 9 small glyphs.
 assert sorted(name for name in svgs if render.size(name) == 64) == sorted(render.SMALL), sorted(render.SMALL)
 for name, svg in sorted(svgs.items()):
     size = render.size(name)
