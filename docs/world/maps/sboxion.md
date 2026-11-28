@@ -30,7 +30,7 @@ mod does not ship it and the repository cannot build it: the map tools stay outs
 The module looks for the pak once a Lua load, in `SB/Content/Paks/~mods`, then in `SB/Content/Paks/LogicMods`. The
 `.utoc` must name `SBO_World` and `Xion_P.umap`, with its `.pak` and `.ucas` beside it.
 
-There are eleven builds of the pak, under the same three file names. Only one of them is installed at a time.
+There are twelve builds of the pak, under the same three file names. Only one of them is installed at a time.
 
 | Pak | Packages | Levels listed | `.utoc` | `.ucas` | Version in `coop xion status` |
 | --- | --- | --- | --- | --- | --- |
@@ -45,8 +45,9 @@ There are eleven builds of the pak, under the same three file names. Only one of
 | 27 November 2026, full test, sixth build | `Xion_P`, the fifteen room levels and the two district levels | 173 | 2560 bytes | 2,610,974 bytes | `2560_2610974` |
 | 27 November 2026, full test, seventh build | `Xion_P`, the fifteen room levels and the two district levels, rebuilt | 173 | 2560 bytes | 2,612,399 bytes | `2560_2612399` |
 | 28 November 2026, full test, eighth build | `Xion_P`, the fifteen room levels and the three plate levels | 174 | 2999 bytes | 4,509,629 bytes | `2999_4509629` |
+| 28 November 2026, full test, ninth build | `Xion_P`, the fifteen room levels and the three plate levels, rebuilt | 174 | 2987 bytes | 4,387,443 bytes | `2987_4387443` |
 
-All eleven pass the check above. The module looks for package paths, never for a version: `self.gate()` in
+All twelve pass the check above. The module looks for package paths, never for a version: `self.gate()` in
 `sboxion.lua` hands the version to `coop xion status`, which prints it. Nothing else reads it. Two rebuilds of the
 third full test build, made on 25 November 2026 with pieces turned inside the rooms, read the same version: it is
 made of two sizes. At the first arrival
@@ -75,6 +76,10 @@ The eighth build holds the fifteen room levels with the same bytes as the sevent
 district levels it holds the three levels of [the underground district](#the-underground-district)'s plate:
 `Under_P1_Streets.umap`, `Under_P1_Shops.umap` and `Under_P1_Blocks.umap`. Its level line reads `174 listed, 140 of
 140`. With it the module also opens the gate G18.
+
+The ninth build holds the same levels. `Xion_P` and the fifteen room levels are the same bytes as in the eighth build.
+Only the three plate levels are new: the plate as fixed after the eighth build's game test ([What the ninth build
+changes](#what-the-ninth-build-changes)). The module works with it as with the eighth build.
 
 ## Commands
 
@@ -837,8 +842,9 @@ Send the `npcs:` lines of `UE4SS.log`.
 
 ## The underground district
 
-The eighth full test build (28 November 2026) holds a district of SBO's own under the lower street: a plate hung under
-the city, made of Stellar Blade's own pieces. None of it has run in game. The sixth and seventh builds held an
+The eighth and ninth full test builds (28 November 2026) hold a district of SBO's own under the lower street: a plate
+hung under the city, made of Stellar Blade's own pieces. The eighth build ran in game once. The ninth holds the plate as
+fixed after that test. The sixth and seventh builds held an
 earlier district on the same spot (`Under_D1_Arch` and `Under_D1_ArchHomes`). The module no longer asks for those two
 levels.
 
@@ -872,7 +878,8 @@ unit copies one or more groups of pieces of SB's own Xion, in SB's own arrangeme
   court, the tailor's dais, workbench and frame wall.
 - The edge: the north edge terrace, a plank door and lattice frames under three edges.
 
-The plate holds 3,269 pieces. 1,283 of them are copied from 44 groups of SB's Xion. The others are SB's kit pieces
+In the ninth build the plate holds 3,082 pieces (3,269 in the eighth). 1,224 of them are copied from 44 groups of SB's
+Xion. The others are SB's kit pieces
 laid as SB lays them: walls, slabs, stairs, rails, hanging blocks under the plate and ground planes with SB's street
 materials. Every piece names one of Stellar Blade's meshes or the engine's plane, which load from the player's own
 game files. The plate has 144 movable lights, 14 of them cast shadows.
@@ -881,9 +888,9 @@ The district is three levels on the streaming list of `Xion_P`, under the folder
 
 | Level | What it holds | Pieces | Lights | Streaming slot |
 | --- | --- | --- | --- | --- |
-| `/Game/SBO_World/Rooms/Under_P1_Streets` | The walk: stairs, landings, terraces, the street, the lane and their ground | 1,047 | 38 | `LevelStreamingDynamic_54` |
-| `/Game/SBO_World/Rooms/Under_P1_Shops` | The shops and the homes | 1,378 | 75 | `LevelStreamingDynamic_56` |
-| `/Game/SBO_World/Rooms/Under_P1_Blocks` | The hanging blocks, their faces, the lattice frames and the lid | 844 | 31 | `LevelStreamingDynamic_58` |
+| `/Game/SBO_World/Rooms/Under_P1_Streets` | The walk: stairs, landings, terraces, the street, the lane and their ground | 994 | 38 | `LevelStreamingDynamic_54` |
+| `/Game/SBO_World/Rooms/Under_P1_Shops` | The shops and the homes | 1,331 | 75 | `LevelStreamingDynamic_56` |
+| `/Game/SBO_World/Rooms/Under_P1_Blocks` | The hanging blocks, their faces, the lattice frames and the lid | 757 | 31 | `LevelStreamingDynamic_58` |
 
 The three slots name volumes in E04 as SB ships them. The build makes them always loaded, so the module counts the
 three levels among the always-loaded ones. The earlier district rode on `_54` and `_56` and loaded in game. `_58` has
@@ -954,10 +961,30 @@ The lines are translated into the 22 language files. The porter, the cook, the m
 inside their room's door wall. The other five talk on the plate's side of its edge toward G18's tunnel. Every NPC
 stands 3.7 m or more under the lower street at G18 (Z -228), past the 3 m of a line.
 
-### What the eighth build leaves open
+### What the ninth build changes
 
-- Nothing ran in game: the walk from E1, the collision of the pieces (2,560 block EVE, 709 let her through), the
-  light under SB's own env volumes, the NPC bodies and their lines.
+The eighth build's game test showed five faults. The ninth build's plate fixes them and changes nothing else:
+
+- Rail bays stand only along a rim over a drop of 1 m or more. 32 bays are gone: bays that crossed a walk or the
+  stone stair, bays over no floor and bays raised above their walk.
+- Loose props stand on the floor under them. 404 props moved by -23 to +21 cm, each with what stood on it. 42 are
+  gone: props with no floor within 30 cm under their feet, props half inside a floor slab (three cafe tables in the
+  terrace block among them) and what stood on those.
+- Decor with nothing under it or behind it is gone: 111 pieces, most of them fuse boxes, AC units and signs.
+- The three stone slabs at the tailor's door share one turn. They are 25.8 cm apart and the dais is 25.8 cm over the
+  top one. The first stands 22.4 cm over the street, so that the walk's 30 cm step still climbs it from the slab under
+  the street's ground plane.
+- Two pipes are gone: one ran through a rail of the yard, one lay across a walk.
+
+No NPC moved.
+
+### What the ninth build leaves open
+
+- Nothing of the ninth build ran in game: the walk from E1, the collision of the pieces (2,423 block EVE, 659 let her
+  through), the light under SB's own env volumes, the NPC bodies and their lines.
+- Where a removed rail bay stood, some rims over a drop have no rail now: the layout's rim check finds 44.4 m of
+  walked rim without one (31.6 m in the eighth build). A fall off the plate is caught (see [Falls over the
+  district](#falls-over-the-district)).
 - The layout's walk check from E1 reached all 10 NPC places. Each NPC stands on a cell EVE walks to.
 - One light copied from SB, in `Under_P1_Streets`, stands at 0 cd and gives no light.
 - `coop xion rooms off` puts G18's pieces back too. With EVE below the gate she then cannot walk out until
@@ -965,7 +992,7 @@ stands 3.7 m or more under the lower street at G18 (Z -228), past the 3 m of a l
 
 ### Testing the district in game
 
-With the eighth build in `SB/Content/Paks/~mods`, on a co-op save, alone.
+With the ninth build in `SB/Content/Paks/~mods`, on a co-op save, alone.
 
 1. `coop xion`. Within 15 s the log has `levels: 174 listed, 140 of 140`, `rooms: this pak holds 16 of 16 rooms`
    and `rooms: G18 open: 6 rows hidden`.
@@ -1041,7 +1068,7 @@ The same as with the rooms pak. The rooms open as before. The recovery catches E
 what wakes up ([What the log shows](#what-the-log-shows)). Nothing pins the pak's version: `coop xion status` prints
 `pak 1203_1501548`, `pak 1203_1546008` for the second build, `pak 1863_1918741` for the third, `pak 2719_2331195`
 for the fourth, `pak 2303_2267202` for the fifth, `pak 2560_2610974` for the sixth, `pak 2560_2612399` for the
-seventh and `pak 2999_4509629` for the eighth.
+seventh, `pak 2999_4509629` for the eighth and `pak 2987_4387443` for the ninth.
 
 ### What is not known
 
