@@ -63,6 +63,7 @@ return {
     sit='Sätt dig',stand='Res dig',
     line={prompt='Co-op-linje',free='Linjen är ledig. Bli värd för en session eller gå med i en väns spel.',
         open='Din session är öppen. Bjud in en vän härifrån.',linked='Ansluten till %s.'},
+    confirm_host='Välj igen inom 3 s för att bli värd för en onlinesession.',
     confirm_leave='Välj igen inom 3 s för att lämna.',confirm_remove='Välj igen inom 3 s för att ta bort och blockera %s.',
     confirm_reset_keys='Välj igen inom 3 s för att återställa alla tangenter.',
     reload='Sparat. Gäller när modden laddas om (vid spelstart eller Ctrl+R).',
@@ -413,6 +414,14 @@ return {
         entry='%d. %s %d',sep=', ',placed='Du kom på plats %d av %d.'},
     -- The pause menu's Online tab (ui/kit/pause_tab.lua): its word and the notice when the game stays paused.
     pause_tab={tab='Online',stuck='Spelet förblev pausat, så co-op-menyn öppnades inte.'},
+    -- The pause menu's Online page (ui/kit/online_page.lua): the left list's categories and the section headers.
+    online_page={cat={session='Session',players='Spelare',world='Delad värld',combat='Strid',modes='Spellägen',
+        controls='Kontroller',display='Visning',others='Andra spelare',photo='Fotoläge',saves='Sparfiler',help='Hjälp'},
+        sec={play='Spela online',current='Denna session',hosting='Värd',members='Medlemmar',
+        sharing='Vad som delas',travel='Resor',difficulty='Svårighetsgrad',rules='Regler',modes='Lägen',
+        keyboard='Tangentbord och mus',controller='Handkontroll',features='Funktioner',all='Alla tangenter',
+        interface='Gränssnitt',names='Namn',sky='Himmel',look='Utseende',sound='Ljud',motion='Rörelse',chat='Chatt',
+        photo='Fotoläge',saves='Sparfiler',help='Hjälp'}},
     -- The emote wheel (ui/kit/wheel.lua, eve/ui/wheel.lua): its hints, the centre's word while nothing is pointed at
     -- (after StringTable_UI's UI_HUD_Gesture) and why it did not open.
     wheel={title='Social handling',release='Släpp: spela upp',point='Peka',next='Nästa kategori',

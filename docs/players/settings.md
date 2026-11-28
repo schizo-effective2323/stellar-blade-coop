@@ -215,7 +215,7 @@ pvp_spike=on
 # and each co-op save is copied before the game rewrites it (the 10 newest kept per slot).
 sbo_lobby=on
 # Online tab: on or off, on by default. On, the pause menu gets an Online tab after Settings. RB on Settings (E on
-# the keyboard) or a click on the tab closes the pause menu and opens the co-op menu.
+# the keyboard) or a click on the tab opens the Online page inside the pause menu.
 pause_tab=on
 # Popups during online play: on or off, on by default. On, the game's tutorial popups and record popups are off while
 # you play online with at least one other player. Your own values come back when you leave. The game's settings file
@@ -252,7 +252,7 @@ photohunt=on
 | `emote_key` | same as `menu_key`, or `none`: the key held to open the [emote wheel](interface.md#emote-wheel); releasing it plays the emote you point at. Options, Controls, Emote wheel key; it applies at once | `F2` |
 | `closet_key` | same as `menu_key`, or `none`: the key that opens the [Stellar Closet](../closet/closet.md#the-closet-menu) menu; pressed while it is open, it goes back as Esc does. On a controller, D-pad Left tapped alone opens it and B closes it. Options, Controls, Open Stellar Closet; it applies at once | `F1` |
 | `emote_pad` | `dpad_left` or `off`: on a controller, `dpad_left` opens the [emote wheel](interface.md#emote-wheel) while D-pad Left is held 0.3 s and plays the emote you point at on its release. A tap of D-pad Left stays the game's. Options, Controls, Emote wheel on a controller (D-pad Left held or Off); it applies at once | `dpad_left` |
-| `pause_tab` | `on` or `off`: the [Online tab](interface.md#pause-menu) after Settings in the game's pause menu, which opens the co-op menu. Off, RB on Settings goes to Equipment as in the game. Options, Controls, Online tab in the pause menu; it applies from the next pause menu | `on` |
+| `pause_tab` | `on` or `off`: the [Online tab](interface.md#pause-menu) after Settings in the game's pause menu, which opens the Online page. Off, RB on Settings goes to Equipment as in the game. Options, Controls, Online tab in the pause menu; it applies from the next pause menu | `on` |
 | `who_can_join` | `public`, `friends`, `invitation` or `closed`: who can join an online session you host. `public`: any player of your version, who finds it in the session list. `friends`: your Steam friends. `invitation`: the friends you invite or anyone with your [join code](playing-with-a-friend.md#join-codes). `closed`: nobody (Private in the co-op menu). The words `code` and `private` from 0.11 and older read as `invitation`; the file keeps them | `public` |
 | `friends_ask` | `on` or `off`, with `public` or `invitation`: `on` makes your Steam friends wait for your answer like other players. The co-op menu shows it as Friends join without asking, On while `friends_ask=off` | `off` |
 | `max_players` | `2` to `4`: the players an online session you host holds, you included (Players on the Options page and the Create a session screen), from the next session you host. Past 2, shared enemies, the shared world and story together run between you and one guest only ([More than 2 players](playing-with-a-friend.md#more-than-2-players)) | `4` |

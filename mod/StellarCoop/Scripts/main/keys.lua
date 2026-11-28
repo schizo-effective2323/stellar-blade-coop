@@ -23,7 +23,9 @@ local print,log=M.print,M.log
 -- click declines or closes), then the lobby's screens' and the menu's
 -- (a left click selects the row under the mouse, a right click goes back), then the left one the co-op saves'
 -- question's (the choice under the mouse); closed, they are the game's. A left click over the pause menu's Online tab
--- closes the pause menu and opens the co-op menu (ui/kit/pause_tab.lua). A key callback runs on UE4SS's key thread: it
+-- enters its Online page (ui/kit/pause_tab.lua). While that page shows, the navigation keys, Enter and Esc go to it
+-- before anything else (E and F do nothing there). An F-key goes to its key row while one waits for a key.
+-- A key callback runs on UE4SS's key thread: it
 -- only hands the press to the game thread, where the console's checks (coop off included) apply. A modified F-key is
 -- bound before the plain one, so if UE4SS also calls the plain bind for a Shift+F5, the plain press that follows at
 -- once is the same press, dropped. The status key gives a one-line summary, in the log in English and on screen in the
@@ -50,9 +52,10 @@ if M.settings then
         local base=name:match('^%a+%+(F%d+)$')
         if base then modified_at[base]=os.clock()
         elseif modified_at[name] and os.clock()-modified_at[name]<0.2 then return end
-        -- Typing, the host's question or the emote wheel open: our keys do nothing.
+        -- Typing, the host's question or the emote wheel open: our keys do nothing. A key row waiting for a key, in the
+        -- co-op menu or on the pause menu's Online page, takes it.
         if M.wheel.is_open() or M.box.is_open() or M.code_box.is_open() or M.approval.is_open() or M.menu.capture(name)
-            then return end
+            or M.pause_tab.capture(name,os.clock()) then return end
         for _,action in ipairs(ACTIONS) do
             if M.settings[action..'_key'].name==name then
                 log('key '..name..': '..action)
@@ -105,7 +108,8 @@ if M.settings then
     bind('RETURN',nil,function()
         ExecuteInGameThread(function()
             if os.clock()-alt_enter_at<0.2 or M.wheel.is_open() then return end
-            if M.approval.is_open() then M.approval.nav('select')
+            if M.pause_tab.page_shown() then M.pause_tab.nav('select',os.clock())
+            elseif M.approval.is_open() then M.approval.nav('select')
             elseif M.lobby.is_open() then M.lobby.nav('select')
             elseif M.open_screen() then M.open_screen().nav('select')
             elseif M.menu.is_open() then
@@ -136,7 +140,9 @@ if M.settings then
             {'LEFT_ARROW','left'},{'A','left'},{'Q','left'},{'RIGHT_ARROW','right'},{'D','right'},
             {'SPACE','select'},{'E'},{'F'}}) do
         bind(nav[1],nil,function()
-            if M.wheel.is_open() then -- Its pages only.
+            if M.pause_tab.page_shown() then -- The pause menu's Online page: its words only.
+                if nav[2] then ExecuteInGameThread(function() M.pause_tab.nav(nav[2],os.clock()) end) end
+            elseif M.wheel.is_open() then -- Its pages only.
                 local word=nav[1]=='E' and 'tab_right' or (nav[1]=='Q' or nav[1]=='A') and 'tab_left' or nil
                 if word then ExecuteInGameThread(function() M.wheel.nav(word) end) end
             -- The host's question opens on its own: the arrows only, never W, S or Space (walking, jumping, the menu).
@@ -174,7 +180,8 @@ if M.settings then
         end)
     end
     bind('ESCAPE',nil,function()
-        if M.wheel.is_open() then ExecuteInGameThread(function() M.wheel.nav('back') end)
+        if M.pause_tab.page_shown() then ExecuteInGameThread(function() M.pause_tab.nav('back',os.clock()) end)
+        elseif M.wheel.is_open() then ExecuteInGameThread(function() M.wheel.nav('back') end)
         elseif M.approval.is_open() then ExecuteInGameThread(function() M.approval.nav('back') end)
         elseif M.lobby.is_open() then ExecuteInGameThread(function() M.lobby.nav('back') end)
         elseif M.open_screen() then ExecuteInGameThread(function()

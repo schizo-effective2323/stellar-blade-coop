@@ -26,7 +26,8 @@
 -- distance or another map's 32-byte name, the paid fetch's offer after them with the longest key name and betacrystal,
 -- the fetch's other lines with a 32-byte money name, within 200 bytes; coop gift's notices with a 32-byte name and
 -- alias within 200 bytes; the 25 module names in every table; the notice
--- of a module that failed to load with the longest of them within 200 bytes; Stellar Closet's menu words: a slot name
+-- of a module that failed to load with the longest of them within 200 bytes; the Online page's words, one for each
+-- category and section of ui/kit/online_model.lua, each within its column; Stellar Closet's menu words: a slot name
 -- for each of closet/slots.lua's Slots.LIST ids, a tab for each Slots.MENUS id and a region for each Slots.REGIONS
 -- name, each tab within 16 columns, each key hint within 14, its notices within 200 bytes, the Colour tab's name and
 -- about line for each closet/colour.lua role and a name for Off and each swatch, the roles within a row's title column,
@@ -618,5 +619,24 @@ end
 local n=0
 for _ in pairs(T.en.emote.names) do n=n+1 end
 assert(n==#EMOTES,'T.en.emote.names: '..n..' names')
+-- The pause menu's Online page (ui/kit/online_page.lua): a word for each category and section of
+-- ui/kit/online_model.lua and for no other id; in every language a category's word within its left list item (Bold 34
+-- in SB's 356-unit button: 16 columns), a section's word within 40 columns.
+local O=require('ui.kit.online_model')
+local cats,secs={},{}
+for _,cat in ipairs(O.CATEGORIES) do
+    cats[cat.id]=true
+    for _,sec in ipairs(cat.sections) do secs[sec.id]=true end
+end
+local page=T.en.online_page
+for id in pairs(cats) do assert(type(page.cat[id])=='string','T.en.online_page.cat.'..id..': missing') end
+for id in pairs(secs) do assert(type(page.sec[id])=='string','T.en.online_page.sec.'..id..': missing') end
+for id in pairs(page.cat) do assert(cats[id],'T.en.online_page.cat.'..id..': no such category') end
+for id in pairs(page.sec) do assert(secs[id],'T.en.online_page.sec.'..id..': no such section') end
+for name in pairs(R.TEXT) do
+    local p=T.pick(name).online_page
+    for k,text in pairs(p.cat) do fits(name..'.online_page.cat.'..k,text,16) end
+    for k,text in pairs(p.sec) do fits(name..'.online_page.sec.'..k,text,40) end
+end
 
 print('ui_text_test ok')

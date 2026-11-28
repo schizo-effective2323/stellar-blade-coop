@@ -98,7 +98,14 @@ for _,a in ipairs({{'mark',TEX..'Item/CommonIcon/4DotMark'},{'link',TEX..'Common
         {'popup_close',SOUND..'CommonPopup/UI_Common_Popup_Close_Cue',1},
         {'popup_confirm',SOUND..'CommonPopup/UI_Common_Popup_Confirm_Cue',1},
         -- The item wheel's open and focus sounds (WB_MainHUD_ItemEquip's): the emote wheel's.
-        {'wheel_open',SOUND..'UI_BodySuit_Open',1},{'wheel_move',SOUND..'ui_move',1}}) do
+        {'wheel_open',SOUND..'UI_BodySuit_Open',1},{'wheel_move',SOUND..'ui_move',1},
+        -- The pause menu's Online page (ui/kit/online_page.lua): tab is the focus sound of SB's Settings page
+        -- (FocusChangedSound of WB_Setting_Tab and of WB_Setting_DetailBase).
+        {'tab',SOUND..'MainMenu/UI_Tab_2_Cue',1},
+        -- confirm: the SelectedSound of WB_Setting_Button_Slot (an action run); refuse: the CantSound of
+        -- WB_Setting_Rolling_Slot (a SoundWave, as ui_move). Read in their class exports:
+        -- /Game/Sound/UI/MainMenu/UI_Setting_Confirm_Cue.0 and /Game/Sound/UI/ui_beep.0.
+        {'confirm',SOUND..'MainMenu/UI_Setting_Confirm_Cue',1},{'refuse',SOUND..'ui_beep',1}}) do
     table.insert(Ui.ASSETS,{a[1],path(a[2]),volume=a[3],alt=a.alt and path(a.alt)})
 end
 -- The F-key icons but F10's (the console's), key_f1 to key_f12, for the emote wheel's key: before the sounds.

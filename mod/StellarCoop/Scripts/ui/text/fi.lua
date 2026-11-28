@@ -62,6 +62,7 @@ return {
     sit='Istu',stand='Nouse',
     line={prompt='Co-op-linja',free='Linja on vapaa. Isännöi istuntoa tai liity kaverin peliin.',
         open='Istuntosi on auki. Kutsu kaveri täältä.',linked='Yhteydessä: %s.'},
+    confirm_host='Isännöi verkkoistuntoa valitsemalla uudelleen 3 sekunnin kuluessa.',
     confirm_leave='Poistu valitsemalla uudelleen 3 sekunnin kuluessa.',
     confirm_remove='Poista ja estä %s valitsemalla uudelleen 3 sekunnin kuluessa.',
     confirm_reset_keys='Palauta kaikki näppäimet valitsemalla uudelleen 3 sekunnin kuluessa.',
@@ -427,6 +428,15 @@ return {
         top='Valokuvajahti: %s.',entry='%d. %s %d',sep=', ',placed='Sijoituksesi: %d/%d.'},
     -- The pause menu's Online tab (ui/kit/pause_tab.lua): its word and the notice when the game stays paused.
     pause_tab={tab='Online',stuck='Peli jäi tauolle, joten co-op-valikko ei avautunut.'},
+    -- The pause menu's Online page (ui/kit/online_page.lua): the left list's categories and the section headers.
+    online_page={cat={session='Istunto',players='Pelaajat',world='Jaettu maailma',combat='Taistelu',modes='Pelitilat',
+        controls='Näppäimet',display='Näyttö',others='Muut pelaajat',photo='Kuvaustila',saves='Tallennukset',
+        help='Ohje'},
+        sec={play='Pelaa verkossa',current='Tämä istunto',hosting='Isännöinti',members='Jäsenet',
+        sharing='Mitä jaetaan',travel='Matkustus',difficulty='Vaikeustaso',rules='Säännöt',modes='Tilat',
+        keyboard='Näppäimistö ja hiiri',controller='Ohjain',features='Ominaisuudet',all='Kaikki näppäimet',
+        interface='Käyttöliittymä',names='Nimet',sky='Taivas',look='Ulkonäkö',sound='Ääni',motion='Liike',
+        chat='Keskustelu',photo='Kuvaustila',saves='Tallennukset',help='Ohje'}},
     -- The emote wheel (ui/kit/wheel.lua, eve/ui/wheel.lua): its hints, the centre's word while nothing is pointed at
     -- (after StringTable_UI's UI_HUD_Gesture) and why it did not open.
     wheel={title='Sosiaalinen toiminto',release='Vapauta: toista',point='Osoita',next='Seuraava luokka',

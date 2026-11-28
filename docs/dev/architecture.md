@@ -39,9 +39,16 @@ Stellar Blade Online has two parts, both in the mod folder `Mods/StellarCoop/`:
     own procedure. A new game window is subclassed at the next call. After `coop off` nothing is subclassed. Then
     `coop_tick` gives the game's procedure back. The procedure reads and writes no game memory. Nothing is subclassed
     before the closet camera reads the wheel.
-  - `coop_pause_close`, an exported function that Lua calls on the game thread when the pause menu's Online tab closes
-    the pause menu. It runs the game's own close, the one Back uses (see [Pause
+  - `coop_pause_close`, an exported function that Lua calls on the game thread when the pause menu's Online tab or its
+    Online page closes the pause menu. It runs the game's own close, the one Back uses (see [Pause
     menu](../players/interface.md#pause-menu)).
+  - `coop_pause_enter` and `coop_pause_page`, exported functions that Lua calls on the game thread for the pause
+    menu's Online page, tab 9 of the game's pause menu. `coop_pause_enter` runs the shown page's deactivate as the
+    game's tab change does, then writes 9 as the current tab. Lua passes 5 arguments and gets back 1 (entered), 2
+    (tab 9 already shows), 3 (no pause menu open), 4 (the game's tab lock is on) or 5 (off). `coop_pause_page` answers
+    the open menu's tab: Lua passes 12 arguments and gets back the tab 1 to 9, 10 (another number), 11 (no pause menu
+    open) or 12 (off). Off means another build, `coop off` or the tab's fault. While tab 9 shows, the input hook keeps
+    the game's Back from the pause menu, so Lua handles Back on its page.
 
 ```
    your game                                                      friend's game
@@ -64,10 +71,10 @@ Both games run the same pipeline in both directions, so each player sees the oth
 | `main/loader.lua` | The module loader: each module's `wiring.lua` in list order, the stubs, the off line and its notice, the build steps, `view` and `get` (see [Modules and isolation](#modules-and-isolation)) |
 | `main/commands.lua` | `coop ui` and `coop off`, `coop guide` and `coop keys` from `ui/kit/commands.lua`, then `report` and `run`, which every `coop` word goes through |
 | `main/ui.lua` | The UI kit, the guide and the menu (`ui/kit/menu.lua`), with each module's build steps between them in the kit's build order |
-| `main/input.lua` | The frame and pass timing line, the pad's events routed to the open screen, the Online tab, the console command |
+| `main/input.lua` | The frame and pass timing line, the pad's events routed to the open screen, the pause menu's Online tab and its Online page (`ui/kit/online_page.lua`, built behind its own guard), the console command |
 | `main/frame.lua` | The frame loop: each module's frame work under `guarded()`, the UI's ticks and the pad's events |
 | `main/pass.lua` | The 250 ms loop, with the Steam link only: each module's pass work under `guarded()`, the link's notices and the off notices |
-| `main/keys.lua` | The key binds, with the Steam link only: the F-keys, Enter, the navigation keys, Esc and the mouse buttons |
+| `main/keys.lua` | The key binds, with the Steam link only: the F-keys, Enter, the navigation keys, Esc and the mouse buttons (the navigation keys, Enter and Esc go to the Online page while it shows) |
 | `<module>/wiring.lua` | A module's manifest: the modules it reads later (`uses`), the `M` fields it sets (`exports`), its share of the startup (`new`) and its kit groups (`build`) |
 | `<module>/commands.lua` | A module's `coop` words: its `new` returns them and the loader adds them to `M.commands` |
 | `online/session/commands.lua` | The session's `coop` commands: `host` (the Create a session screen, or a host at once with a Who can join word), `invite`, `join` (a lobby id, a join code or a row of the session list), `list`, `leave`, `status`, `report`, `copy`, `mark`, `allow`, `deny`, `remove`, `mute`, `unmute`, `block`, `unblock` and `blocked` |

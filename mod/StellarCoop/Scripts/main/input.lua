@@ -87,7 +87,7 @@ end
 -- bike (D-pad Right held 1 s) gets EVE on the bike or off it as bike_key does, in a world with our HUD shown, none of
 -- our screens open (the host's question, the Sessions screen and the Create a session screen included) and the game
 -- neither paused nor showing one of its own screens, such as its inventory or map; otherwise it logs why and does
--- nothing. pause_tab (RB on the pause menu's last tab, E on the keyboard: the native part's event 12) goes to the
+-- nothing. pause_tab (RB on the pause menu's last tab or LB on its first: the native part's event 12) goes to the
 -- Online tab only (ui/kit/pause_tab.lua), never to one of our screens. left and right (the D-pad or the left stick)
 -- that nothing above took switch the member spectate watches while our EVE is down in a shared boss fight
 -- (fight/enemies/spectate.lua).
@@ -98,6 +98,8 @@ end
 -- (closet/ui/menu.lua's toggle), under the bike's refusals and not while spectate watches (D-pad Left switches the
 -- member then). A refusal of the menu's own (combat, a cutscene) is logged only: D-pad Left is tapped in play. Open,
 -- the tap does nothing: its left moved in the menu. B closes it.
+-- While the pause menu's Online page shows (ui/kit/pause_tab.lua), every word but pause_tab goes to it first: up, down,
+-- left, right, select and back act there, the others do nothing.
 M.PAD={'up','down','left','right','select','back','menu','tab_left','tab_right','bike','refresh','pause_tab','wheel',
     'closet'}
 -- bike_key and the pad's bike: EVE on the bike or off it, logged as a command is. A refusal also goes on screen, in
@@ -110,14 +112,16 @@ function M.bike_press(by)
     M.report(ok,message)
     if not ok then M.say(tostring(message)) end
 end
--- menu_key's path with nothing open in a world: B in the lobby world, the co-op menu elsewhere, its refusals said.
-local function open_menu()
+-- menu_key's path with nothing open in a world: B in the lobby world, the co-op menu elsewhere, its refusals said. p: a
+-- module page to open it on (the pause tab's 'open_menu' answer; the Online page has no Test tools row any more).
+local function open_menu(p)
     if M.sbo.in_lobby() then return M.lobby_key() end
-    local ok,why,shown,en=M.menu.toggle(M.booth.near(require('core.where').me()))
+    local ok,why,shown,en=M.menu.toggle(not p and M.booth.near(require('core.where').me()) or nil,p)
     if why then M.report(ok,why); M.say(shown or why,en) end
 end
 function M.pad_event(what)
     if what=='pause_tab' then return M.pause_tab.event(os.clock()) end
+    if M.pause_tab.page_shown() then return M.pause_tab.nav(what,os.clock()) end
     if M.wheel and M.wheel.is_open() then
         if what=='tab_left' or what=='tab_right' or what=='select' or what=='back' then M.wheel.nav(what) end
         return
@@ -199,15 +203,55 @@ function M.pad_event(what)
         M.spectate.switch(what)
     end
 end
--- The pause menu's Online tab (ui/kit/pause_tab.lua), made after pad_event: it opens the menu. Logging [PT] lines.
--- Its button and its open run on the game thread; RB comes as pad_event's pause_tab, a click through
--- main/keys.lua's LEFT_MOUSE_BUTTON bind.
-M.pause_tab=require('ui.kit.pause_tab').new({log=function(m) print('[StellarCoop][PT] '..tostring(m)..'\n') end,
+-- The pause menu's Online tab (ui/kit/pause_tab.lua), made after pad_event: it enters the Online page. Logging [PT]
+-- lines. Its button, its page and its entry run on the game thread; RB comes as pad_event's pause_tab, a click through
+-- main/keys.lua's LEFT_MOUSE_BUTTON bind, the page's keys through main/keys.lua's binds and pad_event.
+local function pt_log(m) print('[StellarCoop][PT] '..tostring(m)..'\n') end
+-- The Online page (ui/kit/online_page.lua), made behind its own guard: a page that does not load or build is off until
+-- the mod reloads, with one line. The Online tab then opens the co-op menu as before; the kit, the co-op menu and the
+-- keys go on. Its words are the co-op menu's. Its ctx (the fields online_model.lua reads) is read at each call: the
+-- link's state, the chat box and the values of coop-settings.txt. Its mouse is the kit's pointer.
+-- Its rows change a value, take a key, host, invite and write the bug report through the co-op menu's own act and bind
+-- (ui/kit/menu.lua); a row that still needs the game world runs through the co-op menu's away once the pause tab closed
+-- the pause menu. Find a session shows in its rows through the Sessions screen's own tab, searches and joins
+-- (online/session/ui/sessions.lua), Join with a code through the code box's own check and join
+-- (online/session/join.lua): each nil while the online sessions are off.
+local page_built,page=pcall(function()
+    local Model=require('ui.kit.model')
+    return require('ui.kit.online_page').new({log=pt_log,words=M.words,
+        sound=function(name) if M.kit then M.kit.sound(name) end end,
+        guide_words=function()
+            return require('ui.text.guide').pick(M.kit and M.kit.language(),M.settings and M.settings.ui_language)
+        end,
+        ctx=function()
+            local link=M.link
+            local values=Model.read(link and link.settings_text() or '')
+            if not link then return {values=values} end
+            return {mode=link.mode(),chat=M.box~=nil and M.box.can()==true,code=link.code(),stranger=link.stranger(),
+                values=values,members=link.members(),words=M.words()}
+        end,
+        theme=require('ui.kit.kit').THEME,pointer=function() if M.kit then return M.kit.pointer() end end,
+        act=function(...) return M.menu.act(...) end,bind=function(...) return M.menu.bind(...) end,
+        sessions=require('main.loader').get(M,'online.session','sessions'),
+        code=require('main.loader').get(M,'online.session','code_box')})
+end)
+if not page_built then
+    pt_log('online page: off until the mod reloads: '..tostring(page))
+    page=nil
+end
+M.pause_tab=require('ui.kit.pause_tab').new({log=pt_log,page=page,
+    sound=function(name) if M.kit then M.kit.sound(name) end end,
     ready=function() return M.link~=nil and require('core.unreal').controller()~=nil end,
     enabled=function() return M.settings~=nil and M.settings.pause_tab==true end,
     word=function() return M.words().pause_tab.tab end,paused=function() return M.kit~=nil and M.kit.paused(true) end,
     open=open_menu,notice=function() M.say(M.words().pause_tab.stuck,T.en.pause_tab.stuck) end,
-    ask=function(line) return M.ask(line)() end,close=M.pause_close})
+    -- A row of the Online page that needs the game world, once SB closed the pause menu: the co-op menu's own run of
+    -- it. The bug report's words go on the notice line, where the co-op menu shows them under its rows.
+    away=function(action)
+        local ok,note=M.menu.away(action)
+        if action=='report' and note then M.say(note,ok and T.en.report or note) end
+    end,
+    ask=function(line) return M.ask(line)() end,close=M.pause_close,enter=M.pause_enter,tab=M.pause_page})
 RegisterConsoleCommandHandler('coop',function(_,parameters)
     M.typed_at=os.clock()
     -- A seventh word too, so a command that takes six (coop leviathan show) refuses one more.

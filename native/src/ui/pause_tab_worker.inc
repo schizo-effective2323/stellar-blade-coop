@@ -13,7 +13,8 @@ namespace {
 // still inside the hook after the undo is safe.
 Filter pause_tab_state = Filter::untried; // The worker's.
 bool pause_tab_fault_logged = false;
-uint32_t pause_tab_opens_logged = 0;
+uint32_t pause_tab_opens_logged = 0, pause_tab_held_logged = 0;
+uint64_t pause_tab_passed_logged = 0;
 
 uint64_t pause_tab_original() { return base + (coop::pause_tab::kInput - game::kImageBase); }
 uint64_t pause_tab_hook() { return reinterpret_cast<uintptr_t>(&pause_tab_input); }
@@ -53,13 +54,32 @@ void pause_tab_undo(const char *why) {
   else
     say(std::string("pause tab off (") + why + "): 0x145c26768 holds " + slot_value(held) + ", left as it is");
 }
-// Each worker pass (from lion_pass): the swap once a run, a line for each new open, the hook's fault once.
+// Each worker pass (from lion_pass): the swap once a run, a line for each new open and each new held action, the
+// hook's fault once.
 void pause_tab_pass() {
   if (pause_tab_state == Filter::untried && pinned && !blocked && !pause_tab_faulted)
     pause_tab_install();
   if (const uint32_t opens = pause_tab_opens; opens != pause_tab_opens_logged) {
     pause_tab_opens_logged = opens;
-    say("pause tab: RB on Settings opened the Online tab (" + std::to_string(opens) + " this run)");
+    say("pause tab: RB on Settings or LB on the first tab opened the Online tab (" + std::to_string(opens) +
+        " this run)");
+  }
+  if (const uint64_t passed = pause_tab_passed; passed != pause_tab_passed_logged) {
+    pause_tab_passed_logged = passed;
+    if ((passed >> 32) <= 8) // Eight lines a run are enough to read the lock and the list.
+      say(std::string("pause tab: ") + (passed & 1 ? "RB on tab " : "LB on tab ") +
+          std::to_string(passed >> 24 & 0xff) + " went to SB (lock " + std::to_string(passed >> 16 & 0xff) + ", " +
+          std::to_string(passed >> 8 & 0xff) + " tabs enabled)");
+  }
+  if (const uint32_t held = pause_tab_held; held != pause_tab_held_logged) {
+    // One line as the count reaches 1, 10, 100 and so on: a held D-pad would write one at every pass.
+    uint32_t step = 1;
+    while (step <= held / 10)
+      step *= 10;
+    if (pause_tab_held_logged < step)
+      say("pause tab: an action kept from SB on the Online page, Back or one SB ignores there (" +
+          std::to_string(held) + " this run)");
+    pause_tab_held_logged = held;
   }
   if (pause_tab_faulted && !pause_tab_fault_logged) {
     pause_tab_fault_logged = true;

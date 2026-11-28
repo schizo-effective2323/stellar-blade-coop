@@ -64,6 +64,7 @@ return {
     sit='Otur',stand='Kalk',
     line={prompt='Co-op hattı',free='Hat boşta. Bir oturum kur ya da bir arkadaşına katıl.',
         open='Oturumun açık. Buradan bir arkadaşını davet et.',linked='%s ile hattasın.'},
+    confirm_host='Çevrim içi oturum kurmak için 3 sn içinde yeniden seç.',
     confirm_leave='Ayrılmak için 3 sn içinde yeniden seç.',
     confirm_remove='3 sn içinde yeniden seçersen %s çıkarılır ve engellenir.',
     confirm_reset_keys='Tüm tuşları sıfırlamak için 3 sn içinde yeniden seç.',
@@ -425,6 +426,15 @@ return {
         top='Fotoğraf avı: %s.',entry='%d. %s %d',sep=', ',placed='Sıran: %d / %d.'},
     -- The pause menu's Online tab (ui/kit/pause_tab.lua): its word and the notice when the game stays paused.
     pause_tab={tab='Çevrimiçi',stuck='Oyun duraklatılmış kaldığı için co-op menüsü açılmadı.'},
+    -- The pause menu's Online page (ui/kit/online_page.lua): the left list's categories and the section headers.
+    online_page={cat={session='Oturum',players='Oyuncular',world='Ortak dünya',combat='Çatışma',modes='Oyun modları',
+        controls='Kontroller',display='Görüntü',others='Diğer oyuncular',photo='Fotoğraf modu',saves='Kayıtlar',
+        help='Yardım'},
+        sec={play='Çevrim içi oyna',current='Bu oturum',hosting='Ev sahipliği',members='Üyeler',
+        sharing='Paylaşılanlar',travel='Seyahat',difficulty='Zorluk',rules='Kurallar',modes='Modlar',
+        keyboard='Klavye ve fare',controller='Oyun kumandası',features='Özellikler',all='Tüm tuşlar',interface='Arayüz',
+        names='İsimler',sky='Gökyüzü',look='Görünüm',sound='Ses',motion='Hareket',chat='Sohbet',photo='Fotoğraf modu',
+        saves='Kayıtlar',help='Yardım'}},
     -- The emote wheel (ui/kit/wheel.lua, eve/ui/wheel.lua): its hints, the centre's word while nothing is pointed at
     -- (after StringTable_UI's UI_HUD_Gesture) and why it did not open.
     wheel={title='Sosyal eylem',release='Bırak: oynat',point='İşaret et',next='Sonraki kategori',

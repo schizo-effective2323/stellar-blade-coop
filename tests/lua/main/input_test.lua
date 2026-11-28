@@ -478,6 +478,161 @@ in_world=false
     assert(last()=='[StellarCoop] STOP: '..'coop off is active until the game restarts\n' and not kit_shown.wheel)
 end)()
 
+-- The pause menu's Online page: while it shows (ui/kit/pause_tab.lua's page_shown), the pad's words, the navigation
+-- keys, Enter and Esc go to the tab's nav and to no screen of ours (E and F do nothing); pause_tab still goes to its
+-- event. While it does not show, nothing changes. main/input.lua builds the page behind its own guard: the tab gets it
+-- with the native entry and tab read, its ctx gives online_model.lua's fields, its pointer the kit's; a page that does
+-- not build logs one line, the tab gets none and the keys work on.
+;(function()
+    local function pad(...) for _,e in ipairs({...}) do pd.q[#pd.q+1]=e end; loops[1].f() end
+    settings_text,status_text,link_mode,in_world,photo_mode='',plain,'none',true,false
+    load_main(true)
+    kit_ready=true; quarter()
+    assert(type(pt.o.page)=='table' and pt.o.page.shown()==false and pt.o.enter and pt.o.tab,'The page, built')
+    key('F5'); assert(kit_shown.menu)
+    pt.page=true
+    pad(1,5,6,3,4,2)
+    assert(table.concat(pt.navs,' ')=='up select back left right down' and kit_shown.menu and focus()=='Host a session',
+        table.concat(pt.navs,' '))
+    pad(12); assert(#pt.events==1 and #pt.navs==6,'RB on Settings: the tab\'s event, never nav')
+    pt.navs={}
+    key('ESCAPE'); key('RETURN'); key('DOWN_ARROW'); key('S'); key('SPACE'); key('E'); key('F')
+    assert(table.concat(pt.navs,' ')=='back select down down select' and kit_shown.menu
+        and focus()=='Host a session',table.concat(pt.navs,' '))
+    pt.page,pt.navs=false,{}
+    key('DOWN_ARROW'); assert(focus()=='Find a session' and #pt.navs==0,'Not shown: the menu has its keys')
+    key('ESCAPE'); assert(not kit_shown.menu and #pt.navs==0)
+    -- Its ctx: the link's state, the settings' values, read at each call. No module pages: the Test tools stay in the
+    -- co-op menu (F5).
+    local captured
+    local real=package.loaded['ui.kit.online_page']
+    package.loaded['ui.kit.online_page']={new=function(o) captured=o; return real.new(o) end}
+    link_mode,link_code,link_stranger='host','0CS-CBMH',{id='9',name='S'}
+    settings_text='who_can_join=friends\n'
+    load_main(true)
+    local ctx=captured.ctx()
+    assert(ctx.mode=='host' and ctx.code=='0CS-CBMH' and ctx.stranger.name=='S' and ctx.values.who_can_join=='friends'
+        and ctx.pages==nil and type(ctx.members)=='table' and ctx.words==captured.words(),'The page\'s ctx')
+    assert(captured.theme==require('ui.kit.kit').THEME and captured.guide_words().row=='Guide')
+    -- Find a session: the Sessions screen itself (online/session/wiring.lua's), read at each call.
+    local n=#ss.calls
+    assert(captured.sessions().enter()==true and ss.calls[n+1]=='enter' and captured.sessions().texts().tab=='Public',
+        'The page\'s Sessions screen')
+    -- Join with a code: the code box itself (online/session/wiring.lua's), its characters and its join.
+    assert(captured.code().chars()==require('online.session.join').CHARS,'The code box\'s characters')
+    link_mode='none'
+    assert(captured.code().join('0cs-cbmh')==true and asked[#asked]=='join 0CS-CBMH',tostring(asked[#asked]))
+    link_mode='host'
+    wh.mouse={700,450}
+    local x,y=captured.pointer()
+    assert(x==700 and y==450,'The page\'s mouse: the kit\'s pointer')
+    -- A page that does not build: one line, no page for the tab, the keys work on.
+    package.loaded['ui.kit.online_page']={new=function() error('no page today') end}
+    link_mode,link_code,link_stranger,settings_text='none',nil,nil,''
+    load_main(true)
+    package.loaded['ui.kit.online_page']=real
+    assert(table.concat(printed,'|'):find('[StellarCoop][PT] online page: off until the mod reloads: ',1,true)
+        and table.concat(printed,'|'):find('no page today',1,true) and pt.o.page==nil and pt.o.enter)
+    kit_ready=true; quarter()
+    key('F5'); assert(kit_shown.menu,'The co-op menu opens without the page')
+    key('ESCAPE'); in_world,kit_ready=false,false
+end)()
+
+-- The Online page's rows run through the co-op menu's own act and bind (ui/kit/menu.lua), which read the words and
+-- the file again at each call: a value written as the menu writes it; a confirm in the player's words while the co-op
+-- menu never opened; a key refused with the clash note as the file holds it now, the file unchanged; a free key taken
+-- (the first menu_key written turns host_key off); pause_tab=off in effect at once; Host a session and Invite run.
+;(function()
+    local page_o
+    local real=package.loaded['ui.kit.online_page']
+    package.loaded['ui.kit.online_page']={new=function(o) page_o=o; return real.new(o) end}
+    settings_text,status_text,link_mode,in_world,photo_mode='menu_key=F5\n',plain,'none',true,false
+    load_main(true)
+    package.loaded['ui.kit.online_page']=real
+    local ok,note=page_o.act('set','who_can_join','friends',page_o.ctx())
+    assert(ok==true and note==nil and settings_text:find('\nwho_can_join=friends\n',1,true),settings_text)
+    assert(logged('menu: who_can_join=friends saved in coop-settings.txt'),'Logged as the menu logs it')
+    kit_language='fr-FR'
+    local fr=require('ui.text').pick('fr-FR','game').confirm_leave
+    assert(fr~=require('ui.text').en.confirm_leave and select(2,page_o.act('confirm_leave'))==fr,
+        'The player\'s words, the menu closed')
+    fr=require('ui.text').pick('fr-FR','game').confirm_host
+    assert(fr~=require('ui.text').en.confirm_host and select(2,page_o.act('confirm_host'))==fr,
+        'Host a session asks first in the player\'s words')
+    -- The next act starts with no note: the confirm question never rides on a later press.
+    ok,note=page_o.act('set','who_can_join','public',page_o.ctx())
+    assert(ok==true and note==nil,'No note left from the confirm: '..tostring(note))
+    kit_language=nil
+    settings_text='status_key=Shift+F9\n'
+    local taken,written
+    taken,written,note=page_o.bind('menu_key','Shift+F9')
+    assert(taken==false and written==nil and note=='Show the status already uses this key.'
+        and settings_text=='status_key=Shift+F9\n',tostring(note))
+    taken,written,note=page_o.bind('menu_key','Shift+F7')
+    assert(taken==true and written==true and note==nil and settings_text:find('menu_key=Shift+F7\n',1,true)
+        and settings_text:find('host_key=none\n',1,true),settings_text)
+    assert(pt.o.enabled(),'The Online tab is on')
+    assert(page_o.act('set','pause_tab','off',page_o.ctx())==true and settings_text:find('pause_tab=off\n',1,true)
+        and not pt.o.enabled(),'pause_tab=off in effect at once')
+    -- Host a session from the page: the Create a session screen's request (its Start through
+    -- online/session/wiring.lua), with Who can join's value in effect, no screen opened. Invite runs in place.
+    -- The kit is up here, so a host asked without Who can join's word would open the Create a session screen.
+    kit_ready=true; quarter()
+    ok,note=page_o.act('host',nil,nil,page_o.ctx())
+    assert(ok==true and note==nil and asked[#asked]=='host public 4' and not cr.open,tostring(asked[#asked]))
+    local n=#asked
+    cr.o.act({host='public'})
+    assert(#asked==n+1 and asked[#asked]=='host public 4','Create a session\'s Start asks the same line')
+    assert(page_o.act('invite')==true and asked[#asked]=='invite','Invite in place')
+    in_world,kit_ready=false,false
+end)()
+
+-- A row of the Online page that needs the game world, once the pause tab closed the pause menu (its away): the co-op
+-- menu's own run. Find a session opens the Sessions screen, Host a session runs coop host as the menu's row does (the
+-- Create a session screen), Write a bug report asks report and puts the co-op menu's words for it on the notice line.
+;(function()
+    settings_text,status_text,link_mode,in_world,photo_mode='',plain,'none',true,false
+    load_main(true)
+    kit_ready=true; quarter()
+    pt.o.away('find'); assert(ss.calls[#ss.calls]=='open' and ss.open,'The Sessions screen')
+    ss.o.kit.input(false); ss.open=false
+    pt.o.away('host'); assert(cr.calls[#cr.calls]=='open' and cr.open,'coop host: the Create a session screen')
+    cr.o.kit.input(false); cr.open=false
+    pt.o.away('report')
+    assert(asked[#asked]=='report' and fed()=='The bug report goes to coop-report.txt in the mod folder.',fed())
+    in_world,kit_ready=false,false
+end)()
+
+-- The pause tab's open with a module page (its 'open_menu' answer; the Online page has no Test tools row since stage 3,
+-- F5 keeps them): the co-op menu opens on that page; with none, on its main page as before.
+;(function()
+    local menu_o
+    local real=package.loaded['ui.kit.menu']
+    package.loaded['ui.kit.menu']={new=function(o) menu_o=o; return real.new(o) end}
+    settings_text,status_text,link_mode,in_world,photo_mode='',plain,'none',true,false
+    load_main(true)
+    package.loaded['ui.kit.menu']=real
+    kit_ready=true; quarter()
+    pt.o.open(menu_o.pages()[1]); assert(kit_shown.menu and menu_view.title.s=="EVE's cut moves",menu_view.title.s)
+    key('ESCAPE'); key('ESCAPE'); pt.o.open(); assert(menu_view.title.s=='CO-OP' and focus()=='Host a session')
+    key('ESCAPE'); in_world,kit_ready=false,false
+end)()
+
+-- An F-key while a key row of the pause menu's Online page waits for a key: the pause tab's capture takes it and no
+-- action of ours runs; with no wait the key runs as before.
+;(function()
+    settings_text,status_text,link_mode,in_world,photo_mode='',plain,'none',true,false
+    load_main(true)
+    kit_ready=true; quarter()
+    pt.page,pt.capturing=true,true
+    key('F7')
+    assert(table.concat(pt.captures,' ')=='F7' and not logged('key F7: follow'),'Taken by the key row')
+    pt.capturing=false
+    key('F7')
+    assert(table.concat(pt.captures,' ')=='F7 F7' and logged('key F7: follow'),'No wait: F7 runs as before')
+    pt.page,in_world,kit_ready=false,false,false
+end)()
+
 -- The closet menu (closet/ui/menu.lua) is one of the screens main/base.lua's open_screen hands the keys to: Enter, Space,
 -- the arrows, WASD and E, Q (A on AZERTY) and F reach its nav; Esc goes back; coop ui reset closes it. Off, its loader stub
 -- answers nothing: no screen, no key.

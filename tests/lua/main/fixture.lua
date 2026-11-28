@@ -364,17 +364,24 @@ package.loaded['online.group.region_tabs']={new=function(o)
 end}
 -- The pause menu's Online tab: what pause_tab.new got, its ticks, the clocks of its events and clicks, its stops,
 -- armed() (pt.armed) and the ask its slow writes when the setting changes, as ui/kit/pause_tab.lua's does (pt.asked:
--- the last one written; tests/lua/ui/kit/pause_tab_test.lua tests the module itself).
-pt={o=nil,ticks=0,events={},clicks={},stops=0,armed=false,asked=nil}
+-- the last one written; tests/lua/ui/kit/pause_tab_test.lua tests the module itself); page_shown() (pt.page), the
+-- words its nav got (pt.navs) and the keys its capture got (pt.captures), taken while pt.capturing.
+pt={o=nil,ticks=0,events={},clicks={},stops=0,armed=false,asked=nil,page=false,navs={},captures={},capturing=false}
 package.loaded['ui.kit.pause_tab']={new=function(o)
-    pt.o,pt.ticks,pt.events,pt.clicks,pt.stops,pt.armed,pt.asked=o,0,{},{},0,false,nil
+    pt.o,pt.ticks,pt.events,pt.clicks,pt.stops,pt.armed,pt.asked,pt.page,pt.navs=o,0,{},{},0,false,nil,false,{}
+    pt.captures,pt.capturing={},false
     return {tick=function() pt.ticks=pt.ticks+1 end,
         slow=function()
             if pt.stops>0 or o.enabled()==pt.asked then return end
             if o.ask(o.enabled() and 'pausetab on' or 'pausetab off') then pt.asked=o.enabled() end
         end,
         event=function(now) pt.events[#pt.events+1]=now end,click=function(now) pt.clicks[#pt.clicks+1]=now end,
-        armed=function() return pt.armed end,stop=function() pt.stops=pt.stops+1 end}
+        armed=function() return pt.armed end,stop=function() pt.stops=pt.stops+1 end,
+        page_shown=function() return pt.page end,nav=function(word) pt.navs[#pt.navs+1]=word end,
+        capture=function(name)
+            pt.captures[#pt.captures+1]=name
+            return pt.capturing
+        end}
 end}
 package.loaded['online.modes.nightop.probe']={new=function(log,ask,status)
     probe={log=log,ask=ask,status=status}
@@ -886,7 +893,11 @@ package.loaded['online.session.ui.sessions']={new=function(o)
         close=function() said('close'); ss.open=false end,
         nav=function(what) said('nav',what) end,
         slow=function(shown) ss.slows[#ss.slows+1]=shown end,
-        tick=function() end}
+        tick=function() end,
+        -- The pause menu's Online page's three: ss.texts (or an empty Public list) and ss.ask_ok their answers.
+        enter=function() said('enter'); return true end,
+        texts=function() return ss.texts or {tab='Public',refresh='Refresh',status='',footer='',rows={}} end,
+        ask=function(what,i) said('ask',what,i); return ss.ask_ok~=false end}
 end}
 -- The Create a session screen (online/session/ui/create.lua; online/session/ui/create_test tests it), the same way:
 -- cr.o, cr.calls, cr.slows, cr.open and cr.refuse. As the real one, it opens only once its last slow said a world shows
@@ -1116,6 +1127,11 @@ nk={bits=0,missing=false}
 -- The native part's pause menu close (coop_pause_close): each call hands back answer of its three arguments (1 closed,
 -- 2 no pause menu, 3 off); calls: how often it was called; missing: an older DLL without it.
 pc={answer=1,calls=0,missing=false}
+-- The native part's Online page entry (coop_pause_enter) and tab read (coop_pause_page): each call hands back answer of
+-- its 5 or 12 arguments (enter: 1 entered to 5 off; page: 1 to 9 the tab, 10 other, 11 no pause menu, 12 off); calls:
+-- how often it was called; missing: an older DLL without it.
+pe={answer=1,calls=0,missing=false}
+pp={answer=11,calls=0,missing=false}
 -- source: the chunk name main.lua gets instead of its path in the repository, as UE4SS gives it ('@<path>'), which sets
 -- the mod folder.
 function load_main(with_native,no_folder,source)
@@ -1129,6 +1145,15 @@ function load_main(with_native,no_folder,source)
                 assert(select('#',...)==3,'Three arguments: the most the native part hands back')
                 pc.calls=pc.calls+1
                 return table.unpack({...},1,pc.answer)
+            end
+        end
+        if name=='coop_pause_enter' or name=='coop_pause_page' then
+            local fake,most=name=='coop_pause_enter' and pe or pp,name=='coop_pause_enter' and 5 or 12
+            if fake.missing then return nil,'not exported' end
+            return function(...)
+                assert(select('#',...)==most,name..': '..most..' arguments, the most it hands back')
+                fake.calls=fake.calls+1
+                return table.unpack({...},1,fake.answer)
             end
         end
         if name=='coop_stick' or name=='coop_held' or name=='coop_fkey' then
@@ -1181,6 +1206,7 @@ function load_main(with_native,no_folder,source)
         return true
     end
     pd.q,pd.calls,pc.calls,kit_lost={},0,0,nil
+    pe.calls,pp.calls=0,0
     wh.stick,wh.held,wh.fkey,wh.mouse,wh.centred=0,0,0,{1920,1080},0
     pr.bits,pr.levels,pr.calls=0,{1+32,1+65+32,1+130,1+195},0 -- At rest: the sticks centred, the triggers let go.
     kh.bits=0
@@ -1200,7 +1226,7 @@ function load_main(with_native,no_folder,source)
     gm.o,gm.ticks,gm.controllers,gm.toggles,gm.restores,gm.stops,gm.out,gm.hud,gm.starts=nil,0,{},0,0,{},nil,nil,0
     sb.seat,sb.seat_error,sb.sitting,sb.sat,sb.stands,sb.busy=nil,nil,nil,nil,0,false
     lb.o,lb.calls,lb.screen,lb.ask,lb.refuse,lb.slows,lb.ticks=nil,{},nil,nil,nil,0,{}
-    ss.o,ss.calls,ss.open,ss.refuse,ss.slows=nil,{},false,nil,{}
+    ss.o,ss.calls,ss.open,ss.refuse,ss.slows,ss.texts,ss.ask_ok=nil,{},false,nil,{},nil,nil
     cr.o,cr.calls,cr.open,cr.refuse,cr.slows=nil,{},false,nil,{}
     link_match,link_round,link_me,link_owner,link_uidev=nil,nil,nil,nil,nil
     rx.o,rx.ticks,rx.stops,rx.booked,rx.raise,rx.tick_raise,rx.stopped=nil,0,0,nil,nil,nil,nil

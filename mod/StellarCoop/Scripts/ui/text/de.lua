@@ -65,6 +65,7 @@ return {
     sit='Hinsetzen',stand='Aufstehen',
     line={prompt='Koop-Leitung',free='Die Leitung ist frei. Hoste eine Sitzung oder tritt einem Freund bei.',
         open='Deine Sitzung ist offen. Lade von hier aus einen Freund ein.',linked='Du bist mit %s verbunden.'},
+    confirm_host='Zum Hosten einer Online-Sitzung innerhalb von 3 s erneut auswählen.',
     confirm_leave='Zum Verlassen innerhalb von 3 s erneut auswählen.',
     confirm_remove='Zum Entfernen und Blockieren von %s innerhalb von 3 s erneut auswählen.',
     confirm_reset_keys='Zum Zurücksetzen aller Tasten innerhalb von 3 s erneut auswählen.',
@@ -440,6 +441,15 @@ return {
         entry='%d. %s %d',sep=', ',placed='Dein Platz: %d von %d.'},
     -- The pause menu's Online tab (ui/kit/pause_tab.lua): its word and the notice when the game stays paused.
     pause_tab={tab='Online',stuck='Das Spiel blieb pausiert, daher hat sich das Koop-Menü nicht geöffnet.'},
+    -- The pause menu's Online page (ui/kit/online_page.lua): the left list's categories and the section headers.
+    online_page={cat={session='Sitzung',players='Spieler',world='Gemeinsame Welt',combat='Kampf',modes='Spielmodi',
+        controls='Steuerung',display='Bildschirm',others='Andere Spieler',photo='Fotomodus',saves='Speicherstände',
+        help='Hilfe'},
+        sec={play='Online spielen',current='Diese Sitzung',hosting='Hosten',members='Mitglieder',
+        sharing='Was geteilt wird',travel='Reisen',difficulty='Schwierigkeitsstufe',rules='Regeln',modes='Modi',
+        keyboard='Tastatur und Maus',controller='Controller',features='Funktionen',all='Alle Tasten',
+        interface='Oberfläche',names='Namen',sky='Himmel',look='Aussehen',sound='Ton',motion='Bewegung',chat='Chat',
+        photo='Fotomodus',saves='Speicherstände',help='Hilfe'}},
     -- The emote wheel (ui/kit/wheel.lua, eve/ui/wheel.lua): its hints, the centre's word while nothing is pointed at
     -- (after StringTable_UI's UI_HUD_Gesture) and why it did not open.
     wheel={title='Soziale Aktion',release='Loslassen: abspielen',point='Zeigen',next='Nächste Kategorie',

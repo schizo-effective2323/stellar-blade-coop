@@ -60,6 +60,7 @@ return {
     sit='Sit',stand='Stand up',
     line={prompt='Co-op line',free='The line is free. Host a session or join a friend.',
         open='Your session is open. Invite a friend from here.',linked='On the line with %s.'},
+    confirm_host='Select again within 3 s to host an online session.',
     confirm_leave='Select again within 3 s to leave.',confirm_remove='Select again within 3 s to remove and block %s.',
     confirm_reset_keys='Select again within 3 s to reset every key.',
     reload='Saved. It takes effect when the mod reloads (game start or Ctrl+R).',
@@ -522,6 +523,14 @@ return {
         top='Photo hunt: %s.',entry='%d. %s %d',sep=', ',placed='You placed %d of %d.'},
     -- The pause menu's Online tab (ui/kit/pause_tab.lua): its word and the notice when the game stays paused.
     pause_tab={tab='Online',stuck='The game stayed paused, so the co-op menu did not open.'},
+    -- The pause menu's Online page (ui/kit/online_page.lua): the left list's categories and the section headers.
+    online_page={cat={session='Session',players='Players',world='Shared world',combat='Combat',modes='Game modes',
+        controls='Controls',display='Display',others='Other players',photo='Photo mode',saves='Saves',help='Help'},
+        sec={play='Play online',current='This session',hosting='Hosting',members='Members',
+        sharing='What is shared',travel='Travel',difficulty='Difficulty',rules='Rules',modes='Modes',
+        keyboard='Keyboard and mouse',controller='Controller',features='Features',all='All keys',interface='Interface',
+        names='Names',sky='Sky',look='Look',sound='Sound',motion='Motion',chat='Chat',photo='Photo mode',saves='Saves',
+        help='Help'}},
     -- The emote wheel (ui/kit/wheel.lua, eve/ui/wheel.lua): its hints, the centre's word while nothing is pointed at
     -- (after StringTable_UI's UI_HUD_Gesture) and why it did not open.
     wheel={title='Social action',release='Release: play',point='Point',next='Next category',

@@ -63,6 +63,7 @@ return {
     sit='Sæt dig',stand='Rejs dig',
     line={prompt='Co-op-linje',free='Linjen er ledig. Vær vært for en session, eller deltag i en vens spil.',
         open='Din session er åben. Invitér en ven herfra.',linked='Forbundet med %s.'},
+    confirm_host='Vælg igen inden for 3 s for at være vært for en onlinesession.',
     confirm_leave='Vælg igen inden for 3 s for at forlade sessionen.',
     confirm_remove='Vælg igen inden for 3 s for at fjerne og blokere %s.',
     confirm_reset_keys='Vælg igen inden for 3 s for at nulstille alle taster.',
@@ -415,6 +416,15 @@ return {
         top='Fotojagt: %s.',entry='%d. %s %d',sep=', ',placed='Du blev nummer %d af %d.'},
     -- The pause menu's Online tab (ui/kit/pause_tab.lua): its word and the notice when the game stays paused.
     pause_tab={tab='Online',stuck='Spillet blev på pause, så co-op-menuen åbnede ikke.'},
+    -- The pause menu's Online page (ui/kit/online_page.lua): the left list's categories and the section headers.
+    online_page={cat={session='Session',players='Spillere',world='Delt verden',combat='Kamp',modes='Spiltilstande',
+        controls='Taster',display='Visning',others='Andre spillere',photo='Fototilstand',saves='Gemte spil',
+        help='Hjælp'},
+        sec={play='Spil online',current='Denne session',hosting='Vært',members='Medlemmer',
+        sharing='Hvad der deles',travel='Rejse',difficulty='Sværhedsgrad',rules='Regler',modes='Tilstande',
+        keyboard='Tastatur og mus',controller='Controller',features='Funktioner',all='Alle taster',
+        interface='Brugerflade',names='Navne',sky='Himmel',look='Udseende',sound='Lyd',motion='Bevægelse',chat='Chat',
+        photo='Fototilstand',saves='Gemte spil',help='Hjælp'}},
     -- The emote wheel (ui/kit/wheel.lua, eve/ui/wheel.lua): its hints, the centre's word while nothing is pointed at
     -- (after StringTable_UI's UI_HUD_Gesture) and why it did not open.
     wheel={title='Social handling',release='Slip: afspil',point='Peg',next='Næste kategori',

@@ -63,6 +63,7 @@ return {
     sit='Сесть',stand='Встать',
     line={prompt='Линия кооператива',free='Линия свободна. Создайте сессию или присоединитесь к другу.',
         open='Ваша сессия открыта. Пригласите друга отсюда.',linked='На линии: %s.'},
+    confirm_host='Чтобы создать онлайн-сессию, выберите еще раз в течение 3 сек.',
     confirm_leave='Чтобы выйти, выберите еще раз в течение 3 сек.',
     confirm_remove='Исключить и заблокировать: %s? Выберите еще раз в течение 3 сек.',
     confirm_reset_keys='Чтобы сбросить все клавиши, выберите еще раз в течение 3 сек.',
@@ -417,6 +418,15 @@ return {
         top='Фотоохота: %s.',entry='%d. %s %d',sep=', ',placed='Ваше место: %d из %d.'},
     -- The pause menu's Online tab (ui/kit/pause_tab.lua): its word and the notice when the game stays paused.
     pause_tab={tab='Онлайн',stuck='Игра осталась на паузе, поэтому меню кооператива не открылось.'},
+    -- The pause menu's Online page (ui/kit/online_page.lua): the left list's categories and the section headers.
+    online_page={cat={session='Сессия',players='Игроки',world='Общий мир',combat='Бой',modes='Режимы игры',
+        controls='Управление',display='Экран',others='Другие игроки',photo='Фоторежим',saves='Сохранения',
+        help='Справка'},
+        sec={play='Игра онлайн',current='Эта сессия',hosting='Хост',members='Участники',
+        sharing='Что общее',travel='Перемещение',difficulty='Сложность',rules='Правила',modes='Режимы',
+        keyboard='Клавиатура и мышь',controller='Контроллер',features='Функции',all='Все клавиши',interface='Интерфейс',
+        names='Имена',sky='Небо',look='Внешний вид',sound='Звук',motion='Движение',chat='Чат',photo='Фоторежим',
+        saves='Сохранения',help='Справка'}},
     -- The emote wheel (ui/kit/wheel.lua, eve/ui/wheel.lua): its hints, the centre's word while nothing is pointed at
     -- (after StringTable_UI's UI_HUD_Gesture) and why it did not open.
     wheel={title='Социальное действие',release='Отпустить: показать',point='Навести',next='Следующая категория',

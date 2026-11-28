@@ -64,6 +64,7 @@ return {
     sit='Sentarse',stand='Levantarse',
     line={prompt='Línea co-op',free='La línea está libre. Crea una sesión o únete a un amigo.',
         open='Tu sesión está abierta. Invita a un amigo desde aquí.',linked='En línea con %s.'},
+    confirm_host='Vuelve a seleccionar en menos de 3 s para crear una sesión en línea.',
     confirm_leave='Vuelve a seleccionar en menos de 3 s para salir.',
     confirm_remove='Vuelve a seleccionar en menos de 3 s para expulsar y bloquear a %s.',
     confirm_reset_keys='Vuelve a seleccionar en menos de 3 s para restablecer todas las teclas.',
@@ -427,6 +428,15 @@ return {
         top='Caza de fotos: %s.',entry='%d. %s %d',sep=', ',placed='Tu puesto: %d de %d.'},
     -- The pause menu's Online tab (ui/kit/pause_tab.lua): its word and the notice when the game stays paused.
     pause_tab={tab='En línea',stuck='El juego siguió en pausa, así que el menú co-op no se abrió.'},
+    -- The pause menu's Online page (ui/kit/online_page.lua): the left list's categories and the section headers.
+    online_page={cat={session='Sesión',players='Jugadores',world='Mundo compartido',combat='Combate',
+        modes='Modos de juego',controls='Controles',display='Pantalla',others='Otros jugadores',photo='Modo foto',
+        saves='Guardado',help='Ayuda'},
+        sec={play='Jugar en línea',current='Esta sesión',hosting='Anfitrión',members='Miembros',
+        sharing='Qué se comparte',travel='Viaje',difficulty='Dificultad',rules='Reglas',modes='Modos',
+        keyboard='Teclado y ratón',controller='Mando',features='Funciones',all='Todas las teclas',interface='Interfaz',
+        names='Nombres',sky='Cielo',look='Apariencia',sound='Sonido',motion='Movimiento',chat='Chat',photo='Modo foto',
+        saves='Partidas guardadas',help='Ayuda'}},
     -- The emote wheel (ui/kit/wheel.lua, eve/ui/wheel.lua): its hints, the centre's word while nothing is pointed at
     -- (after StringTable_UI's UI_HUD_Gesture) and why it did not open.
     wheel={title='Acción social',release='Soltar: reproducir',point='Apuntar',next='Siguiente categoría',

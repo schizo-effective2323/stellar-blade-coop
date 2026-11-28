@@ -13,10 +13,10 @@ The keys work with or without the console. They need the native part (`StellarCo
 
 | Key (default) | Action | Console equivalent |
 | --- | --- | --- |
-| F5 | Open or close the [co-op menu](players/interface.md#co-op-menu); its first row hosts a session. Within 3 m of a camp phone booth, open the [co-op line](players/interface.md#co-op-line) instead. In the [SBO lobby](online/lobby.md#the-lobby-menu), open the lobby menu, or sit on a hall seat within 1.5 m that has no chair | (none) |
+| F5 | Open or close the [co-op menu](players/interface.md#co-op-menu), the menu for admins and debugging (Test tools). Players use the Online tab of the pause menu. Within 3 m of a camp phone booth, open the [co-op line](players/interface.md#co-op-line) instead. In the [SBO lobby](online/lobby.md#the-lobby-menu), open the lobby menu, or sit on a hall seat within 1.5 m that has no chair | (none) |
 | View held 1 s, on a [controller](players/interface.md#controller) | Open or close the co-op menu, the co-op line at a booth, or the lobby menu in the SBO lobby | (none) |
 | LB, RB, on a controller | Change the tab of the SBO lobby's Settings screen, of the [Sessions screen](players/interface.md#sessions-screen) or of the Stellar Closet menu | (none) |
-| RB or E on the Settings tab of the game's pause menu, or a click on its Online tab | Close the pause menu and open the co-op menu ([Pause menu](players/interface.md#pause-menu)) | (none) |
+| RB or E on the Settings tab of the game's pause menu, or a click on its Online tab | Open the Online page: host, find or join an online session, the settings, the guide and the bug report ([Pause menu](players/interface.md#pause-menu)) | (none) |
 | Y, on a controller | Refresh the Sessions screen's list, or stop the search that runs | `coop list public\|friends` |
 | F6 | Show the status: one line on screen (see [Notices](players/interface.md#notices)) and in `UE4SS.log` | (a short form of `coop status`) |
 | F7 | As the guest, travel to where the host last stood on solid ground (from another map, through the camp nearest him first), or cancel the travel that `follow_host=always` is about to start ([Following the host](players/playing-with-a-friend.md#following-the-host)). On the death screen, while its offer shows, get up in place and go back to a living friend on your map, or cancel `always`'s way back ([Back to a friend after a death](players/playing-with-a-friend.md#back-to-a-friend-after-a-death)) | `coop travel host` |

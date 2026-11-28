@@ -200,6 +200,24 @@ assert(rt.o.ready()==true,'A link and a player controller: the teleport tabs may
 cv.pc=nil; assert(rt.o.ready()==false,'No player controller yet'); cv.pc=cv.stale
 assert(rt.o.ready()==false,'Another object at the old address'); cv.pc=cv.PC
 assert(pt.o.ready()==true and pt.o.enabled()==true,'The pause menu\'s Online tab: as the teleport tabs, on by default')
+-- The Online page's two native reads (main/boot.lua), handed to the tab: how many of 5 (coop_pause_enter) or 12
+-- (coop_pause_page) arguments come back is the answer, as a word or a tab; any other count is nil and why.
+for n,word in ipairs({'entered','shown','none','locked','off'}) do
+    pe.answer=n
+    local got=pt.o.enter()
+    assert(got==word,'coop_pause_enter '..n..': '..tostring(got))
+end
+for n=1,9 do pp.answer=n; assert(pt.o.tab()==n,'coop_pause_page '..n) end
+for n,word in pairs({[10]='other',[11]='none',[12]='off'}) do
+    pp.answer=n; assert(pt.o.tab()==word,'coop_pause_page '..n)
+end
+pe.answer,pp.answer=0,0
+local no_word,no_why=pt.o.enter()
+assert(no_word==nil and no_why=='coop_pause_enter answered 0')
+no_word,no_why=pt.o.tab()
+assert(no_word==nil and no_why=='coop_pause_page answered 0')
+assert(pe.calls==6 and pp.calls==13,pe.calls..' '..pp.calls)
+pe.answer,pp.answer=1,11
 assert(ra.steers==2 and ra.steered_at==1,'The driving each frame, before the native tick: the pose has its yaw')
 -- coop race: its words to online/modes/race/run.lua (record, cp, save, cancel, quit on any slot), its start on the
 -- co-op save slot only; race.new got the [DR] logger, the link, the ghost, the Doro look, the notices, Night
@@ -1298,6 +1316,17 @@ assert(logged('ghost: K2_DestroyActor: no world') and notice_stops==stops+1 and 
     and last()=='[StellarCoop] OK: asked the native part: off\n',last())
 toggle_raise,active=nil,false
 status_text='mod=v proto=3 steam=ready\nlink=none lobby=0\nlast=#1 ready\n'
+-- An older DLL without the Online page's exports: each read gives nil and the loadlib reason. Nothing is called.
+pe.missing,pp.missing=true,true
+load_main(true)
+do
+    local word,why=pt.o.enter()
+    assert(word==nil and why=='the native part has no coop_pause_enter (not exported)',tostring(why))
+    word,why=pt.o.tab()
+    assert(word==nil and why=='the native part has no coop_pause_page (not exported)',tostring(why))
+    assert(pe.calls==0 and pp.calls==0)
+end
+pe.missing,pp.missing=false,false
 
 -- closet_key (F1 unless set) runs the closet action: the closet menu's toggle (closet/ui/menu.lua), which opens it or
 -- is its Back; a refused open is reported. The loader stub of an off closet module takes the press and raises nothing.

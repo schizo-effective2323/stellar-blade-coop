@@ -3,14 +3,27 @@
 -- SBO License 1.0 or later, in LICENSE and at github.com/MotherSphere/stellar-blade-coop; NOTICE adds a permission.
 -- The pause menu's Online tab (ui/kit/pause_tab.lua) over fakes. Covered: nothing before the game is ready; the class
 -- loaded, the keeper made and the Construct hook registered once; a Construct adds one button after SB's 8 with the
--- word, SB's last button's style, RefreshDesign and HitTestInvisible; a second Construct adds none; a row rebuilt to
--- SB's 8 gets it again at the next slow while paused; a click over the button closes the pause menu once through the
--- native part's close (SB's own, never the widget's CloseSelf), one elsewhere or with no pause menu does nothing; RB
--- closes it, the co-op menu opens at the first tick after the unpause, or after 2 s still paused a give-up line and
--- notice; a close refused for now logs one line and waits for nothing, one that can never work stops the tab with one
--- STOP line and asks pausetab off; pause_tab off makes nothing and asks pausetab off; the asks:
--- once a change, a refused one again at the next slow and logged once; a pause menu of another shape stops the tab
--- with one STOP line and asks pausetab off; coop off stops it.
+-- word, SB's last button's style, RefreshDesign, the visibilities of SB's last button and of its Button_Action; a
+-- button without Button_Action stops the tab and leaves no half-made button; a second Construct adds none; a row
+-- rebuilt to SB's 8 gets it again at the next slow while paused. With no page: a click over the Button (its IsHovered,
+-- not the button's; the cached geometry is never read) closes the pause menu once through the native part's close (SB's
+-- own, never the widget's CloseSelf), one elsewhere or with no pause menu does nothing; RB closes it, the co-op menu
+-- opens at the first tick after the unpause, or after 2 s still paused a give-up line and notice; a close refused for
+-- now logs one line and waits for nothing, one that can never work stops the tab with one STOP line and asks pausetab
+-- off; pause_tab off makes nothing and asks pausetab off; the asks: once a change, a refused one again at the next slow
+-- and logged once; a pause menu of another shape stops the tab with one STOP line and asks pausetab off; coop off stops
+-- it. With a page: RB and a hovered click read the tab, build the page, enter, show it, focus our button and defocus
+-- SB's button of the tab left, with the shown line and SB's pages now and 0.5 s later; each click logs both hovers in
+-- one line and SB's tab one frame later; on tab 9 the page's mouse look runs each frame (a page off there takes the
+-- fault path); the page hides when SB shows another tab or the menu closed; it forgets the master when that is gone;
+-- Open the co-op menu closes then opens the co-op menu, back in the list closes only; the entry's locked and none
+-- change nothing with one line each, off or a page that does not build take the path before the page; a page that turns
+-- off while shown closes and opens the co-op menu; coop off hides it with SB's close. The page's nav and click get the
+-- clock; their 'close' (the Online tab written off on the page) closes the pause menu with no co-op menu. An F-key goes
+-- to the page's capture only while the page shows. Their 'away' and a row's id close the pause menu, then run that row
+-- once unpaused (o.away), or give up after 2 s; a run that raises is one line.
+-- A freed pause menu or button (the crash of 25 November 2026): no read of it from the frame's hover look, a click or
+-- LB and RB; a rebuilt row gets ours again; another widget at the kept button's address is not asked.
 package.path='mod/StellarCoop/Scripts/?.lua;'..package.path
 local MASTER='/Game/Art/UI/Widget/GameMenu/WB_GameMenu_Master.WB_GameMenu_Master'
 local MASTER_KEEPER=MASTER..'.StellarCoop_PauseTabKeeper'
@@ -22,17 +35,33 @@ local function object(fields)
     fields.type=function() return 'UObject' end
     fields.IsValid=function() return true end
     fields.GetAddress=function() return address end
+    fields.GetFullName=fields.GetFullName or function() return 'Widget '..address end
     return fields
+end
+-- SB freed this widget: it reads invalid. Any other read of it counts in touched: in the game such a read crashes
+-- inside UE4SS, where no pcall reaches.
+local touched=0
+local function free(o)
+    local kept={}
+    for k,v in pairs(o) do kept[k]=v end
+    for k in pairs(kept) do o[k]=nil end
+    setmetatable(o,{__index=function(_,k)
+        if k=='type' or k=='GetAddress' then return kept[k] end
+        if k=='IsValid' then return function() return false end end
+        touched=touched+1
+        return kept[k]
+    end})
 end
 local missing=setmetatable({},{__index=function(_,k)
     if k=='type' then return function() return 'UObject' end end
     if k=='IsValid' then return function() return false end end
 end})
 local logs,hooks,objects,loaded,constructed
-local mouse,under,ask_refusal
+-- hovered: our Button_Action's IsHovered; widget_hovered: our button's own (the user widget's).
+local hovered,widget_hovered,ask_refusal
 local function reset()
     logs,hooks,objects,loaded,constructed={},{},{},{},{}
-    mouse,under,ask_refusal={X=10,Y=20},false,nil
+    hovered,widget_hovered,ask_refusal=false,false,nil
 end
 reset()
 StaticFindObject=function(path) return objects[path] or missing end
@@ -48,21 +77,23 @@ end
 FName=function(s) return s end
 FText=function(s) return s end
 RegisterHook=function(path,f) hooks[#hooks+1]={path=path,f=f} end
-local function libraries()
-    objects['/Script/UMG.Default__WidgetLayoutLibrary']=object({GetMousePositionOnPlatform=function() return mouse end})
-    objects['/Script/UMG.Default__SlateBlueprintLibrary']=object({IsUnderLocation=function(_,geometry,at)
-        assert(geometry.cached and at==mouse)
-        return under
-    end})
-end
 local Tab=require('ui.kit.pause_tab')
 
--- A pause menu whose tab row holds SB's 8 buttons, each with the five style fields.
-local function menu(no_tap_set)
+-- SB's focus look on a tab button, counted.
+local function looks(fields)
+    fields.focus,fields.defocus=0,0
+    fields.FocusTabButton=function(self) self.focus=self.focus+1 end
+    fields.DefocusTabButton=function(self) self.defocus=self.defocus+1 end
+    return fields
+end
+-- A pause menu whose tab row holds SB's 8 buttons, each with the five style fields, SelfHitTestInvisible with a
+-- Visible Button_Action; no_action: ours has no Button_Action.
+local function menu(no_tap_set,no_action)
     local buttons,class={},object()
     local function button(i)
-        return object({TextWidthValue=200+i,MinTextMargin=10+i,TextColor='color'..i,TextFont='font'..i,
-            TextShadowColor='shadow'..i})
+        return object(looks({TextWidthValue=200+i,MinTextMargin=10+i,TextColor='color'..i,TextFont='font'..i,
+            TextShadowColor='shadow'..i,GetVisibility=function() return 4 end,
+            Button_Action=object({GetVisibility=function() return 0 end})}))
     end
     for i=1,8 do buttons[i]=button(i) end
     local row=object({
@@ -75,11 +106,14 @@ local function menu(no_tap_set)
     local tabs=object({TabButtonClass=class,TabButtonContainer=row,
         CreateDynamicChildUserWidget=function(_,c,panel)
             assert(c==class and panel==row)
-            local made=object({refreshed=0,
+            local made=object(looks({refreshed=0,
                 TextBlock=object({SetText=function(self,t) self.text=t end}),
+                Button_Action=not no_action and object({SetVisibility=function(self,v) self.visibility=v end,
+                    IsHovered=function() return hovered end}) or nil,
                 RefreshDesign=function(self) self.refreshed=self.refreshed+1 end,
                 SetVisibility=function(self,v) self.visibility=v end,
-                GetCachedGeometry=function() return {cached=true} end})
+                IsHovered=function() if widget_hovered=='raise' then error('refused') end return widget_hovered end,
+                GetCachedGeometry=function() error('the cached geometry was read') end}))
             buttons[#buttons+1]=made
             return made
         end})
@@ -89,13 +123,19 @@ local function menu(no_tap_set)
     return m,buttons
 end
 
-local function new(t)
-    t=t or {}
-    -- closes: the native closes asked; answer: what the next ones return (closed by default).
-    local s={opens=0,notices=0,asks={},paused=true,enabled=true,ready=true,closes=0,answer={true}}
-    s.tab=Tab.new({log=function(line) logs[#logs+1]=line end,ready=function() return s.ready end,
+local function new(page)
+    -- closes: the native closes asked; answer: what the next ones return (closed by default). enters, tabs: the native
+    -- entry's and tab read's calls; entry, now: what they answer.
+    local s={opens=0,notices=0,asks={},paused=true,enabled=true,ready=true,closes=0,answer={true},enters=0,tabs=0,
+        entry='entered',now=8}
+    s.sounds,s.aways={},{} -- aways: the ids o.away ran; away_raise: it raises that.
+    s.tab=Tab.new({log=function(line) logs[#logs+1]=line end,ready=function() return s.ready end,page=page,
+        sound=function(name) s.sounds[#s.sounds+1]=name end,
+        enter=page and function() s.enters=s.enters+1; return s.entry end or nil,
+        tab=page and function() s.tabs=s.tabs+1; return s.now end or nil,
         enabled=function() return s.enabled end,word=function() return 'Online' end,
-        paused=function() return s.paused end,open=function() s.opens=s.opens+1 end,
+        paused=function() return s.paused end,open=function(p) s.opens,s.opened=s.opens+1,p end,
+        away=function(id) s.aways[#s.aways+1]=id; if s.away_raise then error(s.away_raise) end end,
         notice=function() s.notices=s.notices+1 end,
         ask=function(line)
             s.asks[#s.asks+1]=line
@@ -121,7 +161,7 @@ assert(#loaded==1 and loaded[1]==MASTER and #constructed==1 and constructed[1].i
 assert(#hooks==1 and hooks[1].path==MASTER..'_C:Construct' and #logs==1 and logs[1]:find('hook on',1,true),
     'One Construct hook')
 
--- A Construct: our button after SB's 8, with the word, SB's last button's style, refreshed and HitTestInvisible.
+-- A Construct: our button after SB's 8, with the word, SB's last button's style and visibilities, refreshed.
 local m,buttons=menu()
 construct(m)
 local ours=buttons[9]
@@ -129,7 +169,8 @@ assert(#buttons==9 and ours.TextValue=='Online' and ours.TextBlock.text=='Online
 for _,k in ipairs({'TextWidthValue','MinTextMargin','TextColor','TextFont','TextShadowColor'}) do
     assert(ours[k]==buttons[8][k],'Style copied from SB\'s last button: '..k)
 end
-assert(ours.refreshed==1 and ours.visibility==3,'RefreshDesign once, HitTestInvisible')
+assert(ours.refreshed==1 and ours.visibility==4 and ours.Button_Action.visibility==0,
+    'RefreshDesign once; ours and its Button_Action take the mouse as SB\'s last button and its Button_Action')
 construct(m)
 assert(#buttons==9,'A second Construct of that pause menu adds none')
 -- The asks: pausetab on at the first slow, none while nothing changes.
@@ -142,11 +183,11 @@ assert(#buttons==8,'Not paused: the row is left alone')
 s.paused=true; s.tab.slow()
 assert(#buttons==9 and buttons[9]~=ours and buttons[9].TextValue=='Online','Added again')
 
--- A click: over the button closes the pause menu once; elsewhere nothing.
-libraries()
+-- A click: over the Button (its IsHovered; the button's own answers no, as in the game) closes the pause menu once;
+-- elsewhere nothing.
 assert(s.tab.armed(),'Armed while a pause menu has our button')
 s.tab.click(1); assert(s.closes==0,'A click elsewhere: nothing')
-under=true
+hovered=true
 s.tab.click(1); s.tab.click(1.1)
 assert(s.closes==1 and m.closes==0 and not s.tab.armed(),
     'A click over the button: closed once by SB\'s own close, then no pause menu')
@@ -189,11 +230,11 @@ local m10,b10=menu(); construct(m10)
 assert(#b9==9 and #b10==8 and m9.closes==0,'Stopped: no more buttons')
 
 -- pause_tab off: no button, RB and a click do nothing, pausetab off asked at the next slow.
-reset(); libraries()
+reset()
 s=new(); s.tab.tick(0)
 s.enabled=false
 local m3,b3=menu(); construct(m3)
-s.tab.event(1); under=true; s.tab.click(1)
+s.tab.event(1); hovered=true; s.tab.click(1)
 assert(#b3==8 and s.closes==0 and m3.closes==0 and not s.tab.armed() and #logs==1,'Off: nothing')
 s.tab.slow(); assert(s.asks[1]=='pausetab off','Off asked')
 -- A refused ask: asked again at the next slow, logged once.
@@ -246,4 +287,238 @@ do
     StaticFindObject=saved_find
     Keep.reset()
 end
+-- A tab button without Button_Action: one STOP line, the half-made button removed.
+reset()
+s=new(); s.tab.tick(0)
+local m11,b11=menu(false,true); construct(m11)
+assert(#b11==8 and logs[#logs]:find('^STOP: ') and logs[#logs]:find('the tab button has no Button_Action; the pause '
+    ..'menu keeps its 8 tabs until the mod reloads$'),logs[#logs])
+
+-- With the page (a fake of ui/kit/online_page.lua's): what it was asked, in order.
+local function fake_page()
+    local p={calls={},on=false,off=false,built=true,answer=nil,clicked=nil,vis='WB_GameMenu_Setting=Hidden',ticks={}}
+    local function note(...) p.calls[#p.calls+1]=table.concat({...},' ') end
+    p.page={build=function(m) note('build'); p.master=m; return p.built,not p.built and 'no canvas' or nil end,
+        show=function(on) note('show',tostring(on)); if not p.off then p.on=on end end,
+        shown=function() return p.on end,
+        nav=function(word,now) note('nav',word); p.nav_at=now; return p.answer,p.arg end,
+        click=function(now) note('click'); p.click_at=now; return p.clicked,p.arg end,
+        capture=function(name)
+            note('capture',name)
+            if p.capture_off then p.off,p.on=true,false end
+            return p.capturing
+        end,
+        tick=function(now) p.ticks[#p.ticks+1]=now; if p.tick_off then p.off,p.on=true,false end end,
+        visibility=function() return p.vis end,
+        forget=function() note('forget'); p.on=false end,
+        off=function() return p.off end}
+    return p
+end
+local function count(list,text) local n=0 for _,l in ipairs(list) do if l==text then n=n+1 end end return n end
+-- RB on Settings: the tab read, the page built, the entry, the page shown; our button focused, SB's Settings button
+-- defocused; the shown line and SB's pages now and 0.5 s later.
+reset()
+local p=fake_page()
+s=new(p.page); s.tab.tick(0)
+local m12,b12=menu(); construct(m12)
+s.tab.event(10)
+assert(s.tabs==1 and s.enters==1 and table.concat(p.calls,',')=='build,show true' and p.master==m12,
+    table.concat(p.calls,','))
+assert(b12[9].focus==1 and b12[8].defocus==1 and b12[7].defocus==0 and s.closes==0,'Ours focused, Settings defocused')
+assert(s.tab.page_shown() and logged('online page shown (from tab 8, by LB or RB)')
+    and logs[#logs]=="online page: SB's pages after the deactivate: WB_GameMenu_Setting=Hidden",logs[#logs])
+s.now=9
+s.tab.tick(10.2); assert(not logged('0.5 s after'),'Not yet')
+p.vis='WB_GameMenu_Setting=Collapsed'
+s.tab.tick(10.6); s.tab.tick(10.7)
+assert(count(logs,"online page: SB's pages 0.5 s after the deactivate: WB_GameMenu_Setting=Collapsed")==1)
+assert(table.concat(p.ticks,' ')=='10.2 10.6 10.7','The page\'s mouse look each frame on tab 9')
+-- The keys: a move stays on the page; back in the list closes the pause menu only (no co-op menu).
+s.tab.nav('down',10.8); assert(s.closes==0 and p.calls[#p.calls]=='nav down')
+p.answer='close'; s.tab.nav('back',10.9)
+assert(s.closes==1 and not s.tab.page_shown() and b12[9].defocus==1,'Back in the list: SB\'s close, the page hidden')
+s.paused=false; s.tab.tick(11); assert(s.opens==0,'No co-op menu after Back')
+-- Open the co-op menu: SB's close, then the co-op menu once unpaused.
+s.paused=true; p.answer=nil
+local m13=menu(); construct(m13)
+s.now=8; s.tab.event(20); s.now=9
+p.answer='open_menu'; s.tab.nav('select',20.05)
+assert(s.closes==2 and not s.tab.page_shown(),'Open the co-op menu: SB\'s close')
+s.tab.tick(20.1); assert(s.opens==0,'Still paused: not yet')
+s.paused=false; s.tab.tick(20.2); assert(s.opens==1,'Then the co-op menu')
+-- A hovered click: the same entry by a click; SB's tab one frame later. Each click: both answers in one line.
+s.paused,p.answer,hovered=true,nil,false
+local m14,b14=menu(); construct(m14)
+s.now=3
+-- The mouse onto our tab: the hover sound once as it arrives, again only after it left.
+hovered=true; s.tab.tick(29); s.tab.tick(29.2)
+assert(count(s.sounds,'move')==1,'Once as the mouse arrives')
+hovered=false; s.tab.tick(29.4); hovered=true; s.tab.tick(29.6)
+assert(count(s.sounds,'move')==2,'Again after it left')
+hovered=false; s.tab.tick(29.8)
+widget_hovered=true
+s.tab.click(30); s.tab.click(30.1)
+assert(count(logs,'click: Online tab hovered: Button_Action no, tab button yes')==2
+    and p.calls[#p.calls]=='show false','Not over the Button: one line each click, no entry')
+widget_hovered='raise' -- The question asked for the log alone is refused: one line, the tab goes on.
+s.tab.click(30.15)
+assert(logged('click: Online tab hovered: Button_Action no, tab button refused') and s.tab.armed())
+hovered,widget_hovered=true,false
+s.tab.click(30.2)
+assert(logged('click: Online tab hovered: Button_Action yes, tab button no')
+    and s.sounds[#s.sounds]=='wheel_move' and logged('online page shown (from tab 3, by a click)')
+    and b14[3].defocus==1 and b14[9].focus==1)
+s.now=9
+s.tab.tick(30.3)
+assert(logged("click: one frame later SB's pause menu shows tab 9"),logs[#logs])
+-- A click while the page shows is the page's: on Open the co-op menu SB's close, then the co-op menu.
+p.clicked='open_menu'; s.tab.click(30.4)
+assert(p.calls[#p.calls-1]=='click' and s.closes==3 and not s.tab.page_shown())
+p.clicked,s.paused=nil,false
+s.tab.tick(30.5); assert(s.opens==2,'Then the co-op menu')
+s.paused=true
+-- SB leaves tab 9 by itself: another tab, a close, the menu gone.
+local m15,b15=menu(); construct(m15)
+s.now=8; s.tab.event(40)
+s.now=1; s.tab.tick(40.1)
+assert(not s.tab.page_shown() and logs[#logs]=='online page hidden: SB shows tab 1' and b15[9].defocus==1)
+s.now=8; s.tab.event(41); s.now='none'; s.tab.tick(41.1)
+assert(logs[#logs]=='online page hidden: the pause menu closed')
+s.now=8; s.tab.event(42); s.now=9
+m15.IsValid=function() return false end
+s.tab.tick(42.1)
+assert(logs[#logs]=='online page hidden: the pause menu is gone' and p.calls[#p.calls]=='forget')
+assert(s.closes==3,'SB closed it by itself: no close of ours')
+-- The entry's answers: locked and none change nothing, one line each; off takes the path before the page.
+local m16=menu(); construct(m16)
+local calls=#p.calls
+s.now=8; s.entry='locked'; s.tab.event(50)
+assert(logs[#logs]=="online page: SB's tab lock is on; nothing changed" and not s.tab.page_shown())
+s.entry='none'; s.tab.event(51)
+assert(logs[#logs]=='online page: the game has no pause menu open' and not s.tab.page_shown() and s.closes==3)
+assert(table.concat(p.calls,',',calls+1)=='build,build','Built, never shown')
+s.entry='off'; s.tab.event(52)
+assert(logged('online page: not entered (off)') and s.closes==4)
+s.paused=false; s.tab.tick(52.1); assert(s.opens==3,'The path before the page: the co-op menu')
+-- A page that does not build: the path before the page.
+s.paused,s.entry,p.built=true,'entered',false
+local m17=menu(); construct(m17)
+s.tab.event(60); assert(s.closes==5 and not s.tab.page_shown())
+p.built=true
+-- A page that turns off while shown: SB's close, the co-op menu, one line; in its mouse look too.
+local m18,b18=menu(); construct(m18)
+s.tab.event(70); s.now=9
+p.off=true; p.on=false
+s.tab.nav('down',70.1)
+assert(logged('online page: off while shown; the pause menu closes and the co-op menu opens as before')
+    and s.closes==6 and b18[9].defocus==1)
+p.off=false
+local m20,b20=menu(); construct(m20)
+s.now=8; s.tab.event(75); s.now=9
+p.tick_off=true; s.tab.tick(75.1); p.tick_off=false
+assert(count(logs,'online page: off while shown; the pause menu closes and the co-op menu opens as before')==2
+    and s.closes==7 and b20[9].defocus==1 and not s.tab.page_shown(),'Off in its mouse look: the same path')
+p.off=false
+-- coop off with the page shown: hidden, SB's close once, one line; no more buttons.
+local m19=menu(); construct(m19)
+s.tab.event(80)
+s.tab.stop()
+assert(not s.tab.page_shown() and s.closes==8 and logged('online page hidden: coop off') and not s.tab.armed())
+-- The page's nav and click get the clock (a confirm row's 3 s window). The Online tab written off on the page (nav or
+-- a click answering close): SB's close, no co-op menu after it.
+reset()
+p=fake_page()
+s=new(p.page); s.tab.tick(0)
+local m21=menu(); construct(m21)
+s.tab.event(90); s.now=9
+p.answer='close'; s.tab.nav('right',90.5)
+assert(p.nav_at==90.5 and s.closes==1 and not s.tab.page_shown(),'Off by the keys: closed')
+local m22=menu(); construct(m22)
+s.now=8; s.tab.event(91); s.now=9
+p.clicked='close'; s.tab.click(91.5)
+assert(p.click_at==91.5 and s.closes==2 and not s.tab.page_shown(),'Off by a click: closed')
+s.paused=false; s.tab.tick(92); assert(s.opens==0,'No co-op menu')
+-- An F-key (main/keys.lua): false while the page is hidden, the page's capture while it shows; a page that turns off
+-- in it takes the fault path.
+s.paused=true
+assert(s.tab.capture('F7',93)==false and not p.calls[#p.calls]:find('capture',1,true),'Hidden: not asked')
+local m23=menu(); construct(m23)
+s.now=8; s.tab.event(94); s.now=9
+p.capturing=true
+assert(s.tab.capture('Shift+F7',94.5)==true and p.calls[#p.calls]=='capture Shift+F7','Shown: the page\'s')
+p.capturing=false
+assert(s.tab.capture('F7',94.6)==false,'No key row waits: not taken')
+p.capture_off=true
+assert(s.tab.capture('F7',94.7)==true and s.closes==3 and not s.tab.page_shown()
+    and logged('online page: off while shown; the pause menu closes and the co-op menu opens as before'))
+p.capture_off,p.off=false,false
+-- A row of the page that needs the game world ('away' and its id): SB's close once, nothing while paused, the row run
+-- once at the first unpaused tick (never the co-op menu); still paused after 2 s: the give-up line and notice, nothing
+-- run; a run that raises: one line, the tab goes on.
+local function shown(at) construct(menu()); s.now=8; s.tab.event(at); s.now=9 end
+shown(95)
+p.answer,p.arg='away','find'; s.tab.nav('select',95.1)
+assert(s.closes==4 and not s.tab.page_shown(),'SB\'s close')
+s.tab.tick(95.2); assert(#s.aways==0,'Still paused: nothing run')
+s.paused=false; s.tab.tick(95.3); s.tab.tick(95.4)
+assert(table.concat(s.aways,' ')=='find' and s.opens==0,'Run once after the unpause')
+s.paused=true; shown(96)
+local notices=s.notices
+p.clicked,p.arg='away','host'; s.tab.click(96.1)
+s.tab.tick(97); s.tab.tick(98.2); s.paused=false; s.tab.tick(98.3)
+assert(s.closes==5 and #s.aways==1 and s.notices==notices+1
+    and count(logs,"pause tab: the game stayed paused for 2 s; the pause menu is the player's")==1,'Given up')
+s.paused=true; shown(99)
+s.away_raise='no guide today'
+p.answer,p.arg='away','guide'; s.tab.nav('select',99.1)
+s.paused=false; s.tab.tick(99.2); s.away_raise=nil
+assert(logs[#logs]=='pause tab: guide failed: no guide today' and #s.aways==2,logs[#logs])
+s.paused=true; shown(100); assert(s.tab.page_shown(),'The tab goes on')
+-- 'open_menu' and a Test tools page: the co-op menu opened on that page once unpaused.
+p.answer,p.arg='open_menu','P'; s.tab.nav('select',100.1); s.paused=false; s.tab.tick(100.2)
+assert(s.opened=='P' and s.opens==1,tostring(s.opened))
+p.answer,p.clicked,p.arg=nil,nil,nil
+
+-- A freed button. On 25 November 2026 the game crashed inside UE4SS: the pause menu was closed, SB had freed its
+-- widgets, a cursor left shown read as a paused game and the frame's hover look called the kept button. The kept
+-- button is asked only whether it lives: no read of it from the frame, a click or LB and RB. The tab is not armed
+-- until a pause menu gets a new button.
+reset(); s=new(); s.tab.tick(0)
+local m20,b20=menu(); construct(m20)
+hovered=true; s.tab.tick(1)
+assert(count(s.sounds,'move')==1 and s.tab.armed(),'The hover look runs on a live button')
+free(b20[9]); free(m20)
+s.tab.tick(2); s.tab.tick(3)
+assert(touched==0 and not s.tab.armed(),'The frame look: '..touched..' reads of a freed widget')
+s.tab.click(4); s.tab.event(5)
+assert(touched==0 and s.closes==0,'Not armed: nothing')
+-- A click first, then LB or RB first, each on a tab that was still armed.
+local m21,b21=menu(); construct(m21)
+free(b21[9]); free(m21)
+s.tab.click(6)
+assert(touched==0 and s.closes==0 and not s.tab.armed(),'A click: '..touched..' reads of a freed widget')
+local m22,b22=menu(); construct(m22)
+free(b22[9]); free(m22)
+s.tab.event(7)
+assert(touched==0 and s.closes==0 and not s.tab.armed(),'LB or RB: '..touched..' reads of a freed widget')
+assert(logs[#logs]=='pause tab: LB or RB at an end of the tab row with no Online tab shown; nothing opened',logs[#logs])
+-- Only the button freed (SB rebuilt the tab row): the same, then ours again at the next slow.
+local m23,b23=menu(); construct(m23)
+free(b23[9]); table.remove(b23)
+s.tab.tick(8)
+assert(touched==0 and not s.tab.armed(),'A rebuilt row: '..touched..' reads of a freed widget')
+s.tab.slow()
+assert(#b23==9 and s.tab.armed(),'Added again')
+-- The kept button's address given to another widget: it lives under another name. It is not ours: no call on it.
+local asks=0
+b23[9].Button_Action.IsHovered=function() asks=asks+1; return true end
+b23[9].GetFullName=function() return 'WB_Common_Tab_Btn_C of another menu' end
+s.tab.tick(9); s.tab.click(10)
+assert(asks==0 and s.closes==0 and not s.tab.armed(),'Another widget at the kept address is not asked')
+-- Only the pause menu freed: its button is not asked either.
+local m24,b24=menu(); construct(m24)
+b24[9].Button_Action.IsHovered=function() asks=asks+1; return true end
+free(m24)
+s.tab.tick(11); s.tab.click(12)
+assert(asks==0 and touched==0 and not s.tab.armed(),'The button of a freed pause menu is not asked')
 print('pause_tab_test ok')

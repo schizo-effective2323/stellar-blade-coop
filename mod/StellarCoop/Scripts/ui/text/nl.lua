@@ -62,6 +62,7 @@ return {
     sit='Gaan zitten',stand='Opstaan',
     line={prompt='Co-oplijn',free='De lijn is vrij. Host een sessie of doe mee met een vriend.',
         open='Je sessie is open. Nodig hier een vriend uit.',linked='Verbonden met %s.'},
+    confirm_host='Selecteer binnen 3 s opnieuw om een onlinesessie te hosten.',
     confirm_leave='Selecteer binnen 3 s opnieuw om de sessie te verlaten.',
     confirm_remove='Selecteer binnen 3 s opnieuw om %s te verwijderen en te blokkeren.',
     confirm_reset_keys='Selecteer binnen 3 s opnieuw om alle toetsen te herstellen.',
@@ -424,6 +425,15 @@ return {
         entry='%d. %s %d',sep=', ',placed='Je plaats: %d van %d.'},
     -- The pause menu's Online tab (ui/kit/pause_tab.lua): its word and the notice when the game stays paused.
     pause_tab={tab='Online',stuck='De game bleef gepauzeerd, dus het co-opmenu ging niet open.'},
+    -- The pause menu's Online page (ui/kit/online_page.lua): the left list's categories and the section headers.
+    online_page={cat={session='Sessie',players='Spelers',world='Gedeelde wereld',combat='Vechten',modes='Spelmodi',
+        controls='Besturing',display='Weergave',others='Andere spelers',photo='Fotomodus',saves='Opgeslagen games',
+        help='Hulp'},
+        sec={play='Online spelen',current='Deze sessie',hosting='Hosten',members='Leden',
+        sharing='Wat gedeeld wordt',travel='Reizen',difficulty='Spelniveau',rules='Regels',modes='Modi',
+        keyboard='Toetsenbord en muis',controller='Controller',features='Functies',all='Alle toetsen',
+        interface='Interface',names='Namen',sky='Lucht',look='Uiterlijk',sound='Geluid',motion='Beweging',chat='Chat',
+        photo='Fotomodus',saves='Opgeslagen games',help='Hulp'}},
     -- The emote wheel (ui/kit/wheel.lua, eve/ui/wheel.lua): its hints, the centre's word while nothing is pointed at
     -- (after StringTable_UI's UI_HUD_Gesture) and why it did not open.
     wheel={title='Sociale actie',release='Loslaten: afspelen',point='Richten',next='Volgende categorie',

@@ -61,6 +61,7 @@ return {
     sit='الجلوس',stand='الوقوف',
     line={prompt='خط اللعب التعاوني',free='الخط متاح. استضف جلسة أو انضم إلى صديق.',
         open='جلستك مفتوحة. ادعُ صديقًا من هنا.',linked='أنت على الخط مع %s.'},
+    confirm_host='حدد مجددًا خلال 3 ثوانٍ لاستضافة جلسة عبر الإنترنت.',
     confirm_leave='حدد مجددًا خلال 3 ثوانٍ للمغادرة.',confirm_remove='حدد مجددًا خلال 3 ثوانٍ لإزالة %s وحظره.',
     confirm_reset_keys='حدد مجددًا خلال 3 ثوانٍ لإعادة ضبط كل المفاتيح.',
     reload='تم الحفظ. يسري التغيير عند إعادة تحميل التعديل بالضغط على Ctrl+R أو عند بدء اللعبة.',
@@ -400,6 +401,15 @@ return {
         top='صيد الصور: %s.',entry='%d. %s %d',sep='، ',placed='مركزك: %d من %d.'},
     -- The pause menu's Online tab (ui/kit/pause_tab.lua): its word and the notice when the game stays paused.
     pause_tab={tab='أونلاين',stuck='بقيت اللعبة متوقفة مؤقتًا، فلم تُفتح قائمة اللعب التعاوني.'},
+    -- The pause menu's Online page (ui/kit/online_page.lua): the left list's categories and the section headers.
+    online_page={cat={session='الجلسة',players='اللاعبون',world='العالم المشترك',combat='القتال',modes='أوضاع اللعب',
+        controls='عناصر التحكم',display='العرض',others='اللاعبون الآخرون',photo='وضع الصور',saves='ملفات الحفظ',
+        help='المساعدة'},
+        sec={play='اللعب عبر الإنترنت',current='هذه الجلسة',hosting='الاستضافة',
+        members='الأعضاء',sharing='ما تتم مشاركته',travel='التنقل',difficulty='الصعوبة',rules='القواعد',modes='الأوضاع',
+        keyboard='لوحة المفاتيح والفأرة',controller='وحدة التحكم',features='الميزات',all='كل المفاتيح',
+        interface='الواجهة',names='الأسماء',sky='السماء',look='المظهر',sound='الصوت',motion='الحركة',chat='الدردشة',
+        photo='وضع الصور',saves='ملفات الحفظ',help='المساعدة'}},
     -- The emote wheel (ui/kit/wheel.lua, eve/ui/wheel.lua): its hints, the centre's word while nothing is pointed at
     -- (after StringTable_UI's UI_HUD_Gesture) and why it did not open.
     wheel={title='تفاعل اجتماعي',release='حرر: تشغيل',point='أشر',next='الفئة التالية',

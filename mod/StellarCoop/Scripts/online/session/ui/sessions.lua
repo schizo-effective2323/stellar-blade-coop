@@ -22,7 +22,8 @@
 -- key while the screen is open; SBO's words are ui/text.lua's. Parts are ui/kit/parts.lua's: every part call runs in
 -- pcall, a refusal is logged once, a part that cannot be made is logged once and left out until the mod reloads. Its
 -- kit fallback draws in its place: rows as kit rows, headers and hints as kit texts.
--- Open, closed and a join asked each log one line.
+-- Open, closed and a join asked each log one line. The pause menu's Online page shows the same tab, searches and joins
+-- in its own rows (enter, texts, ask): the same rules, requests and refusals, without this screen's parts.
 local Model=require('online.session.ui.sessions_model')
 local Parts=require('ui.kit.parts')
 local T=require('ui.text')
@@ -125,6 +126,21 @@ function Sessions.new(o)
         if s.key=='wait' then return t.sessions.wait:format(s.args[1]) end
         return t.sessions[s.key]
     end
+    -- Refresh's word: SB's Cancel while our search runs (Refresh then stops it).
+    local function refresh_of(t)
+        return view.ours and (game('UI_Cancel') or t.lobby.row.cancel) or t.sessions.refresh
+    end
+    -- A row's details as the pane shows them, one line each: the region, the camp, the players and ping, the rules,
+    -- the Steam friend mark, the version; the empty ones left out.
+    local function details_of(t,r)
+        local camp=r.camp and game(Model.camp(r.camp))
+        local version=t.sessions.version:format(tostring(input.proto or '-'),tostring(input.build or '-'))
+        local out={}
+        for _,s in ipairs({region(r),camp or '',players(r),rules_of(t,r),r.pal and t.sessions.friend or '',version}) do
+            if s~='' then out[#out+1]=s end
+        end
+        return table.concat(out,'\n')
+    end
     local function hints(specs)
         local out={}
         for i,h in ipairs(specs) do out[i]=Parts.hint(HINT_RIGHT-HINT_STEP*i,HINT_Y,h[1],h[2]) end
@@ -185,7 +201,7 @@ function Sessions.new(o)
         local proto,build=tostring(input.proto or '-'),tostring(input.build or '-')
         v.version.set(r and t.sessions.version:format(proto,build) or '')
         v.foot.set(t.sessions.footer:format(proto,build))
-        local refresh=view.ours and (game('UI_Cancel') or t.lobby.row.cancel) or t.sessions.refresh
+        local refresh=refresh_of(t)
         -- Y's icon: UI_FaceButton_Top, SB's UI action for the top face button. The 26123051 exe names it beside
         -- UI_FaceButton_Bottom (WB_Common_Popup's hint action) and UI_LeftShoulder (our tab hint) in one switch
         -- (FUN_14254baf0); SB's key map binds it to the pad's Y and the keyboard's F, so F is our Refresh key.
@@ -206,14 +222,25 @@ function Sessions.new(o)
     end
     -- A tab change asks for the new tab's search. Our running search goes on (Refresh alone stops it): stopping it
     -- here would lose its rows while the 5 s gap held the new one back.
+    local function switch(id)
+        tab,cur,top,pointed=id,1,0,false
+        read()
+        if not view.ours then search() end
+    end
     local function set_tab(id)
         if id~=tab then
-            tab,cur,top,pointed=id,1,0,false
             kit.sound('change')
-            read()
-            if not view.ours then search() end
+            switch(id)
         end
         draw()
+    end
+    -- Select on row i of the view: its lobby's join asked, logged; false for no row.
+    local function join(i)
+        local request=Model.select(view,i)
+        if not request then return false end
+        log('sessions: ask to join lobby '..view.rows[i].lobby)
+        o.act({request=request})
+        return true
     end
     -- The row under the mouse or nil, then a tab id or the slot.
     local function under()
@@ -272,11 +299,9 @@ function Sessions.new(o)
         elseif what=='refresh' then
             if search() then kit.sound('change') end
         elseif what=='select' then -- SB's setting confirm sound, from the row.
-            local request=Model.select(view,cur)
-            if not request then return draw() end
+            if not Model.select(view,cur) then return draw() end
             call(list[cur-top],'option select',function(w) w:EventNotification('StateSelect') end)
-            log('sessions: ask to join lobby '..view.rows[cur].lobby)
-            o.act({request=request})
+            join(cur)
             return self.close()
         elseif what=='back' then
             kit.sound('back')
@@ -314,6 +339,39 @@ function Sessions.new(o)
                 draw()
             end
         end
+    end
+    -- The pause menu's Online page (ui/kit/online_page.lua, through main/input.lua) shows Find a session in its own
+    -- rows with these: this screen's tab, searches and joins, without its kit group or the game's input.
+    -- enter: the page shows it; a search of the tab asked when it may, one line. true.
+    function self.enter()
+        said={}
+        log('sessions: on the Online page, '..tab)
+        search()
+        return true
+    end
+    -- What the page shows now, in the player's words: {tab= its name, refresh= Refresh's word, status= the status line
+    -- or '', footer=, rows={{lobby=, name=, value=, details=}, ...}}.
+    function self.texts()
+        local t=words()
+        read()
+        local rows={}
+        for i,r in ipairs(view.rows) do
+            rows[i]={lobby=r.lobby,name=name_of(t,r),value=value_of(r),details=details_of(t,r)}
+        end
+        return {tab=tab_name(t,tab),refresh=refresh_of(t),status=status_of(t) or '',
+            footer=t.sessions.footer:format(tostring(input.proto or '-'),tostring(input.build or '-')),rows=rows}
+    end
+    -- A press of the page: 'tab' (the other tab, its search when it may: true), 'refresh' (true when a search was
+    -- asked or ours stopped; false inside the 5 s gap or while a match search runs), 'join' and i (row i of the last
+    -- texts: true once its join was asked, false for no row).
+    function self.ask(what,i)
+        if what=='tab' then
+            switch(Model.other(tab))
+            return true
+        end
+        if what=='refresh' then return search() end
+        if what=='join' then return join(i) end
+        return false
     end
     return self
 end

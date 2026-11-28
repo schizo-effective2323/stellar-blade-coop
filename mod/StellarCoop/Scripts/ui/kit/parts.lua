@@ -8,15 +8,20 @@
 -- went (a map change); a call on one runs in pcall and a refusal is logged once a kind; a kind that cannot be made is
 -- logged once and left out until the mod reloads, so the screen draws its kit fallback in its place.
 local Parts={}
--- Each kind's path under /Game/Art/UI/Widget/, in the parts check's order (online/lobby/ui/lobby.lua). slider (the
--- settings menu's slider slot: closet/ui/view.lua's number rows) is not in that check: a screen without it shows the
--- kit row instead. Its Focus and Normal functions (look below) were read in WB_Setting_Slider_Slot's widget JSON (the
--- pak of build 26123051) on 27 Nov 2026, as closet/ui/view.lua's comment on its members says.
+-- Each kind's path under /Game/Art/UI/Widget/; ORDER: the parts check's (online/lobby/ui/lobby.lua). The pause menu's
+-- Online page (ui/kit/online_page.lua) also makes SB's Settings parts: the left list item (tab), the row with a choice
+-- (rolling), the slider row (slider) and the description pane (detail), each read in the class exports of 26123051.
+-- closet/ui/view.lua's number rows draw slider too (the settings menu's slider slot). slider is not in the parts check:
+-- a screen without it shows the kit row instead. Its Focus and Normal functions (look below) were read in
+-- WB_Setting_Slider_Slot's widget JSON (the pak of build 26123051) on 27 Nov 2026, as closet/ui/view.lua's comment on
+-- its members says.
 Parts.ORDER={'row','option','header','hint','popup','count'}
 local PATH={row='Lobby/WB_Lobby_Menu_Slot',option='GameMenu/Setting/Slot/WB_Setting_Button_Slot',
     header='GameMenu/Setting/Slot/WB_Setting_Category',hint='GameMenu/Common/Indicator/WB_Common_IndicatorBtnDefault',
     popup='GameMenu/Common/WB_Common_Popup',count='HUD/WB_MainHUD_CountDown',
-    slider='GameMenu/Setting/Slot/WB_Setting_Slider_Slot'}
+    tab='GameMenu/Setting/WB_Setting_TabButton',
+    rolling='GameMenu/Setting/Slot/WB_Setting_Rolling_Slot',slider='GameMenu/Setting/Slot/WB_Setting_Slider_Slot',
+    detail='GameMenu/Setting/Detail/WB_Setting_SlotDetail'}
 -- Each kind's object path (kit.warm_part) and class (kit.part).
 Parts.ASSET,Parts.CLASS={},{}
 for kind,p in pairs(PATH) do

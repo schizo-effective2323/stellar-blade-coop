@@ -62,6 +62,7 @@ return {
     sit='นั่ง',stand='ลุกขึ้น',
     line={prompt='สาย Co-op',free='สายว่างอยู่ โฮสต์เซสชันหรือเข้าร่วมเกมของเพื่อน',
         open='เซสชันของคุณเปิดอยู่ เชิญเพื่อนได้จากที่นี่',linked='กำลังต่อสายกับ %s'},
+    confirm_host='เลือกอีกครั้งภายใน 3 วินาทีเพื่อโฮสต์เซสชันออนไลน์',
     confirm_leave='เลือกอีกครั้งภายใน 3 วินาทีเพื่อออก',confirm_remove='เลือกอีกครั้งภายใน 3 วินาทีเพื่อนำ %s ออกและบล็อก',
     confirm_reset_keys='เลือกอีกครั้งภายใน 3 วินาทีเพื่อรีเซ็ตปุ่มทั้งหมด',
     reload='บันทึกแล้ว จะมีผลเมื่อม็อดโหลดใหม่ (ตอนเปิดเกมหรือกด Ctrl+R)',
@@ -385,6 +386,14 @@ return {
         entry='%d. %s %d',sep=', ',placed='อันดับของคุณ: %d จาก %d'},
     -- The pause menu's Online tab (ui/kit/pause_tab.lua): its word and the notice when the game stays paused.
     pause_tab={tab='ออนไลน์',stuck='เกมยังหยุดชั่วคราวอยู่ เมนู co-op จึงไม่เปิด'},
+    -- The pause menu's Online page (ui/kit/online_page.lua): the left list's categories and the section headers.
+    online_page={cat={session='เซสชัน',players='ผู้เล่น',world='โลกที่แชร์',combat='การต่อสู้',modes='โหมดเกม',
+        controls='การควบคุม',display='การแสดงผล',others='ผู้เล่นอื่น',photo='โหมดถ่ายภาพ',saves='เซฟ',help='ช่วยเหลือ'},
+        sec={play='เล่นออนไลน์',current='เซสชันนี้',hosting='การโฮสต์',members='สมาชิก',
+        sharing='สิ่งที่แชร์',travel='การเดินทาง',difficulty='ความยาก',rules='กฎ',modes='โหมด',
+        keyboard='คีย์บอร์ดและเมาส์',controller='คอนโทรลเลอร์',features='ฟีเจอร์',all='ปุ่มทั้งหมด',
+        interface='อินเทอร์เฟซ',names='ชื่อ',sky='ท้องฟ้า',look='รูปลักษณ์',sound='เสียง',motion='การเคลื่อนไหว',
+        chat='แชท',photo='โหมดถ่ายภาพ',saves='เซฟ',help='ช่วยเหลือ'}},
     -- The emote wheel (ui/kit/wheel.lua, eve/ui/wheel.lua): its hints, the centre's word while nothing is pointed at
     -- (after StringTable_UI's UI_HUD_Gesture) and why it did not open.
     wheel={title='การกระทำทางสังคม',release='ปล่อย: เล่น',point='ชี้',next='หมวดถัดไป',
