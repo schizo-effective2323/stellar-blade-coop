@@ -321,13 +321,15 @@ return {
             leave='Nie udało się wrócić do Xion. Wyjdź do menu głównego: tam zapis co-op zostanie przywrócony.'}},
     lobby={sub='LOBBY PvP · SBO',page='LOBBY · SBO',mode={race='Wyścig Doro',
             scoreattack='Pogoń za punktami',
-            ffa='Każdy na każdego'},
+            ffa='Każdy na każdego',
+            sp='Survival Protocol'},
         desc={
             race='Od 2 do 8 graczy ściga się jako Doro na tej samej trasie. Wygrywa najkrótszy czas.',
             scoreattack='Od 2 do 8 graczy gra jednocześnie w to samo wyzwanie. Wygrywa najlepszy wynik, potem '
                 ..'najkrótszy czas.',
             ffa='Od 2 do 8 graczy. Wygrywa ten, kto pierwszy zdobędzie 20 zabójstw, albo najlepszy wynik po 10 '
-            ..'minutach. Odrodzenie po 4 s.',more='Więcej trybów pojawi się w kolejnych wersjach.'},
+            ..'minutach. Odrodzenie po 4 s.',sp='2 players take on Survival Protocol together. Waves, bosses and hazards share one arena.',
+            more='Więcej trybów pojawi się w kolejnych wersjach.'},
         row={track='Trasa',
             challenge='Wyzwanie',
             search='Szukaj',cancel='Anuluj',private='Mecz prywatny',code='Kod %s',join_code='Wpisz kod',
@@ -350,7 +352,7 @@ return {
             race_ranking='Najkrótszy czas, remis do 0,01 s',
             ranking='Najlepszy wynik, potem najkrótszy czas',
             damage='Brak',host_pick='Wybór hosta',
-            random='Losowa',players='Od 2 do 8',finish='20 zabójstw lub 10 min',
+            random='Losowa',players='Od 2 do 8',sp_players='2',finish='20 zabójstw lub 10 min',
             tie='Nagła śmierć, maks. 60 s',respawn='4 s',protection='6 s, kończy się, gdy atakujesz',
             difficulty='Tryb normalny dla wszystkich',equipment='Takie samo dla wszystkich',
             start='10 s od 2 graczy, 5 s przy komplecie',public='Publiczne',private='Prywatne, kod %s',

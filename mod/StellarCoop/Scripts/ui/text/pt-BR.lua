@@ -331,13 +331,15 @@ return {
             leave='Não foi possível voltar a Xion. Volte ao Menu Principal: o jogo salvo co-op é restaurado lá.'}},
     lobby={sub='LOBBY PvP · SBO',page='LOBBY · SBO',mode={race='Corrida de Doro',
             scoreattack='Corrida por pontos',
-            ffa='Todos contra todos'},
+            ffa='Todos contra todos',
+            sp='Survival Protocol'},
         desc={
             race='De 2 a 8 jogadores correm como Doro no mesmo percurso. Vence o menor tempo.',
             scoreattack='De 2 a 8 jogadores jogam o mesmo desafio ao mesmo tempo. Vence a melhor pontuação, depois o '
                 ..'menor tempo.',
             ffa='De 2 a 8 jogadores. Vence quem chegar primeiro a 20 abates, ou a melhor pontuação após 10 minutos. '
-            ..'Você reaparece após 4 s.',more='Mais modos chegarão em versões futuras.'},row={track='Percurso',
+            ..'Você reaparece após 4 s.',sp='2 players take on Survival Protocol together. Waves, bosses and hazards share one arena.',
+            more='Mais modos chegarão em versões futuras.'},row={track='Percurso',
             challenge='Desafio',
             search='Pesquisar',
             cancel='Cancelar',private='Partida privada',code='Código %s',join_code='Inserir código',
@@ -360,7 +362,7 @@ return {
             race_ranking='Menor tempo, empate até 0,01 s',
             ranking='Melhor pontuação, depois menor tempo',
             damage='Nenhum',host_pick='Escolha do anfitrião',
-            random='Aleatório',players='2 a 8',finish='20 abates ou 10 min',
+            random='Aleatório',players='2 a 8',sp_players='2',finish='20 abates ou 10 min',
             tie='Morte súbita, 60 s no máximo',respawn='4 s',protection='6 s, acaba se você atacar',
             difficulty='Modo Normal para todos',equipment='O mesmo para todos',
             start='10 s com 2 jogadores, 5 s se cheio',public='Público',private='Privado, código %s',

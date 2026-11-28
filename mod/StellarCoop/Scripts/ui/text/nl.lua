@@ -329,13 +329,15 @@ return {
             leave='Terug naar Xion lukte niet. Ga naar het hoofdmenu: daar wordt de opgeslagen co-opgame hersteld.'}},
     lobby={sub='PvP-LOBBY · SBO',page='LOBBY · SBO',mode={race='Dororace',
             scoreattack='Scorejacht',
-            ffa='Ieder voor zich'},
+            ffa='Ieder voor zich',
+            sp='Survival Protocol'},
         desc={
             race='2 tot 8 spelers racen als Doro over dezelfde route. De kortste tijd wint.',
             scoreattack='2 tot 8 spelers spelen tegelijk dezelfde uitdaging. De beste score wint, daarna de kortste '
                 ..'tijd.',
             ffa='2 tot 8 spelers. Wie het eerst 20 kills heeft, wint, anders de beste score na 10 minuten. Je '
-            ..'respawnt na 4 s.',more='Meer modi komen in latere versies.'},row={track='Route',
+            ..'respawnt na 4 s.',sp='2 players take on Survival Protocol together. Waves, bosses and hazards share one arena.',
+            more='Meer modi komen in latere versies.'},row={track='Route',
             challenge='Uitdaging',
             search='Zoeken',cancel='Annuleren',
             private='Privé-match',code='Code %s',join_code='Code invoeren',room='Wachtruimte',settings='Instellingen',
@@ -358,7 +360,7 @@ return {
             ranking='Beste score, dan kortste tijd',
             damage='Geen',host_pick='Keuze van de host',
             random='Willekeurig',
-            players='2 tot 8',finish='20 kills of 10 min',tie='Sudden death, maximaal 60 s',
+            players='2 tot 8',sp_players='2',finish='20 kills of 10 min',tie='Sudden death, maximaal 60 s',
             respawn='4 s',protection='6 s, stopt als je aanvalt',difficulty='Normale modus voor iedereen',
             equipment='Voor iedereen gelijk',start='10 s vanaf 2 spelers, 5 s als vol',public='Openbaar',
             private='Privé, code %s',version='%s, protocol %d'},pop={leave_title='LOBBY VERLATEN',

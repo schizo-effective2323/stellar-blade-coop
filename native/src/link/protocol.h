@@ -159,21 +159,32 @@ constexpr size_t kMaxRemote = kMatchMembers - 1;
 constexpr int kMaxMembers = 4;
 constexpr char kModeKey[] = "sbo_mode", kStateKey[] = "sbo_state", kMapKey[] = "sbo_map";
 constexpr char kRoomKey[] = "sbo_room", kHallKey[] = "sbo_hall";
-// A mode: its name in kModeKey, the players its round needs at least, and its map until stage 4 adds arenas. The score
-// attack's and the Doro race's map word is lobby: their rounds play in the room the members wait in
-// (online/modes/scoreattack/, online/modes/race/match/).
+// A mode: its name in kModeKey, the players its round needs at least, the players its lobby holds at most (max <=
+// kMatchMembers), and its map until stage 4 adds arenas. The score attack's, the Doro race's and Survival Protocol's
+// map word is lobby: their rounds play in the room the members wait in (online/modes/scoreattack/,
+// online/modes/race/match/, online/modes/sp/). Survival Protocol is capped at 2 for now.
 struct Mode {
   const char *name;
   uint32_t min;
+  uint32_t max;
   const char *map;
 };
-constexpr Mode kModes[] = {{"ffa", 2, "NK_Boss_Scarlet"}, {"scoreattack", 2, "lobby"}, {"race", 2, "lobby"}};
+constexpr Mode kModes[] = {{"ffa", 2, 8, "NK_Boss_Scarlet"},
+                           {"scoreattack", 2, 8, "lobby"},
+                           {"race", 2, 8, "lobby"},
+                           {"sp", 2, 2, "lobby"}};
 // The mode of that name, or null when unknown.
 inline const Mode *find_mode(std::string_view name) {
   for (const Mode &m : kModes)
     if (name == m.name)
       return &m;
   return nullptr;
+}
+// Members a match lobby of that mode holds at most; kMatchMembers when the mode is unknown.
+inline uint32_t mode_cap(std::string_view name) {
+  if (const Mode *m = find_mode(name))
+    return m->max;
+  return kMatchMembers;
 }
 
 // The session list's rows (Find a session): the owner of a Public or Friends only online session writes these keys

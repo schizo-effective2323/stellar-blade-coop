@@ -329,13 +329,15 @@ return {
                 ..'são restaurados aí.'}},
     lobby={sub='LOBBY PvP · SBO',page='LOBBY · SBO',mode={race='Corrida de Doro',
             scoreattack='Corrida aos pontos',
-            ffa='Todos contra todos'},
+            ffa='Todos contra todos',
+            sp='Survival Protocol'},
         desc={
             race='De 2 a 8 jogadores correm como Doro no mesmo percurso. Ganha o tempo mais curto.',
             scoreattack='De 2 a 8 jogadores jogam o mesmo desafio ao mesmo tempo. Ganha a melhor pontuação, depois o '
                 ..'tempo mais curto.',
             ffa='De 2 a 8 jogadores. Ganha quem chegar primeiro às 20 eliminações, ou a melhor pontuação após 10 '
-            ..'minutos. Reapareces após 4 s.',more='Mais modos chegam em versões futuras.'},row={track='Percurso',
+            ..'minutos. Reapareces após 4 s.',sp='2 players take on Survival Protocol together. Waves, bosses and hazards share one arena.',
+            more='Mais modos chegam em versões futuras.'},row={track='Percurso',
             challenge='Desafio',
             search='Procurar',
             cancel='Cancelar',private='Partida privada',code='Código %s',join_code='Introduzir código',
@@ -359,7 +361,7 @@ return {
             ranking='Melhor pontuação, depois menor tempo',
             damage='Nenhum',host_pick='Escolha do anfitrião',
             random='Aleatório',
-            players='2 a 8',finish='20 eliminações ou 10 min',
+            players='2 a 8',sp_players='2',finish='20 eliminações ou 10 min',
             tie='Morte súbita, 60 s no máximo',respawn='4 s',protection='6 s, acaba se atacares',
             difficulty='Modo normal para todos',equipment='O mesmo para todos',
             start='10 s com 2 jogadores, 5 s se cheio',public='Público',private='Privado, código %s',

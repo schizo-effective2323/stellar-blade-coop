@@ -63,7 +63,7 @@ private:
     } else {
       public_ = false;
       hosting_ = Who::invitation;
-      create_call_ = api_.create_lobby(mm_, kInvisible, kMatchMembers);
+      create_call_ = api_.create_lobby(mm_, kInvisible, mode_cap(r.mode));
       if (create_call_)
         return event("creating a private " + r.mode + " match lobby (joined with its code)");
       event("Steam refused to create a lobby");
@@ -121,7 +121,7 @@ private:
            std::to_string(build_) + "): hosting one.");
     public_ = true;
     hosting_ = Who::everyone; // Not the last online session's: a closed one would refuse every member.
-    create_call_ = api_.create_lobby(mm_, kPublic, kMatchMembers);
+    create_call_ = api_.create_lobby(mm_, kPublic, mode_cap(seeking_));
     if (create_call_)
       return;
     public_ = false;
@@ -173,12 +173,13 @@ private:
         p.told = false;
       return event("countdown stopped: " + std::to_string(n) + " of " + std::to_string(mode.min) + " players");
     }
+    const uint32_t cap = mode.max;
     if (!count_end_) {
-      count_end_ = now_ + (n == kMatchMembers ? kFullCountdownMs : kCountdownMs);
+      count_end_ = now_ + (n == cap ? kFullCountdownMs : kCountdownMs);
       event("countdown started: " + std::to_string(count_left()) + " s, " + std::to_string(n) + " players");
     } else if (now_ >= count_end_) {
       return start_round(mode);
-    } else if (n == kMatchMembers && count_end_ - now_ > kFullCountdownMs) {
+    } else if (n == cap && count_end_ - now_ > kFullCountdownMs) {
       count_end_ = now_ + kFullCountdownMs;
       for (auto &p : peers_)
         p.told = false;

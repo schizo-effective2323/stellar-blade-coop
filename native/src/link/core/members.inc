@@ -123,7 +123,7 @@ private:
   void poll_members() {
     if (!read_mode())
       return;
-    const int cap = match() ? kMatchMembers : kMaxMembers;
+    const int cap = match() ? static_cast<int>(mode_cap(mode_)) : kMaxMembers;
     int n = api_.member_count(mm_, lobby_);
     if (n > cap) { // Only a lobby made elsewhere can be bigger: greet nobody there.
       leave("more than " + std::to_string(cap) + " players in it");

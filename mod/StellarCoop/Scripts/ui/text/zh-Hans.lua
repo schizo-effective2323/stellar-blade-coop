@@ -258,10 +258,12 @@ return {
         fail={save='游戏未能保存。没有任何改动。',warp='大厅读取失败。没有任何改动。',leave='无法返回希雍。请退出至主菜单：合作存档会在那里恢复。'}},
     lobby={sub='PvP大厅 · SBO',page='大厅 · SBO',mode={race='DORO竞速',
             scoreattack='得分挑战',
-            ffa='自由混战'},desc={
+            ffa='自由混战',
+            sp='Survival Protocol'},desc={
             race='2至8名玩家化身DORO在同一赛道上竞速。用时最短者获胜。',
             scoreattack='2至8名玩家同时挑战同一项目。得分最高者获胜，得分相同时用时最短者获胜。',
             ffa='2至8名玩家。先达到20次击杀者获胜，否则10分钟后得分最高者获胜。被击败4秒后复活。',
+            sp='2 players take on Survival Protocol together. Waves, bosses and hazards share one arena.',
             more='更多模式将在后续版本推出。'},row={track='赛道',
             challenge='挑战',
             search='搜索',cancel='取消',private='私人比赛',code='房间码 %s',join_code='输入房间码',
@@ -280,7 +282,7 @@ return {
             race_ranking='用时最短，相差0.01秒内并列',
             ranking='得分优先，其次用时',
             damage='无',host_pick='由房主选择',
-            random='随机',players='2至8',finish='20次击杀或10分钟',tie='突然死亡，最长60秒',respawn='4秒',
+            random='随机',players='2至8',sp_players='2',finish='20次击杀或10分钟',tie='突然死亡，最长60秒',respawn='4秒',
             protection='6秒，攻击时结束',difficulty='全员正常模式',equipment='所有人相同',start='2人起10秒，满员5秒',public='公开',
             private='私人，房间码 %s',version='%s，协议 %d'},pop={leave_title='离开大厅',leave='返回希雍吗？你会回到与募兵官交谈的地方。'}},
     sessions={ask='申请加入',refresh='刷新',empty='没有开放的房间。',failed='搜索失败。请刷新后重试。',idle='按刷新开始搜索。',wait='%d秒后可再次搜索。',

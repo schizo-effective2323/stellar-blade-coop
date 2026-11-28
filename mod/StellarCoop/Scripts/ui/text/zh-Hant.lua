@@ -257,10 +257,12 @@ return {
         fail={save='遊戲未能儲存。沒有任何變更。',warp='大廳讀取失敗。沒有任何變更。',leave='無法返回曦安。請回主選單：合作存檔會在那裡還原。'}},
     lobby={sub='PvP大廳 · SBO',page='大廳 · SBO',mode={race='DORO競速',
             scoreattack='得分挑戰',
-            ffa='自由混戰'},desc={
+            ffa='自由混戰',
+            sp='Survival Protocol'},desc={
             race='2至8名玩家化身DORO在同一賽道上競速。用時最短者獲勝。',
             scoreattack='2至8名玩家同時挑戰同一項目。得分最高者獲勝，得分相同時用時最短者獲勝。',
             ffa='2至8名玩家。先達到20次擊殺者獲勝，否則10分鐘後得分最高者獲勝。被擊敗4秒後復活。',
+            sp='2 players take on Survival Protocol together. Waves, bosses and hazards share one arena.',
             more='更多模式將在後續版本推出。'},row={track='賽道',
             challenge='挑戰',
             search='搜尋',cancel='取消',private='私人比賽',code='代碼 %s',join_code='輸入代碼',room='等候室',
@@ -279,7 +281,7 @@ return {
             ranking='得分優先，其次用時',
             damage='無',host_pick='由房主選擇',
             random='隨機',
-            players='2至8',finish='20次擊殺或10分鐘',tie='突然死亡，最長60秒',respawn='4秒',protection='6秒，攻擊時結束',
+            players='2至8',sp_players='2',finish='20次擊殺或10分鐘',tie='突然死亡，最長60秒',respawn='4秒',protection='6秒，攻擊時結束',
             difficulty='全員普通模式',equipment='所有人相同',start='2人起10秒，滿員5秒',public='公開',private='私人，代碼 %s',
             version='%s，協定 %d'},pop={leave_title='離開大廳',leave='返回曦安嗎？你會回到與募兵官交談的地方。'}},
     sessions={ask='申請加入',refresh='重新整理',empty='沒有開放的房間。',failed='搜尋失敗。請重新整理後再試。',idle='按重新整理開始搜尋。',wait='%d秒後可再次搜尋。',

@@ -23,12 +23,15 @@ int main() {
   // Lobby tag: protocol and game build.
   assert(lobby_tag(24463856) == std::to_string(kProtocol) + ":24463856");
   // The match modes: FFA on its first arena, the score attack and the Doro race in the lobby room, nothing else.
-  assert(find_mode("ffa") && find_mode("ffa")->min == 2 && std::string(find_mode("ffa")->map) == "NK_Boss_Scarlet" &&
-         !find_mode("tdm") && !find_mode(""));
-  assert(find_mode("scoreattack") && find_mode("scoreattack")->min == 2 &&
+  assert(find_mode("ffa") && find_mode("ffa")->min == 2 && find_mode("ffa")->max == 8 &&
+         std::string(find_mode("ffa")->map) == "NK_Boss_Scarlet" && !find_mode("tdm") && !find_mode(""));
+  assert(find_mode("scoreattack") && find_mode("scoreattack")->min == 2 && find_mode("scoreattack")->max == 8 &&
          std::string(find_mode("scoreattack")->map) == "lobby");
-  assert(find_mode("race") && find_mode("race")->min == 2 && std::string(find_mode("race")->map) == "lobby" &&
-         std::size(kModes) == 3 && !find_mode("dr") && !find_mode("Race"));
+  assert(find_mode("race") && find_mode("race")->min == 2 && find_mode("race")->max == 8 &&
+         std::string(find_mode("race")->map) == "lobby");
+  assert(find_mode("sp") && find_mode("sp")->min == 2 && find_mode("sp")->max == 2 &&
+         std::string(find_mode("sp")->map) == "lobby" && mode_cap("sp") == 2 && mode_cap("ffa") == 8 &&
+         mode_cap("tdm") == kMatchMembers && std::size(kModes) == 4 && !find_mode("dr") && !find_mode("Race"));
 
   // The handshake envelope reads the same whatever the sender's protocol: a mismatch is answered, never ignored.
   Message m = parse_text(hello(kProtocol, "v0.2-3-gabc", 24463856));

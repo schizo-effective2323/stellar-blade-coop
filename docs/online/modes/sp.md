@@ -7,6 +7,9 @@ The plan is in [docs/plans/sp-module.md](../../plans/sp-module.md).
 
 ## What players see
 
+Survival Protocol is a match mode on the Online lobby menu (word `sp`, 2 players). Search and Private match use
+it like score attack and the Doro race. The Link mode list carries `sp` with min 2 and max 2.
+
 | Command | What it does |
 | --- | --- |
 | `coop sp` / `coop sp status` | Link role, whether a partner is linked, protocol version |
@@ -16,8 +19,9 @@ The plan is in [docs/plans/sp-module.md](../../plans/sp-module.md).
 | `coop sp leave` | Leave the session |
 | `coop sp invite` | Open Steam's invite dialog |
 
-The Survival Protocol menu, arenas, waves, modifiers and hazards are not in this module yet. Ghosts stay
-`online.partner`. Revive stays `online.group`. Shared enemies stay `fight.enemies`.
+The Survival Protocol menu, arenas, waves, modifiers and hazards are not in this module yet. A match round's start
+line for `sp` does not yet launch a run. Ghosts stay `online.partner`. Revive stays `online.group`. Shared enemies
+stay `fight.enemies`.
 
 ## How it works
 

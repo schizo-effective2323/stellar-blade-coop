@@ -230,8 +230,8 @@ private:
           leave("leave asked while it was being created");
           notice("Left the session.");
         } else {
-          if (!session) // A match lobby: room for 8.
-            api_.set_member_limit(mm_, lobby_, kMatchMembers);
+          if (!session) // A match lobby: room for that mode's cap (8, or 2 for Survival Protocol).
+            api_.set_member_limit(mm_, lobby_, mode_cap(seeking_));
           api_.set_lobby_data(mm_, lobby_, kLobbyKey, tag_.c_str());
           if (!session) {
             put(kModeKey, seeking_);

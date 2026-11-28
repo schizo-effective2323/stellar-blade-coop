@@ -409,7 +409,7 @@ int main() {
     Mesh m(1);
     m.tick(0, "match search tdm xion xion");
     m.round();
-    assert(ops_with("search ") == 0 && noticed(m.status(0), "No such mode: tdm. Modes: ffa, scoreattack, race."));
+    assert(ops_with("search ") == 0 && noticed(m.status(0), "No such mode: tdm. Modes: ffa, scoreattack, race, sp."));
   }
   // Two searchers in one pass (Review Focus 3, ruling R1): neither lobby exists when the other searches, so each
   // hosts a lobby of one. The host of the higher id searches again 5 s later and joins the lower; the host of the
